@@ -1,0 +1,77 @@
+name: ilmai-store
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://ilmai.store}
+        NEXT_PUBLIC_STORE_URL: ${NEXT_PUBLIC_STORE_URL:-https://ilmai.store}
+        NEXT_PUBLIC_ILMAI_STUDY_URL: ${NEXT_PUBLIC_ILMAI_STUDY_URL:-https://ilmai.study}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?}
+        NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: ${NEXT_PUBLIC_PADDLE_CLIENT_TOKEN:-}
+        NEXT_PUBLIC_PADDLE_ENVIRONMENT: ${NEXT_PUBLIC_PADDLE_ENVIRONMENT:-production}
+        NEXT_PUBLIC_DEFAULT_CURRENCY: ${NEXT_PUBLIC_DEFAULT_CURRENCY:-PKR}
+    restart: unless-stopped
+    expose:
+      - "3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ilmai-store-web-http.rule=Host(`ilmai.store`) || Host(`www.ilmai.store`)"
+      - "traefik.http.routers.ilmai-store-web-http.entrypoints=http"
+      - "traefik.http.routers.ilmai-store-web-http.middlewares=ilmai-store-web-https-redirect"
+      - "traefik.http.middlewares.ilmai-store-web-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.ilmai-store-web-https.rule=Host(`ilmai.store`) || Host(`www.ilmai.store`)"
+      - "traefik.http.routers.ilmai-store-web-https.entrypoints=https"
+      - "traefik.http.routers.ilmai-store-web-https.tls=true"
+      - "traefik.http.routers.ilmai-store-web-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.ilmai-store-web-https.service=ilmai-store-web"
+      - "traefik.http.services.ilmai-store-web.loadbalancer.server.port=3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://ilmai.store}
+      NEXT_PUBLIC_STORE_URL: ${NEXT_PUBLIC_STORE_URL:-https://ilmai.store}
+      NEXT_PUBLIC_ILMAI_STUDY_URL: ${NEXT_PUBLIC_ILMAI_STUDY_URL:-https://ilmai.study}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?}
+      ILMAI_STUDY_AD_CONVERSION_URL: ${ILMAI_STUDY_AD_CONVERSION_URL:-}
+      ILMAI_STUDY_AD_CONVERSION_SECRET: ${ILMAI_STUDY_AD_CONVERSION_SECRET:-}
+      EXCHANGE_RATE_API_KEY: ${EXCHANGE_RATE_API_KEY:-}
+      CRON_SECRET: ${CRON_SECRET:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-store@ilmai.study}
+      B2_ENDPOINT: ${B2_ENDPOINT:-}
+      B2_REGION: ${B2_REGION:-}
+      B2_BUCKET_NAME: ${B2_BUCKET_NAME:-}
+      B2_ACCESS_KEY_ID: ${B2_ACCESS_KEY_ID:-}
+      B2_SECRET_ACCESS_KEY: ${B2_SECRET_ACCESS_KEY:-}
+      B2_PUBLIC_MEDIA_PREFIX: ${B2_PUBLIC_MEDIA_PREFIX:-media/}
+      B2_PRIVATE_DOWNLOADS_PREFIX: ${B2_PRIVATE_DOWNLOADS_PREFIX:-private/}
+      NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: ${NEXT_PUBLIC_PADDLE_CLIENT_TOKEN:-}
+      NEXT_PUBLIC_PADDLE_ENVIRONMENT: ${NEXT_PUBLIC_PADDLE_ENVIRONMENT:-production}
+      PADDLE_API_KEY: ${PADDLE_API_KEY:-}
+      PADDLE_WEBHOOK_SECRET: ${PADDLE_WEBHOOK_SECRET:-}
+      PADDLE_WEBHOOK_TOLERANCE_SECONDS: ${PADDLE_WEBHOOK_TOLERANCE_SECONDS:-300}
+      ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL:-}
+      NEXT_PUBLIC_DEFAULT_CURRENCY: ${NEXT_PUBLIC_DEFAULT_CURRENCY:-PKR}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health',{signal:AbortSignal.timeout(5000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 8s
+      retries: 5
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
