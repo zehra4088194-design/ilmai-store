@@ -19,6 +19,13 @@ npm run dev
 See `ENVIRONMENT.md` for configuration, `SECURITY.md` for the threat model,
 and `ARCHITECTURE.md` for request/data flow.
 
+## Deployment
+
+Coolify should deploy this repo with Docker Compose using `docker-compose.yml`.
+The compose file builds the local `Dockerfile`, exposes container port `3000`,
+and intentionally does not bind a host port so it can run beside `ilmai.study`
+on the same server.
+
 ## Database
 
 Supabase is intentionally not modified by the application agent. Run these
