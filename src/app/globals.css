@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 42 33% 97%;
+  --foreground: 191 45% 12%;
+  --primary: 186 74% 27%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 39 91% 57%;
+  --accent-foreground: 191 45% 12%;
+  --border: 38 22% 87%;
+  --radius: 1rem;
+}
+
+.dark {
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --primary: 174 60% 45%;
+  --primary-foreground: 222 47% 11%;
+  --accent: 43 74% 55%;
+  --accent-foreground: 222 47% 11%;
+  --border: 217 33% 20%;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: Arial, Helvetica, sans-serif;
+  background-image: radial-gradient(circle at 15% 0%, rgba(250, 190, 70, .13), transparent 28rem);
+}
+
+* { border-color: hsl(var(--border)); }
+::selection { background: #f6bb4d; color: #11353a; }
+.display-font { font-family: Georgia, 'Times New Roman', serif; }
+.grain { background-image: linear-gradient(rgba(17,53,58,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(17,53,58,.04) 1px, transparent 1px); background-size: 28px 28px; }

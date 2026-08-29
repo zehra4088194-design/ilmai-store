@@ -1,0 +1,58 @@
+{
+  "name": "ilmai-store",
+  "version": "0.1.0",
+  "private": true,
+  "description": "First-party ecommerce store for the IlmAI education platform.",
+  "keywords": [
+    "new"
+  ],
+  "homepage": "https://github.com/ilmai-store/store#readme",
+  "bugs": {
+    "url": "https://github.com/ilmai-store/store/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilmai-store/store.git"
+  },
+  "license": "ISC",
+  "author": "Husnain noor",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test \"src/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/s3-request-presigner": "^3.600.0",
+    "@supabase/ssr": "^0.5.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.400.0",
+    "next": "^15.0.0",
+    "qrcode": "1.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "resend": "^4.0.0",
+    "tailwind-merge": "^2.5.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/qrcode": "1.5.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.0.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "tsx": "4.19.2",
+    "typescript": "^5.5.0"
+  }
+}

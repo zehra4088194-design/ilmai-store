@@ -1,0 +1,18 @@
+import { NextResponse } from "next/server";
+import { manualPaymentProofSchema } from "@/validators/commerce";
+import { ManualPaymentService } from "@/services/ManualPaymentService";
+import { isAppError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
+
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const body = manualPaymentProofSchema.parse(await request.json());
+    await ManualPaymentService.submitProof(id, body);
+    return NextResponse.json({ submitted: true });
+  } catch (err) {
+    if (isAppError(err)) return NextResponse.json({ error: err.publicMessage }, { status: err.statusCode });
+    logger.error("POST /api/orders/[id]/manual-payment failed", { error: String(err) });
+    return NextResponse.json({ error: "Payment proof could not be submitted." }, { status: 500 });
+  }
+}
