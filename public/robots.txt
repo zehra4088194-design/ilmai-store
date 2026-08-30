@@ -5,6 +5,9 @@ Disallow: /account
 Disallow: /orders
 Disallow: /cart
 Disallow: /checkout
+Disallow: /login
+Disallow: /signup
+Disallow: /auth
 Disallow: /api
 
 Sitemap: https://ilmai.store/sitemap.xml

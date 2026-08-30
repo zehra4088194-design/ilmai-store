@@ -47,6 +47,18 @@ export const ProductService = {
     return { items, total: count ?? items.length };
   },
 
+  /** Minimal published-product listing for sitemap.ts — slug + last-updated only, no joins. */
+  async listPublishedForSitemap(): Promise<Array<{ slug: string; updatedAt: string }>> {
+    const { data, error } = await (await createSupabaseServerClient())
+      .from("products")
+      .select("slug, updated_at")
+      .eq("status", "published")
+      .order("updated_at", { ascending: false })
+      .limit(5000);
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((row: Raw) => ({ slug: row.slug as string, updatedAt: row.updated_at as string }));
+  },
+
   async getBySlug(slug: string): Promise<Product> {
     const { data, error } = await (await createSupabaseServerClient()).from("products").select(select).eq("slug", slug).eq("status", "published").maybeSingle();
     if (error) throw new Error(error.message);
