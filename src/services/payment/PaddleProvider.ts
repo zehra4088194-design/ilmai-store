@@ -2,6 +2,7 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { WebhookError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { getPlatformSettings } from "@/lib/platform-settings/server";
 import type {
   PaymentProvider,
   CreateCheckoutInput,
@@ -17,6 +18,27 @@ type PaddleTransactionResponse = {
     checkout?: { url?: string | null };
   };
 };
+
+// Paddle Billing only settles in this fixed list of currencies — PKR is not
+// among them. Orders priced in an unsupported currency (PKR, our default)
+// are converted to USD for the Paddle transaction only, using the store's
+// own USD/PKR rate; the order itself stays recorded in PKR everywhere else.
+const PADDLE_SUPPORTED_CURRENCIES = new Set([
+  "ARS", "AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "COP", "CZK", "DKK", "EUR",
+  "GBP", "HKD", "HUF", "ILS", "INR", "JPY", "KRW", "MXN", "NOK", "NZD", "PEN",
+  "PLN", "RUB", "SEK", "SGD", "THB", "TRY", "TWD", "UAH", "USD", "VND", "ZAR",
+]);
+
+async function toPaddleCurrency(amountMinor: number, currency: string): Promise<{ amountMinor: number; currency: string }> {
+  const upper = currency.toUpperCase();
+  if (PADDLE_SUPPORTED_CURRENCIES.has(upper)) return { amountMinor, currency: upper };
+  if (upper !== "PKR") throw new Error(`Paddle does not support the currency "${upper}" and no conversion is defined for it.`);
+  const settings = await getPlatformSettings();
+  const usdToPkr = settings.exchangeRate.usdToPkr;
+  // amountMinor is paisa (PKR / 100). Convert to USD cents via the live rate.
+  const usdCents = Math.max(1, Math.round((amountMinor / 100 / usdToPkr) * 100));
+  return { amountMinor: usdCents, currency: "USD" };
+}
 
 /** Paddle Billing API adapter. All amounts are integer minor units. */
 export class PaddleProvider implements PaymentProvider {
@@ -38,17 +60,21 @@ export class PaddleProvider implements PaymentProvider {
     const discountMinor = input.discountMinor ?? 0;
     if (calculated - discountMinor !== input.amountMinor || discountMinor < 0 || discountMinor > calculated) throw new Error("Checkout amount does not match the order.");
 
-    const items = input.lineItems.map((item) => item.priceId
-      ? { price_id: item.priceId, quantity: item.quantity }
-      : {
-          quantity: item.quantity,
-          price: {
-            description: item.name.slice(0, 500),
-            name: item.name.slice(0, 150),
-            unit_price: { amount: String(item.unitPriceMinor), currency_code: item.currency.toUpperCase() },
-            product: { name: item.name.slice(0, 200) },
-          },
-        });
+    const items = await Promise.all(input.lineItems.map(async (item) => {
+      if (item.priceId) return { price_id: item.priceId, quantity: item.quantity };
+      const converted = await toPaddleCurrency(item.unitPriceMinor, item.currency);
+      return {
+        quantity: item.quantity,
+        price: {
+          description: item.name.slice(0, 500),
+          name: item.name.slice(0, 150),
+          unit_price: { amount: String(converted.amountMinor), currency_code: converted.currency },
+          product: { name: item.name.slice(0, 200), tax_category: "standard" },
+        },
+      };
+    }));
+
+    const convertedDiscount = discountMinor > 0 ? await toPaddleCurrency(discountMinor, input.currency) : null;
 
     const response = await fetch(`${this.apiBase}/transactions`, {
       method: "POST",
@@ -63,7 +89,7 @@ export class PaddleProvider implements PaymentProvider {
         collection_mode: "automatic",
         customer: { email: input.customerEmail },
         custom_data: { orderId: input.orderId },
-        ...(discountMinor > 0 ? { discount: { description: "Store promotion", type: "flat", amount: String(discountMinor), currency_code: input.currency.toUpperCase() } } : {}),
+        ...(convertedDiscount ? { discount: { description: "Store promotion", type: "flat", amount: String(convertedDiscount.amountMinor), currency_code: convertedDiscount.currency } } : {}),
         checkout: { url: input.successUrl },
       }),
       cache: "no-store",
