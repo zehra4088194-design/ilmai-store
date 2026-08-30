@@ -230,7 +230,7 @@ password/account email, admin new-order notification, refund/cancellation.
 ## 10. Security Rules
 
 Full detail in `SECURITY.md`. Highlights:
-- `SUPABASE_SERVICE_ROLE_KEY`, Paddle private/webhook secrets,
+- `SUPABASE_SERVICE_ROLE_ID_KEY`, Paddle private/webhook secrets,
   `B2_SECRET_ACCESS_KEY`, `RESEND_API_KEY` are **server-only** — never
   prefixed `NEXT_PUBLIC_`, never imported by client components, never logged.
 - All external input (API bodies, query params, webhook payloads) is validated

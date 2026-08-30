@@ -23,7 +23,7 @@ never reach the browser (see `SECURITY.md` §1).
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | public | Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public | Anon key, RLS-restricted, safe client-side |
-| `SUPABASE_SERVICE_ROLE_KEY` | server | Bypasses RLS — admin/service use only, never client |
+| `SUPABASE_SERVICE_ROLE_ID_KEY` | server | Bypasses RLS — admin/service use only, never client |
 
 ## Resend
 
