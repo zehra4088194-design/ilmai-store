@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { ArrowUpRight, Check, Facebook, Instagram, Loader2, Mail, Youtube } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 function NewsletterForm() {
   const [email, setEmail] = useState("");
@@ -31,6 +33,44 @@ function NewsletterForm() {
         {status === "loading" ? <Loader2 size={15} className="animate-spin" /> : status === "done" ? <Check size={15} /> : "Subscribe"}
       </button>
     </form>
+  );
+}
+
+function AccountLinks() {
+  const router = useRouter();
+  const [email, setEmail] = useState<string | null | undefined>(undefined);
+  const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      setEmail(session?.user?.email ?? null);
+    });
+    return () => subscription.subscription.unsubscribe();
+  }, []);
+
+  async function signOut() {
+    setSigningOut(true);
+    await createSupabaseBrowserClient().auth.signOut();
+    setSigningOut(false);
+    router.push("/store");
+    router.refresh();
+  }
+
+  return (
+    <div className="mt-5 grid gap-3 text-sm text-[#c2d4d2]">
+      <Link href="/account">My Account</Link>
+      <Link href="/orders">My Orders</Link>
+      <Link href="/cart">Cart</Link>
+      {email ? (
+        <button type="button" onClick={signOut} disabled={signingOut} className="flex items-center gap-2 text-left text-[#c2d4d2] hover:text-[#f4bf43]">
+          {signingOut && <Loader2 size={13} className="animate-spin" />} Sign out {email ? `(${email})` : ""}
+        </button>
+      ) : (
+        <Link href="/login">Sign In</Link>
+      )}
+    </div>
   );
 }
 
@@ -80,13 +120,7 @@ export function StoreFooter() {
 
         <div>
           <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#f4bf43]">Account</h3>
-          <div className="mt-5 grid gap-3 text-sm text-[#c2d4d2]">
-            <Link href="/account">My Account</Link>
-            <Link href="/login">Sign In</Link>
-            <Link href="/cart">Cart</Link>
-            <a href="mailto:ilmai.study1@gmail.com">Wishlist</a>
-            <Link href="/account">Logout</Link>
-          </div>
+          <AccountLinks />
           <h3 className="mt-7 text-xs font-black uppercase tracking-[.2em] text-[#f4bf43]">Newsletter</h3>
           <p className="mt-2 text-xs leading-5 text-[#9eb6b3]">Subscribe to get updates on new products and offers.</p>
           <NewsletterForm />

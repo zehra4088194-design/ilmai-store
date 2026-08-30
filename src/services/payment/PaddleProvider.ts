@@ -1,6 +1,7 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { WebhookError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import type {
   PaymentProvider,
   CreateCheckoutInput,
@@ -21,7 +22,14 @@ type PaddleTransactionResponse = {
 export class PaddleProvider implements PaymentProvider {
   private readonly apiKey = process.env.PADDLE_API_KEY;
   private readonly webhookSecret = process.env.PADDLE_WEBHOOK_SECRET;
-  private readonly apiBase = process.env.PADDLE_API_BASE_URL ?? "https://api.paddle.com";
+  // A sandbox API key only works against sandbox-api.paddle.com — hitting
+  // production api.paddle.com with a sandbox key (or vice versa) fails with
+  // a 400/401 that gives no useful hint why. Default the base URL from
+  // NEXT_PUBLIC_PADDLE_ENVIRONMENT so this can't silently mismatch; an
+  // explicit PADDLE_API_BASE_URL still wins if someone sets one.
+  private readonly apiBase =
+    process.env.PADDLE_API_BASE_URL ??
+    (process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT === "sandbox" ? "https://sandbox-api.paddle.com" : "https://api.paddle.com");
 
   async createCheckout(input: CreateCheckoutInput): Promise<CheckoutSession> {
     if (!this.apiKey) throw new Error("PADDLE_API_KEY is not configured.");
@@ -60,11 +68,18 @@ export class PaddleProvider implements PaymentProvider {
       }),
       cache: "no-store",
     });
-    if (!response.ok) throw new Error(`Paddle checkout creation failed (${response.status}).`);
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      logger.error("paddle.create_checkout_failed", { status: response.status, apiBase: this.apiBase, body: errorBody.slice(0, 2000) });
+      throw new Error(`Paddle checkout creation failed (${response.status}).`);
+    }
     const body = await response.json() as PaddleTransactionResponse;
     const id = body.data?.id;
     const checkoutUrl = body.data?.checkout?.url ?? undefined;
-    if (!id || !checkoutUrl) throw new Error("Paddle did not return a checkout URL.");
+    if (!id || !checkoutUrl) {
+      logger.error("paddle.create_checkout_missing_url", { body: JSON.stringify(body).slice(0, 2000) });
+      throw new Error("Paddle did not return a checkout URL.");
+    }
     return { providerCheckoutId: id, checkoutUrl };
   }
 

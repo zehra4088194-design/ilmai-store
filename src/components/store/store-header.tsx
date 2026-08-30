@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, Heart, LifeBuoy, Menu, PackageSearch, Phone, Search, Star, UserRound, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronDown, Heart, LifeBuoy, Loader2, LogOut, Menu, PackageSearch, Phone, Search, Star, UserRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CartBadge } from "@/components/store/cart-badge";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Category } from "@/types/domain";
 
 type Props = { initialSearch?: string; categories?: Category[] };
@@ -18,11 +20,31 @@ const NAV_LINKS: Array<[string, string]> = [
 ];
 
 export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [query, setQuery] = useState(initialSearch);
+  const [email, setEmail] = useState<string | null | undefined>(undefined); // undefined = still checking
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => setQuery(initialSearch), [initialSearch]);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      setEmail(session?.user?.email ?? null);
+    });
+    return () => subscription.subscription.unsubscribe();
+  }, []);
+
+  async function signOut() {
+    setSigningOut(true);
+    await createSupabaseBrowserClient().auth.signOut();
+    setSigningOut(false);
+    router.push("/store");
+    router.refresh();
+  }
 
   return (
     <header className="sticky top-0 z-40">
@@ -68,9 +90,22 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
               <Heart size={19} /> <span className="hidden lg:inline">Wishlist</span>
             </button>
             <CartBadge />
-            <Link href="/account" className="hidden items-center gap-2 text-xs font-bold text-[#112d33] sm:flex" aria-label="Account">
-              <UserRound size={19} /> <span className="hidden lg:inline">My Account</span>
-            </Link>
+            {email ? (
+              <div className="hidden items-center gap-2 sm:flex">
+                <Link href="/account" className="flex items-center gap-2 text-xs font-bold text-[#112d33]" aria-label="Account">
+                  <UserRound size={19} /> <span className="hidden max-w-[120px] truncate lg:inline">{email}</span>
+                </Link>
+                <button onClick={signOut} disabled={signingOut} aria-label="Sign out" title="Sign out" className="icon-button h-9 w-9">
+                  {signingOut ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
+                </button>
+              </div>
+            ) : email === null ? (
+              <Link href="/login" className="hidden items-center gap-2 text-xs font-bold text-[#112d33] sm:flex" aria-label="Sign in">
+                <UserRound size={19} /> <span className="hidden lg:inline">Sign in</span>
+              </Link>
+            ) : (
+              <span className="hidden h-9 w-9 sm:block" aria-hidden />
+            )}
             <button onClick={() => setOpen((v) => !v)} className="icon-button md:hidden" aria-label="Menu">
               {open ? <X size={19} /> : <Menu size={19} />}
             </button>
@@ -124,6 +159,18 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
                 {label}
               </Link>
             ))}
+            {email ? (
+              <button
+                onClick={() => { setOpen(false); signOut(); }}
+                className="rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-left text-sm font-bold text-[#a13f3f]"
+              >
+                Sign out ({email})
+              </button>
+            ) : (
+              <Link href="/login" onClick={() => setOpen(false)} className="rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm font-bold text-[#112d33]">
+                Sign in
+              </Link>
+            )}
           </nav>
         </div>
       )}
