@@ -10,6 +10,7 @@ interface AdPurchaseConversion {
   event: "purchase";
   order_id: string;
   order_number: string;
+  order_value: number;
   amount_minor: number;
   currency: string;
   occurred_at: string;
@@ -34,6 +35,7 @@ export const AdReferralService = {
       event: "purchase",
       order_id: input.order.id,
       order_number: input.order.orderNumber,
+      order_value: input.transaction.amountMinor / 100,
       amount_minor: input.transaction.amountMinor,
       currency: input.transaction.currency,
       occurred_at: input.transaction.paidAt ?? new Date().toISOString(),
