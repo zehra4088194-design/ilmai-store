@@ -42,6 +42,8 @@ migrations manually in order in the target project:
 9. `009_rate_limits.sql`
 10. `010_shipping_fulfillment.sql`
 11. `011_coupon_redemptions.sql`
+12. `012_rate_limit_and_rpc_lockdown.sql`
+13. `013_study_account_handoff.sql`
 
 The daily exchange-rate workflow calls `/api/cron/usd-pkr-rate` at 20:00 UTC
 (01:00 Pakistan time). The inventory cleanup workflow calls
@@ -60,3 +62,13 @@ review, payment proof upload, digital delivery, ad attribution callback,
 inventory reservations, coupon reservations, shipping tracking fields, and
 admin operations are implemented. Run all migrations and configure secrets
 before deployment.
+
+Customer auth (`/login`, `/signup`, `/account`, `/orders/[id]`), the full
+admin panel (products + variants + media, categories, promotions/banners/
+coupons, reviews moderation, order fulfillment/mark-paid/reject, inventory,
+settings), and a cross-app SSO handoff (`/auth/handoff`) are also
+implemented. The handoff route expects a matching token-minting endpoint on
+the ilmai.study side (referenced in code comments as
+`/api/store-handoff`) — that does **not exist yet** in the main app. Until
+it's added there, `/auth/handoff` safely falls through to a normal
+logged-out visit; nothing is broken by its absence, it's just inert.

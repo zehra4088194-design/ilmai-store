@@ -53,6 +53,7 @@ export class PaddleProvider implements PaymentProvider {
       body: JSON.stringify({
         items,
         collection_mode: "automatic",
+        customer: { email: input.customerEmail },
         custom_data: { orderId: input.orderId },
         ...(discountMinor > 0 ? { discount: { description: "Store promotion", type: "flat", amount: String(discountMinor), currency_code: input.currency.toUpperCase() } } : {}),
         checkout: { url: input.successUrl },

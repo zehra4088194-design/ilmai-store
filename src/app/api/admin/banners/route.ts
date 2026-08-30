@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
-import { CategoryService } from "@/services/CategoryService";
-import { categorySchema } from "@/validators/product";
+import { PromotionService } from "@/services/PromotionService";
+import { bannerSchema } from "@/validators/commerce";
 import { isAppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 /**
- * GET /api/admin/categories — every category, including inactive (admin only).
- * POST /api/admin/categories — create a category (admin only).
+ * GET /api/admin/banners — every banner (admin only).
+ * POST /api/admin/banners — create a banner (admin only).
  */
 export async function GET() {
   try {
     await requireAdmin();
-    const categories = await CategoryService.adminList();
-    return NextResponse.json(categories);
+    const banners = await PromotionService.adminListBanners();
+    return NextResponse.json(banners);
   } catch (err) {
     if (isAppError(err)) return NextResponse.json({ error: err.publicMessage }, { status: err.statusCode });
-    logger.error("GET /api/admin/categories failed", { error: String(err) });
+    logger.error("GET /api/admin/banners failed", { error: String(err) });
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }
@@ -24,12 +24,12 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
-    const body = categorySchema.parse(await request.json());
-    const category = await CategoryService.adminCreate(body);
-    return NextResponse.json(category, { status: 201 });
+    const body = bannerSchema.parse(await request.json());
+    const banner = await PromotionService.adminCreateBanner(body);
+    return NextResponse.json(banner, { status: 201 });
   } catch (err) {
     if (isAppError(err)) return NextResponse.json({ error: err.publicMessage }, { status: err.statusCode });
-    logger.error("POST /api/admin/categories failed", { error: String(err) });
+    logger.error("POST /api/admin/banners failed", { error: String(err) });
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

@@ -65,6 +65,12 @@ checks, and webhook handling happen server-side with `PADDLE_API_KEY` /
 | `ADMIN_NOTIFICATION_EMAIL` | server | Where new-order/admin alerts get sent |
 | `NEXT_PUBLIC_DEFAULT_CURRENCY` | public | Default storefront currency, e.g. `PKR` |
 
+## ilmai.study account handoff
+
+| Var | Exposure | Purpose |
+|---|---|---|
+| `STORE_HANDOFF_SECRET` | server | HMAC secret verifying the short-lived token `/auth/handoff` receives from ilmai.study's `/api/store-handoff` — must be the exact same value on both deployments. See `src/lib/auth/handoff.ts`. |
+
 ## Rules
 
 - Never commit `.env` or `.env.local` — only `.env.example` with placeholders.

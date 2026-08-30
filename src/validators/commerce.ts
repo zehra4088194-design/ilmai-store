@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PROMOTION_PLACEMENTS } from "@/constants/promotion";
 
 export const addressSchema = z.object({
   label: z.string().max(60).optional(),
@@ -68,6 +69,20 @@ export const couponSchema = z.object({
   endsAt: z.string().datetime().optional(),
   isActive: z.boolean().default(true),
 });
+
+export const bannerSchema = z.object({
+  title: z.string().trim().min(1).max(160),
+  subtitle: z.string().trim().max(240).optional(),
+  placement: z.enum(PROMOTION_PLACEMENTS),
+  linkUrl: z.string().trim().max(500).optional(),
+  priority: z.number().int().default(0),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime().optional(),
+  isActive: z.boolean().default(true),
+  imageStorageKey: z.string().trim().max(500).optional(),
+});
+
+export const bannerUpdateSchema = bannerSchema.partial();
 
 export const reviewSchema = z.object({
   productId: z.string().uuid(),

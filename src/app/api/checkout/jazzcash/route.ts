@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CartService } from "@/services/CartService";
 import { ManualPaymentService } from "@/services/ManualPaymentService";
+import { PromotionService } from "@/services/PromotionService";
 import { getPlatformSettings } from "@/lib/platform-settings/server";
 import { manualPaymentTotalPkr } from "@/lib/pricing";
 import { checkoutSchema } from "@/validators/commerce";
@@ -27,8 +28,20 @@ export async function POST(request: NextRequest) {
     const [cart, settings] = await Promise.all([CartService.getCurrentCart(), getPlatformSettings()]);
     if (!cart || !cart.items.length) throw new ValidationError("Your cart is empty.");
 
+    // Must mirror OrderService.createFromCart's own total_minor computation
+    // exactly (subtotal - coupon discount) — validateCoupon is a read-only
+    // check (no reservation side effect; that happens separately inside
+    // createFromCart), so calling it here just to preview the discount is
+    // safe. Without this, a couponCode on the request would discount the
+    // order's own total_minor but leave the QR/payments.amount_minor
+    // demanding the full pre-discount amount.
+    const discountMinor = body.couponCode
+      ? (await PromotionService.validateCoupon(body.couponCode, cart.subtotal.amountMinor)).discountMinor
+      : 0;
+    const netAmountMinor = Math.max(0, cart.subtotal.amountMinor - discountMinor);
+
     const walletTotalPkr = manualPaymentTotalPkr(
-      cart.subtotal.amountMinor,
+      netAmountMinor,
       cart.subtotal.currency,
       settings.exchangeRate.usdToPkr,
     );

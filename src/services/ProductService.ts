@@ -54,6 +54,13 @@ export const ProductService = {
     return mapProduct(data);
   },
 
+  async adminGetById(id: string): Promise<Product> {
+    const { data, error } = await createSupabaseAdminClient().from("products").select(select).eq("id", id).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) throw new NotFoundError("Product not found.");
+    return mapProduct(data);
+  },
+
   async adminCreate(input: z.infer<typeof adminCreateProductSchema>): Promise<Product> {
     const db = createSupabaseAdminClient();
     const { data, error } = await db.from("products").insert({ slug: input.slug, title: input.title, description: input.description, product_type: input.productType, status: input.status, base_price_minor: input.basePriceMinor, currency: input.currency, is_featured: input.isFeatured }).select("id").single();
