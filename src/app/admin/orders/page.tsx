@@ -3,6 +3,7 @@ import { ManualPaymentService } from "@/services/ManualPaymentService";
 import { MarkPaidButton } from "@/components/admin/MarkPaidButton";
 import { RejectPaymentButton } from "@/components/admin/RejectPaymentButton";
 import { FulfillmentButton } from "@/components/admin/FulfillmentButton";
+import { CancelOrderButton } from "@/components/admin/CancelOrderButton";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export default async function AdminOrdersPage() {
               {isManualPending && <MarkPaidButton orderId={order.id} />}
               {isManualPending && <RejectPaymentButton orderId={order.id} />}
               {order.paymentStatus === "paid" && order.items.some((item) => ["physical", "book"].includes(item.productType)) && order.fulfillmentStatus !== "fulfilled" && <FulfillmentButton orderId={order.id} />}
+              {["pending", "processing"].includes(order.status) && <CancelOrderButton orderId={order.id} />}
             </div>
           </div>
           {claim && <div className="mt-4 rounded-2xl bg-[#f5f7f3] px-4 py-3 text-sm"><span className="font-bold">JazzCash claim:</span> {claim.status}{claim.transactionReference ? ` · transaction ${claim.transactionReference}` : " · proof not submitted"}{claim.customerNote ? ` · ${claim.customerNote}` : ""}{claim.proofStorageKey && <a className="ml-3 font-bold text-[#14777a]" href={`/api/admin/orders/${order.id}/manual-payment/proof`} target="_blank" rel="noreferrer">View proof</a>}</div>}

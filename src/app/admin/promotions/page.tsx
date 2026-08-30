@@ -3,6 +3,7 @@ import { PromotionForm } from "@/components/admin/PromotionForm";
 import { CouponForm } from "@/components/admin/CouponForm";
 import { BannerForm } from "@/components/admin/BannerForm";
 import { BannerDeleteButton } from "@/components/admin/BannerDeleteButton";
+import { PromotionRowActions } from "@/components/admin/PromotionRowActions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,10 @@ export default async function AdminPromotionsPage() {
                 <p className="font-bold">{promotion.name}</p>
                 <p className="text-sm text-[#668084]">{promotion.discountType} · {promotion.discountValue}</p>
               </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-bold ${promotion.isActive ? "bg-[#e0eee8] text-[#14777a]" : "bg-[#f5f7f3] text-[#668084]"}`}>{promotion.isActive ? "active" : "inactive"}</span>
+              <div className="flex items-center gap-3">
+                <span className={`rounded-full px-3 py-1 text-xs font-bold ${promotion.isActive ? "bg-[#e0eee8] text-[#14777a]" : "bg-[#f5f7f3] text-[#668084]"}`}>{promotion.isActive ? "active" : "inactive"}</span>
+                <PromotionRowActions kind="promotions" id={promotion.id} isActive={promotion.isActive} />
+              </div>
             </div>
           ))}
           {!promotions.length && <p className="rounded-2xl border bg-white p-8 text-center text-[#668084]">No promotions yet.</p>}
@@ -39,15 +43,16 @@ export default async function AdminPromotionsPage() {
         <h2 className="display-font text-2xl text-[#103d42]">Coupons</h2>
         <CouponForm />
         <div className="mt-4 overflow-hidden rounded-3xl border bg-white">
-          <div className="grid grid-cols-[1fr_1fr_1fr_100px] gap-4 border-b px-5 py-4 text-xs font-bold uppercase tracking-widest text-[#668084]">
-            <span>Code</span><span>Discount</span><span>Min order</span><span>Status</span>
+          <div className="grid grid-cols-[1fr_1fr_1fr_80px_90px] gap-4 border-b px-5 py-4 text-xs font-bold uppercase tracking-widest text-[#668084]">
+            <span>Code</span><span>Discount</span><span>Min order</span><span>Status</span><span />
           </div>
           {coupons.map((coupon) => (
-            <div key={coupon.code} className="grid grid-cols-[1fr_1fr_1fr_100px] items-center gap-4 border-b px-5 py-4 text-sm">
+            <div key={coupon.code} className="grid grid-cols-[1fr_1fr_1fr_80px_90px] items-center gap-4 border-b px-5 py-4 text-sm">
               <span className="font-bold">{coupon.code}</span>
               <span>{coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `${(coupon.discountValue / 100).toFixed(2)} ${coupon.minOrder.currency}`}</span>
               <span>{(coupon.minOrder.amountMinor / 100).toFixed(2)} {coupon.minOrder.currency}</span>
               <span className={coupon.isActive ? "font-bold text-[#14777a]" : "text-[#668084]"}>{coupon.isActive ? "active" : "inactive"}</span>
+              <PromotionRowActions kind="coupons" id={coupon.code} isActive={coupon.isActive} />
             </div>
           ))}
           {!coupons.length && <p className="p-8 text-center text-[#668084]">No coupons yet.</p>}

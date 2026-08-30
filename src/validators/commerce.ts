@@ -84,6 +84,19 @@ export const bannerSchema = z.object({
 
 export const bannerUpdateSchema = bannerSchema.partial();
 
+export const promotionSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  discountType: z.enum(["percentage", "fixed_amount"]),
+  discountValue: z.number().int().positive(),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime().optional(),
+  isActive: z.boolean().default(true),
+});
+
+export const promotionUpdateSchema = promotionSchema.partial();
+
+export const couponUpdateSchema = couponSchema.partial().omit({ code: true });
+
 export const reviewSchema = z.object({
   productId: z.string().uuid(),
   rating: z.number().int().min(1).max(5),
