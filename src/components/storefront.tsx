@@ -1,88 +1,440 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Check, ChevronRight, Menu, Search, Sparkles, X } from "lucide-react";
-import type { Banner, Product } from "@/types/domain";
+import {
+  ArrowRight,
+  BookOpen,
+  Boxes,
+  Clock,
+  Cloud,
+  Download,
+  GraduationCap,
+  Headphones,
+  Heart,
+  Layers3,
+  Package,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Tags,
+  Truck,
+} from "lucide-react";
+import type { Banner, Category, Product } from "@/types/domain";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
-import { CartBadge } from "@/components/store/cart-badge";
+import { StoreFooter } from "@/components/store/store-footer";
+import { StoreHeader } from "@/components/store/store-header";
 
 type Props = {
   products: Product[];
   banners?: Banner[];
   featured?: Product[];
+  categories?: Category[];
   initialSearch?: string;
+  catalogMode?: boolean;
 };
 
-function money(product: Product) {
-  return `${product.basePrice.currency} ${new Intl.NumberFormat("en-PK").format(product.basePrice.amountMinor / 100)}`;
+function money(m: { amountMinor: number; currency: string }) {
+  return `${m.currency} ${new Intl.NumberFormat("en-PK").format(m.amountMinor / 100)}`;
 }
 
-function defaultVariantId(product: Product) {
-  return product.variants.find((v) => v.isDefault)?.id ?? product.variants[0]?.id;
+function defaultVariant(product: Product) {
+  return product.variants.find((v) => v.isDefault) ?? product.variants[0];
 }
 
 function primaryImage(product: Product) {
   return product.media.find((m) => m.isPrimary) ?? product.media[0];
 }
 
-const PLACEHOLDER_COLORS = ["bg-[#d8eee8]", "bg-[#f5e3b8]", "bg-[#dce5f2]"];
+function isDigital(product: Product) {
+  return ["digital", "course", "notes", "test_series"].includes(product.productType);
+}
 
-export function Storefront({ products, banners, featured, initialSearch = "" }: Props) {
-  const [menu, setMenu] = useState(false);
+const CATEGORY_ICONS: Record<string, typeof BookOpen> = {
+  books: BookOpen,
+  notes: Layers3,
+  courses: GraduationCap,
+  "test-series": Clock,
+  bundles: Boxes,
+  digital: Cloud,
+};
+const FALLBACK_ICONS = [BookOpen, Layers3, GraduationCap, Clock, Boxes, Cloud];
+
+function ProductCard({ product, index }: { product: Product; index: number }) {
+  const image = primaryImage(product);
+  const variant = defaultVariant(product);
+  const [liked, setLiked] = useState(false);
+
+  return (
+    <article className="product-card-grid group relative overflow-hidden">
+      <Link href={`/store/${product.slug}`} className="relative block aspect-[4/3.4] overflow-hidden bg-[#eef2ee]">
+        {image ? (
+          <img src={image.url} alt={image.altText ?? product.title} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]" />
+        ) : (
+          <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[#16324a] to-[#112d33]">
+            <BookOpen size={80} strokeWidth={1} className="text-white/25" />
+          </div>
+        )}
+        <button
+          type="button"
+          aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
+          onClick={(event) => { event.preventDefault(); setLiked((v) => !v); }}
+          className={`absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 shadow-sm ${liked ? "text-[#e5484d]" : "text-[#112d33]"}`}
+        >
+          <Heart size={15} fill={liked ? "currentColor" : "none"} />
+        </button>
+        <span className="absolute left-3 top-3 rounded-full bg-white/92 px-2.5 py-1 text-[9px] font-black uppercase tracking-[.1em] text-[#112d33]">
+          {product.productType.replaceAll("_", " ")}
+        </span>
+      </Link>
+
+      <div className="p-4">
+        <p className="text-[11px] font-bold uppercase tracking-[.08em] text-[#7a8d90]">{product.categories[0]?.name ?? (isDigital(product) ? "Digital" : "Physical")}</p>
+        <Link href={`/store/${product.slug}`}>
+          <h3 className="mt-1.5 line-clamp-2 text-[15px] font-black leading-snug text-[#112d33]">{product.title}</h3>
+        </Link>
+        <div className="rating-row mt-2">
+          {Array.from({ length: 5 }).map((_, i) => <Star key={i} size={13} fill="currentColor" />)}
+          <span className="ml-1 text-[11px] font-semibold text-[#8698a0]">New</span>
+        </div>
+        <div className="mt-2.5 flex items-baseline justify-between gap-2">
+          <span className="text-lg font-black tracking-[-.02em] text-[#112d33]">{money(variant?.price ?? product.basePrice)}</span>
+          {index % 4 === 0 && <span className="discount-badge">POPULAR</span>}
+        </div>
+        <AddToBagButton
+          variantId={variant?.id}
+          className="gold-btn mt-3.5 h-11 w-full disabled:cursor-not-allowed"
+        />
+      </div>
+    </article>
+  );
+}
+
+function FilterSidebar({
+  categories,
+  activeCategory,
+  onSelect,
+  minPrice,
+  maxPrice,
+  price,
+  onPrice,
+}: {
+  categories: Category[];
+  activeCategory: string | null;
+  onSelect: (id: string | null) => void;
+  minPrice: number;
+  maxPrice: number;
+  price: number;
+  onPrice: (n: number) => void;
+}) {
+  return (
+    <aside className="hidden w-full shrink-0 lg:block lg:w-64">
+      <div className="filter-card">
+        <p className="filter-heading">Categories</p>
+        <div
+          className={`filter-check-row ${!activeCategory ? "active" : ""}`}
+          onClick={() => onSelect(null)}
+        >
+          All Products
+        </div>
+        {categories.map((c) => (
+          <div key={c.id} className={`filter-check-row ${activeCategory === c.id ? "active" : ""}`} onClick={() => onSelect(c.id)}>
+            {c.name}
+          </div>
+        ))}
+      </div>
+
+      <div className="filter-card mt-4">
+        <p className="filter-heading">Filter by Price</p>
+        <input
+          type="range"
+          min={minPrice}
+          max={maxPrice}
+          value={price}
+          onChange={(e) => onPrice(Number(e.target.value))}
+          className="w-full accent-[#f4bf43]"
+        />
+        <div className="mt-2 flex items-center justify-between text-xs font-bold text-[#4c6265]">
+          <span>PKR {minPrice}</span>
+          <span>PKR {price}</span>
+        </div>
+      </div>
+
+      <div className="filter-card mt-4">
+        <p className="filter-heading">Why shop with us</p>
+        <div className="grid gap-3 text-xs leading-5 text-[#4c6265]">
+          <div className="flex items-center gap-2"><ShieldCheck size={15} className="text-[#1a7775]" /> Secure checkout</div>
+          <div className="flex items-center gap-2"><Truck size={15} className="text-[#1a7775]" /> Delivery across Pakistan</div>
+          <div className="flex items-center gap-2"><Download size={15} className="text-[#1a7775]" /> Instant digital access</div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+export function Storefront({
+  products,
+  banners,
+  featured = [],
+  categories = [],
+  initialSearch = "",
+  catalogMode = false,
+}: Props) {
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const hero = banners?.[0];
 
-  return <main className="min-h-screen overflow-hidden">
-    <div className="bg-[#103d42] px-5 py-2 text-center text-xs font-semibold tracking-[.18em] text-[#f8d58d]">FREE DIGITAL DELIVERY · BUILT FOR BETTER STUDY</div>
-    <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-6 lg:px-8">
-      <Link href="/" className="flex items-center gap-3" aria-label="IlmAI Store home"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#f5bc50] text-lg font-black text-[#103d42]">i</span><span className="font-bold tracking-tight">IlmAI <span className="text-[#14777a]">Store</span></span></Link>
-      <nav className="hidden items-center gap-8 text-sm font-semibold text-[#486267] md:flex"><Link href="/store" className="text-[#103d42]">Shop all</Link><a href="#collections">Collections</a><a href="#why">Why IlmAI</a></nav>
-      <div className="flex items-center gap-2">
-        <form action="/store" method="GET" className="hidden items-center gap-2 rounded-full border bg-white/60 px-4 py-2 text-sm md:flex">
-          <Search size={16} />
-          <input name="search" defaultValue={initialSearch} placeholder="Search the shelf" className="w-32 bg-transparent outline-none placeholder:text-[#789094]" />
-        </form>
-        <CartBadge />
-      <Link href="/login" className="hidden rounded-full border bg-white/60 px-4 py-2.5 text-sm font-semibold text-[#103d42] hover:bg-white md:inline-flex">Sign in</Link>
-        <button aria-label="Toggle menu" onClick={() => setMenu(!menu)} className="rounded-full border p-3 md:hidden">{menu ? <X size={18} /> : <Menu size={18} />}</button>
-      </div>
-    </header>
-    {menu && <nav className="mx-5 grid gap-3 rounded-3xl border bg-white p-5 text-sm font-semibold md:hidden">
-      <Link href="/store">Shop all</Link><a href="#collections">Collections</a><a href="#why">Why IlmAI</a><Link href="/cart">Cart</Link><Link href="/login">Sign in</Link><Link href="/account">My account</Link>
-    </nav>}
-    <section className="mx-auto grid max-w-7xl gap-10 px-5 pb-20 pt-10 lg:grid-cols-[1.02fr_.98fr] lg:items-center lg:px-8 lg:pt-16">
-      <div><div className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-[.2em] text-[#14777a]"><Sparkles size={15} /> The thoughtful study shelf</div><h1 className="display-font max-w-xl text-6xl leading-[.94] tracking-[-.045em] text-[#103d42] sm:text-7xl">Tools for the <em className="text-[#14777a]">curious</em> mind.</h1><p className="mt-7 max-w-md text-lg leading-8 text-[#5e7477]">{hero?.subtitle ?? "Notes, books and practice made by the people who understand that learning is more than ticking a box."}</p><div className="mt-9 flex flex-wrap gap-3"><a href="#collections" className="inline-flex items-center gap-3 rounded-full bg-[#103d42] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#14777a]">Explore the collection <ArrowRight size={17} /></a><a href="#why" className="inline-flex items-center rounded-full border px-6 py-3.5 text-sm font-bold text-[#103d42] hover:bg-white">Our point of view</a></div></div>
-      <div className="grain relative min-h-[390px] rounded-[2.5rem] border bg-[#e9f1e8] p-7 shadow-[0_25px_70px_rgba(16,61,66,.12)] sm:min-h-[470px]"><div className="absolute right-7 top-7 rounded-full bg-[#f5bc50] px-4 py-2 text-xs font-bold text-[#103d42]">NEW / 2026</div><div className="absolute bottom-8 left-8 right-8 rounded-[2rem] bg-[#103d42] p-7 text-white sm:p-9"><div className="mb-14 flex justify-between text-xs uppercase tracking-[.2em] text-[#f5d38c]"><span>IlmAI field notes</span><span>Vol. 01</span></div><p className="display-font max-w-sm text-4xl leading-tight">{hero?.title ?? "Make space for the idea before the answer."}</p><div className="mt-6 flex items-center gap-2 text-sm text-[#b5d1cd]"><span className="h-2 w-2 rounded-full bg-[#f5bc50]" /> Curated study resources</div></div><div className="absolute left-10 top-20 h-32 w-32 rounded-full border-[1.5px] border-[#14777a]/40" /><div className="absolute left-[5.5rem] top-[8.5rem] h-20 w-20 rounded-full bg-[#14777a]/20" /></div>
-    </section>
-    {featured && featured.length > 0 && <section className="mx-auto max-w-7xl px-5 pb-4 lg:px-8">
-      <p className="text-xs font-bold uppercase tracking-[.2em] text-[#14777a]">Featured this week</p>
-      <div className="mt-4 flex gap-4 overflow-x-auto pb-2">
-        {featured.map((p) => <Link key={p.id} href={`/store/${p.slug}`} className="flex min-w-[220px] items-center gap-3 rounded-2xl border bg-white/70 p-3 hover:shadow-sm">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#f5bc50]/30 text-[#103d42]"><BookOpen size={20} strokeWidth={1.5} /></span>
-          <span><span className="block text-sm font-bold text-[#103d42]">{p.title}</span><span className="block text-xs text-[#789094]">{money(p)}</span></span>
-        </Link>)}
-      </div>
-    </section>}
-    <section id="collections" className="mx-auto max-w-7xl px-5 pb-24 lg:px-8"><div className="mb-8 flex items-end justify-between"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#14777a]">From the shelf</p><h2 className="display-font mt-2 text-4xl text-[#103d42]">Start somewhere good.</h2></div><Link href="/store" className="hidden items-center gap-1 text-sm font-bold text-[#14777a] sm:flex">View all <ChevronRight size={16} /></Link></div>
-      <div className="grid gap-5 md:grid-cols-3">{products.map((p, i) => {
-        const image = primaryImage(p);
-        return <article key={p.id} className="group rounded-[1.75rem] border bg-white/70 p-3 transition hover:-translate-y-1 hover:shadow-xl">
-          <Link href={`/store/${p.slug}`} className={`${image ? "" : PLACEHOLDER_COLORS[i % PLACEHOLDER_COLORS.length]} relative flex h-56 items-end overflow-hidden rounded-[1.35rem] p-5`}>
-            {image
-              ? <img src={image.url} alt={image.altText ?? p.title} className="absolute inset-0 h-full w-full object-cover" />
-              : <><span className="absolute right-5 top-5 text-5xl font-black text-[#103d42]/10">{String(i + 1).padStart(2, "0")}</span><BookOpen className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[#103d42]/20" size={90} strokeWidth={1} /></>}
-            <span className="relative rounded-full bg-white/75 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#103d42]">{p.productType.replace("_", " ")}</span>
-          </Link>
-          <div className="p-4">
-            <div className="flex items-start justify-between gap-3"><Link href={`/store/${p.slug}`}><h3 className="display-font text-2xl leading-tight text-[#103d42]">{p.title}</h3></Link><span className="whitespace-nowrap text-sm font-bold text-[#14777a]">{money(p)}</span></div>
-            <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#6b7f82]">{p.description ?? ""}</p>
-            <AddToBagButton variantId={defaultVariantId(p)} />
+  const maxPrice = useMemo(() => Math.max(1000, ...products.map((p) => Math.round(p.basePrice.amountMinor / 100))), [products]);
+  const [price, setPrice] = useState(maxPrice);
+
+  const visibleProducts = useMemo(() => {
+    let list = products;
+    if (activeCategory) {
+      const category = categories.find((item) => item.id === activeCategory);
+      if (category) list = list.filter((product) => product.categories.some((item) => item.id === category.id));
+    }
+    return list.filter((p) => Math.round(p.basePrice.amountMinor / 100) <= price);
+  }, [activeCategory, categories, products, price]);
+
+  const featuredProducts = featured.length ? featured : products.slice(0, 4);
+
+  return (
+    <main className="store-shell">
+      <StoreHeader initialSearch={initialSearch} categories={categories} />
+
+      {!catalogMode && (
+        <>
+          {/* Hero */}
+          <section className="store-container pt-6 sm:pt-8">
+            <div className="hero-panel overflow-hidden rounded-[26px]">
+              <div className="grid lg:grid-cols-[1.1fr_.9fr]">
+                <div className="relative z-10 flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-14 lg:py-16">
+                  <span className="eyebrow"><Sparkles size={13} /> The IlmAI collection · 2026</span>
+                  <h1 className="mt-5 max-w-lg text-[clamp(2.4rem,5.2vw,4.2rem)] font-black leading-[.98] tracking-[-.04em] text-[#112d33]">
+                    Learn More.<br />Achieve More.<br /><span className="hero-accent">IlmAI Store.</span>
+                  </h1>
+                  <p className="mt-6 max-w-md text-[15px] leading-7 text-[#5f7476]">
+                    All the study resources, books, notes and courses you need — in one place.
+                  </p>
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <Link href="/store" className="gold-btn min-h-12 px-6">Shop Now <ArrowRight size={16} /></Link>
+                    <a href="#collections" className="secondary-cta">Explore Categories</a>
+                  </div>
+                </div>
+
+                <div className="relative min-h-[300px] overflow-hidden bg-gradient-to-br from-[#16324a] via-[#132c40] to-[#0f2233] lg:min-h-full">
+                  <div className="hero-orb orb-a" />
+                  <div className="hero-orb orb-b" />
+                  <div className="absolute inset-0 flex items-center justify-center p-8">
+                    <div className="relative grid h-full w-full max-w-sm place-items-center">
+                      <div className="grid h-40 w-40 place-items-center rounded-[32px] bg-[#f4bf43] shadow-[0_25px_60px_rgba(244,191,67,.35)] sm:h-52 sm:w-52">
+                        <BookOpen size={80} className="text-[#112d33]" strokeWidth={1.3} />
+                      </div>
+                      <div className="absolute -left-2 top-6 flex flex-col gap-2 sm:left-2">
+                        {["Mathematics", "Physics", "Chemistry"].map((s, i) => (
+                          <div key={s} className="rounded-xl bg-white/95 px-3 py-2 text-[11px] font-black text-[#112d33] shadow-lg" style={{ transform: `translateX(${i * 6}px)` }}>{s}</div>
+                        ))}
+                      </div>
+                      <div className="absolute -right-1 bottom-4 rounded-2xl bg-white/95 px-4 py-3 text-center shadow-lg sm:right-3">
+                        <div className="text-[10px] font-black uppercase tracking-[.1em] text-[#1a7775]">Smart Learning</div>
+                        <div className="mt-1 text-lg font-black text-[#112d33]">IlmAI</div>
+                      </div>
+                    </div>
+                  </div>
+                  {hero?.title && <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/20 bg-black/30 p-4 text-sm font-bold text-white backdrop-blur">{hero.title}</div>}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Feature strip */}
+          <section className="store-container mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              [Sparkles, "High Quality Products", "Carefully selected resources"],
+              [ShieldCheck, "Secure Payments", "100% secure checkout"],
+              [Truck, "Fast Delivery", "Across Pakistan"],
+              [Headphones, "24/7 Support", "We're here to help"],
+            ].map(([Icon, title, body]) => {
+              const IconComp = Icon as typeof BookOpen;
+              return (
+                <div key={title as string} className="surface-card flex items-center gap-3 p-4">
+                  <IconComp size={22} className="shrink-0 text-[#1a7775]" />
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-black text-[#112d33]">{title as string}</div>
+                    <div className="truncate text-[11px] text-[#788a8c]">{body as string}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+
+          {/* Promo cards */}
+          <section className="store-container mt-6 grid gap-4 lg:grid-cols-3">
+            <div className="promo-card bg-[#fbf1de] text-[#112d33]">
+              <span className="rounded-full bg-[#f4bf43] px-3 py-1 text-[10px] font-black uppercase tracking-[.1em]">Special offer</span>
+              <h3 className="mt-4 text-2xl font-black leading-tight">Up to 30% off<br />on selected books</h3>
+              <p className="mt-2 text-xs text-[#7a6a45]">On selected books &amp; study materials</p>
+              <Link href="/store?search=books" className="mt-5 inline-flex items-center gap-1.5 text-xs font-black text-[#112d33]">Shop now <ArrowRight size={13} /></Link>
+              <Package size={90} className="pointer-events-none absolute -bottom-4 -right-4 text-[#112d33]/8" />
+            </div>
+
+            <div className="promo-card bg-white border border-[var(--line)]">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-[.1em] text-[#7a8d90]">Top Categories</span>
+                <Link href="/store" className="text-[11px] font-black text-[#1a7775]">View all</Link>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                {(categories.length ? categories.slice(0, 6) : [
+                  { id: "books", name: "Books" }, { id: "notes", name: "Notes" }, { id: "courses", name: "Courses" },
+                ] as Category[]).slice(0, 6).map((c) => {
+                  const Icon = CATEGORY_ICONS[c.id] ?? BookOpen;
+                  return (
+                    <Link key={c.id} href={`/store?search=${encodeURIComponent(c.name)}`} className="flex flex-col items-center gap-2 rounded-xl p-2 text-center hover:bg-[#f7f8f6]">
+                      <span className="icon-circle"><Icon size={20} /></span>
+                      <span className="text-[10px] font-bold text-[#112d33]">{c.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="promo-card bg-[#eaf1f8] text-[#112d33]">
+              <Tags size={22} className="text-[#1a7775]" />
+              <h3 className="mt-4 text-2xl font-black leading-tight">Digital Products</h3>
+              <p className="mt-1 text-sm font-bold text-[#4c6265]">Instant Download</p>
+              <p className="mt-2 text-xs text-[#5f7476]">PDF notes, past papers, eBooks &amp; more</p>
+              <Link href="/store?search=digital" className="mt-5 inline-flex items-center gap-1.5 text-xs font-black text-[#112d33]">Explore now <ArrowRight size={13} /></Link>
+              <Cloud size={90} className="pointer-events-none absolute -bottom-6 -right-4 text-[#112d33]/8" />
+            </div>
+          </section>
+
+          {/* Category strip */}
+          <section id="collections" className="store-container mt-16">
+            <div className="mb-6 flex items-end justify-between gap-5">
+              <div>
+                <span className="eyebrow">Browse by category</span>
+                <h2 className="section-title mt-2 !text-3xl sm:!text-4xl">Find your lane.</h2>
+              </div>
+              <Link href="/store" className="section-link">View all <ArrowRight size={14} /></Link>
+            </div>
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+              {(categories.length ? categories : ["Notes", "Books", "Courses", "Test Series", "Bundles", "Digital"].map((n, i) => ({ id: String(i), name: n, slug: n } as Category))).slice(0, 6).map((category, index) => {
+                const Icon = CATEGORY_ICONS[category.id] ?? FALLBACK_ICONS[index % FALLBACK_ICONS.length] ?? BookOpen;
+                return (
+                  <button key={category.id} onClick={() => setActiveCategory(categories.length ? category.id : null)} className="category-tile flex flex-col items-center gap-3 text-center">
+                    <span className="icon-circle"><Icon size={22} /></span>
+                    <span className="text-xs font-black text-[#112d33]">{category.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {!!featuredProducts.length && (
+            <section className="store-container mt-16">
+              <div className="curated-strip">
+                <div className="grid gap-10 lg:grid-cols-[.5fr_1.5fr] lg:items-end">
+                  <div>
+                    <span className="eyebrow text-[#f4bf43]">Editor&apos;s shelf</span>
+                    <h2 className="mt-3 text-3xl font-black leading-tight tracking-[-.03em] text-white sm:text-4xl">Picked for a productive week.</h2>
+                    <Link href="/store" className="mt-6 inline-flex items-center gap-2 text-sm font-black text-[#f4bf43]">See everything <ArrowRight size={15} /></Link>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {featuredProducts.slice(0, 4).map((product) => (
+                      <Link key={product.id} href={`/store/${product.slug}`} className="featured-mini">
+                        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-[#f4bf43]"><BookOpen size={18} /></span>
+                        <span className="min-w-0"><span className="block truncate text-sm font-black text-white">{product.title}</span><span className="mt-1 block text-xs text-[#9eb8b5]">{money(product.basePrice)}</span></span>
+                        <ArrowRight size={16} className="ml-auto text-[#87a5a1]" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      {/* Product grid */}
+      <section className={`store-container ${catalogMode ? "pt-10" : "mt-16"}`}>
+        <div className="flex flex-col gap-4 border-b border-[var(--line)] pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="eyebrow">{catalogMode ? "All Products" : "Fresh from IlmAI"}</span>
+            <h2 className="section-title mt-2 !text-3xl sm:!text-4xl">{catalogMode ? "Everything worth studying with." : "Start somewhere good."}</h2>
           </div>
-        </article>;
-      })}</div>
-      {products.length === 0 && <p className="rounded-2xl border bg-white p-8 text-center text-[#5e7477]">No resources found. Try a different search.</p>}
-    </section>
-    <section id="why" className="bg-[#103d42] px-5 py-20 text-white lg:px-8"><div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[.8fr_1.2fr] lg:items-end"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#f5bc50]">The IlmAI difference</p><h2 className="display-font mt-4 text-5xl leading-tight">Less clutter.<br />More clarity.</h2></div><div className="grid gap-8 sm:grid-cols-3">{["Made to understand", "Useful in real life", "Yours forever"].map((x, i) => <div key={x} className="border-t border-white/20 pt-4"><div className="mb-5 text-[#f5bc50]">0{i + 1}</div><h3 className="font-bold">{x}</h3><p className="mt-2 text-sm leading-6 text-[#b6cfcb]">Thoughtfully designed resources that respect your time and attention.</p><Check className="mt-5 text-[#f5bc50]" size={17} /></div>)}</div></div></section>
-    <footer className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-[#6b7f82] sm:flex-row sm:items-center sm:justify-between lg:px-8"><span>© 2026 IlmAI Store</span><span>Learn deeply. Build boldly.</span><a className="font-semibold text-[#14777a]" href="https://ilmai.study">Visit IlmAI Study ↗</a></footer>
-  </main>;
+          {initialSearch && (
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-xs font-bold text-[#5f7476]">
+              Results for &ldquo;{initialSearch}&rdquo;
+            </div>
+          )}
+        </div>
+
+        <div className={catalogMode ? "mt-8 flex flex-col gap-8 lg:flex-row" : "mt-8"}>
+          {catalogMode && (
+            <FilterSidebar
+              categories={categories}
+              activeCategory={activeCategory}
+              onSelect={setActiveCategory}
+              minPrice={0}
+              maxPrice={maxPrice}
+              price={price}
+              onPrice={setPrice}
+            />
+          )}
+
+          <div className="min-w-0 flex-1">
+            {catalogMode && categories.length > 0 && (
+              <div className="mb-5 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+                <button type="button" onClick={() => setActiveCategory(null)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black ${!activeCategory ? "border-[#112d33] bg-[#112d33] text-white" : "border-[var(--line)] bg-white text-[#112d33]"}`}>All</button>
+                {categories.slice(0, 10).map((category) => (
+                  <button key={category.id} type="button" onClick={() => setActiveCategory(category.id)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black ${activeCategory === category.id ? "border-[#112d33] bg-[#112d33] text-white" : "border-[var(--line)] bg-white text-[#112d33]"}`}>{category.name}</button>
+                ))}
+              </div>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {visibleProducts.map((product, index) => <ProductCard key={product.id} product={product} index={index} />)}
+            </div>
+
+            {visibleProducts.length === 0 && (
+              <div className="empty-state">
+                <h3 className="text-xl font-black text-[#112d33]">Nothing on the shelf yet.</h3>
+                <p className="mt-2 text-sm text-[#718184]">Try another search or browse all products.</p>
+                <Link href="/store" className="gold-btn mt-6 min-h-12 px-6">Browse all products <ArrowRight size={15} /></Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {!catalogMode && <div className="mt-8 flex justify-center"><Link href="/store" className="secondary-cta">Explore the full store <ArrowRight size={15} /></Link></div>}
+      </section>
+
+      {!catalogMode && (
+        <section id="why-ilmai" className="store-container mt-16">
+          <div className="grid overflow-hidden rounded-[28px] border border-[var(--line)] bg-[#f1ead9] lg:grid-cols-[.85fr_1.15fr]">
+            <div className="p-8 sm:p-10 lg:p-12">
+              <span className="eyebrow">The IlmAI difference</span>
+              <h2 className="mt-4 text-3xl font-black leading-tight tracking-[-.03em] text-[#112d33] sm:text-4xl">Designed around attention.</h2>
+              <p className="mt-4 max-w-md text-sm leading-7 text-[#617577]">A store should help you decide, not make you scroll forever.</p>
+            </div>
+            <div className="grid gap-px bg-[#d7cdb7] sm:grid-cols-2">
+              {[
+                ["01", "Useful first", "No filler products. Every resource has a clear learning job."],
+                ["02", "Built to last", "Clear files, clean layouts, practical formats."],
+                ["03", "Quietly premium", "A calmer visual language so the important thing stays important."],
+                ["04", "Inside IlmAI", "Store promotions connect naturally with study experiences."],
+              ].map(([no, title, body]) => (
+                <div key={no} className="bg-[#fbf7ee] p-6 sm:p-7">
+                  <div className="text-xs font-black tracking-[.18em] text-[#b49659]">{no}</div>
+                  <h3 className="mt-5 text-lg font-black tracking-[-.02em] text-[#112d33]">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#718184]">{body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <StoreFooter />
+    </main>
+  );
 }

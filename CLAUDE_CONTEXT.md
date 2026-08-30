@@ -358,3 +358,4 @@ reporting for both payment paths, guest order access, private digital delivery,
 inventory reservations, coupon reservations, rate limiting, shipping tracking
 fields, product media upload, and admin category/review/settings pages. Apply
 migrations 005 through 011 after the initial schema before deploying.
+\n\n## 2026-08-30 UI refresh\nThe Storefront, StoreHeader, StoreFooter, product detail, cart shell, checkout shell, and global CSS were refreshed into a distinctive IlmAI-first visual system. The intent is premium educational commerce, not a generic marketplace template. Preserve this visual direction when extending the UI.\n
