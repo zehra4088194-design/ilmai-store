@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
 import { NotFoundError, ValidationError } from "@/lib/errors";
 import { StorageService } from "./StorageService";
+import { PHYSICAL_GOODS_ENABLED, PHYSICAL_PRODUCT_TYPES } from "@/constants/product";
 import type { Product } from "@/types/domain";
 import type { z } from "zod";
 import type { productListQuerySchema, adminCreateProductSchema, adminUpdateProductSchema } from "@/validators/product";
@@ -46,6 +47,7 @@ export const ProductService = {
   async list(query: z.infer<typeof productListQuerySchema>): Promise<{ items: Product[]; total: number }> {
     const db = await createSupabaseServerClient();
     let request = db.from("products").select(select, { count: "exact" }).eq("status", "published");
+    if (!PHYSICAL_GOODS_ENABLED) request = request.not("product_type", "in", `(${PHYSICAL_PRODUCT_TYPES.join(",")})`);
     if (query.search) request = request.or(`title.ilike.%${query.search}%,description.ilike.%${query.search}%`);
     if (query.productType) request = request.eq("product_type", query.productType);
     if (query.minPriceMinor !== undefined) request = request.gte("base_price_minor", query.minPriceMinor);
@@ -61,12 +63,12 @@ export const ProductService = {
 
   /** Minimal published-product listing for sitemap.ts — slug + last-updated only, no joins. */
   async listPublishedForSitemap(): Promise<Array<{ slug: string; updatedAt: string }>> {
-    const { data, error } = await (await createSupabaseServerClient())
+    let request = (await createSupabaseServerClient())
       .from("products")
       .select("slug, updated_at")
-      .eq("status", "published")
-      .order("updated_at", { ascending: false })
-      .limit(5000);
+      .eq("status", "published");
+    if (!PHYSICAL_GOODS_ENABLED) request = request.not("product_type", "in", `(${PHYSICAL_PRODUCT_TYPES.join(",")})`);
+    const { data, error } = await request.order("updated_at", { ascending: false }).limit(5000);
     if (error) throw new Error(error.message);
     return (data ?? []).map((row: Raw) => ({ slug: row.slug as string, updatedAt: row.updated_at as string }));
   },
@@ -75,6 +77,7 @@ export const ProductService = {
     const { data, error } = await (await createSupabaseServerClient()).from("products").select(select).eq("slug", slug).eq("status", "published").maybeSingle();
     if (error) throw new Error(error.message);
     if (!data) throw new NotFoundError("Product not found.");
+    if (!PHYSICAL_GOODS_ENABLED && PHYSICAL_PRODUCT_TYPES.includes(data.product_type)) throw new NotFoundError("Product not found.");
     return mapProduct(data);
   },
 

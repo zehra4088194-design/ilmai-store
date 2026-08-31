@@ -3,8 +3,9 @@ import { StoreHeader } from "@/components/store/store-header";
 import { StoreFooter } from "@/components/store/store-footer";
 import { siteConfig } from "@/config/site";
 import { SUPPORT_WHATSAPP_NUMBER } from "@/constants/manual-payment";
+import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 
-export const metadata: Metadata = { title: "Shipping & Refund Policy — IlmAI Store" };
+export const metadata: Metadata = { title: PHYSICAL_GOODS_ENABLED ? "Shipping & Refund Policy — IlmAI Store" : "Refund Policy — IlmAI Store" };
 
 export default function RefundPolicyPage() {
   return (
@@ -12,7 +13,7 @@ export default function RefundPolicyPage() {
       <StoreHeader />
       <div className="store-container py-10 sm:py-14">
         <span className="eyebrow">Legal</span>
-        <h1 className="section-title mt-3">Shipping &amp; Refund Policy</h1>
+        <h1 className="section-title mt-3">{PHYSICAL_GOODS_ENABLED ? "Shipping & Refund Policy" : "Refund Policy"}</h1>
         <p className="mt-3 text-sm text-[#64748B]">Last updated: {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
 
         <div className="prose-policy mt-10 max-w-3xl">
@@ -27,13 +28,17 @@ export default function RefundPolicyPage() {
             <li>Contact us within 7 days of purchase if there&apos;s a problem with a digital order.</li>
           </ul>
 
-          <h2>Physical products (books, stationery)</h2>
-          <ul>
-            <li><strong>Shipping:</strong> we currently ship within Pakistan. Orders over PKR 2,000 ship free; smaller orders may include a delivery charge shown at checkout. Delivery typically takes a few business days depending on your city.</li>
-            <li><strong>Damaged or wrong item:</strong> if what arrives is damaged, defective, or not what you ordered, contact us within 3 days of delivery with a photo — we&apos;ll replace it or refund it at no extra cost to you.</li>
-            <li><strong>Change of mind:</strong> unused, unopened items in their original condition can be returned within 7 days of delivery. You&apos;re responsible for return shipping in this case, unless the return is due to our error.</li>
-            <li>Once we receive and check a returned item, we process the refund to your original payment method within 5–7 business days.</li>
-          </ul>
+          {PHYSICAL_GOODS_ENABLED && (
+            <>
+              <h2>Physical products (books, stationery)</h2>
+              <ul>
+                <li><strong>Shipping:</strong> we currently ship within Pakistan. Orders over PKR 2,000 ship free; smaller orders may include a delivery charge shown at checkout. Delivery typically takes a few business days depending on your city.</li>
+                <li><strong>Damaged or wrong item:</strong> if what arrives is damaged, defective, or not what you ordered, contact us within 3 days of delivery with a photo — we&apos;ll replace it or refund it at no extra cost to you.</li>
+                <li><strong>Change of mind:</strong> unused, unopened items in their original condition can be returned within 7 days of delivery. You&apos;re responsible for return shipping in this case, unless the return is due to our error.</li>
+                <li>Once we receive and check a returned item, we process the refund to your original payment method within 5–7 business days.</li>
+              </ul>
+            </>
+          )}
 
           <h2>How refunds are paid</h2>
           <p>
@@ -44,9 +49,9 @@ export default function RefundPolicyPage() {
 
           <h2>Order cancellations</h2>
           <p>
-            You can ask us to cancel an order before it&apos;s been fulfilled (before a digital file is issued, or before a
-            physical order ships) for a full refund. Once a digital file has been issued or a physical order has
-            shipped, the relevant policy above applies instead.
+            {PHYSICAL_GOODS_ENABLED
+              ? "You can ask us to cancel an order before it's been fulfilled (before a digital file is issued, or before a physical order ships) for a full refund. Once a digital file has been issued or a physical order has shipped, the relevant policy above applies instead."
+              : "You can ask us to cancel an order before it's been fulfilled (before a digital file is issued) for a full refund. Once a digital file has been issued, the policy above applies instead."}
           </p>
 
           <h2>Need help?</h2>

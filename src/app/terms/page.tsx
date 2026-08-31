@@ -50,10 +50,10 @@ export default function TermsOfServicePage() {
             delivered through a private, time-limited link tied to your order — please don&apos;t share that link.
           </p>
 
-          <h2>5. Shipping, refunds and cancellations</h2>
+          <h2>5. Refunds and cancellations</h2>
           <p>
-            See our <Link href="/refund-policy">Shipping &amp; Refund Policy</Link> for how delivery, returns, and
-            refunds work for both digital and physical products.
+            See our <Link href="/refund-policy">Refund Policy</Link> for how delivery, returns, and refunds work
+            for our digital products.
           </p>
 
           <h2>6. Reviews</h2>
