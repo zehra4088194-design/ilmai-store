@@ -151,37 +151,37 @@ export function ProductForm(props: Props) {
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm font-bold">
             Title
-            <input required value={title} onChange={(e) => setTitle(e.target.value)} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#14777a]" />
+            <input required value={title} onChange={(e) => setTitle(e.target.value)} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#2563EB]" />
           </label>
           <label className="text-sm font-bold">
             Slug
-            <input required value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="exam-notes" className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#14777a]" />
+            <input required value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="exam-notes" className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#2563EB]" />
           </label>
           <label className="text-sm font-bold sm:col-span-2">
             Description
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#14777a]" />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#2563EB]" />
           </label>
           <label className="text-sm font-bold">
             Product type
-            <select value={productType} onChange={(e) => setProductType(e.target.value as (typeof PRODUCT_TYPES)[number])} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#14777a]">
+            <select value={productType} onChange={(e) => setProductType(e.target.value as (typeof PRODUCT_TYPES)[number])} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#2563EB]">
               {PRODUCT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </label>
           {role === "admin" && (
             <label className="text-sm font-bold">
               Status
-              <select value={status} onChange={(e) => setStatus(e.target.value as (typeof PRODUCT_STATUSES)[number])} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#14777a]">
+              <select value={status} onChange={(e) => setStatus(e.target.value as (typeof PRODUCT_STATUSES)[number])} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#2563EB]">
                 {PRODUCT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </label>
           )}
           <label className="text-sm font-bold">
             Base price (in rupees, converted to minor units)
-            <input required type="number" min="0" step="0.01" value={priceRupees} onChange={(e) => setPriceRupees(e.target.value)} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#14777a]" />
+            <input required type="number" min="0" step="0.01" value={priceRupees} onChange={(e) => setPriceRupees(e.target.value)} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#2563EB]" />
           </label>
           <label className="text-sm font-bold">
             Currency
-            <select value={currency} onChange={(e) => setCurrency(e.target.value as (typeof SUPPORTED_CURRENCIES)[number])} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#14777a]">
+            <select value={currency} onChange={(e) => setCurrency(e.target.value as (typeof SUPPORTED_CURRENCIES)[number])} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#2563EB]">
               {SUPPORTED_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </label>
@@ -191,7 +191,7 @@ export function ProductForm(props: Props) {
               Featured on storefront
             </label>
           ) : (
-            <p className="rounded-xl bg-[#f5f7f3] px-4 py-3 text-xs leading-5 text-[#668084] sm:col-span-2">
+            <p className="rounded-xl bg-[#F1F5F9] px-4 py-3 text-xs leading-5 text-[#64748B] sm:col-span-2">
               {props.mode === "create"
                 ? "New listings start as a draft — an admin reviews and publishes it before it goes live on the store."
                 : `Status: ${initial?.status ?? "draft"} — only an admin can publish, unpublish or feature a listing.`}
@@ -203,8 +203,8 @@ export function ProductForm(props: Props) {
       <div className="mt-6 rounded-3xl border bg-white p-6 sm:p-8">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[.2em] text-[#14777a]">Variants</p>
-            <h2 className="display-font mt-1 text-2xl text-[#103d42]">Purchasable options</h2>
+            <p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">Variants</p>
+            <h2 className="display-font mt-1 text-2xl text-[#0B1D3A]">Purchasable options</h2>
           </div>
           <button type="button" onClick={addVariant} className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold">
             <Plus size={15} /> Add variant
@@ -213,9 +213,9 @@ export function ProductForm(props: Props) {
 
         <div className="mt-6 grid gap-4">
           {variants.map((variant, index) => (
-            <div key={index} className="rounded-2xl bg-[#f5f7f3] p-4 sm:p-5">
+            <div key={index} className="rounded-2xl bg-[#F1F5F9] p-4 sm:p-5">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-[#103d42]">Variant {index + 1}</p>
+                <p className="text-sm font-bold text-[#0B1D3A]">Variant {index + 1}</p>
                 {variants.length > 1 && (
                   <button type="button" onClick={() => removeVariant(index)} className="inline-flex items-center gap-1 text-xs font-bold text-red-700">
                     <Trash2 size={14} /> Remove
@@ -225,19 +225,19 @@ export function ProductForm(props: Props) {
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <label className="text-xs font-bold">
                   SKU
-                  <input required value={variant.sku} onChange={(e) => updateVariant(index, { sku: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#14777a]" />
+                  <input required value={variant.sku} onChange={(e) => updateVariant(index, { sku: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#2563EB]" />
                 </label>
                 <label className="text-xs font-bold">
                   Name
-                  <input required value={variant.name} onChange={(e) => updateVariant(index, { name: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#14777a]" />
+                  <input required value={variant.name} onChange={(e) => updateVariant(index, { name: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#2563EB]" />
                 </label>
                 <label className="text-xs font-bold">
                   Price (in rupees)
-                  <input required type="number" min="0" step="0.01" value={variant.priceRupees} onChange={(e) => updateVariant(index, { priceRupees: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#14777a]" />
+                  <input required type="number" min="0" step="0.01" value={variant.priceRupees} onChange={(e) => updateVariant(index, { priceRupees: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#2563EB]" />
                 </label>
                 <label className="text-xs font-bold">
                   Currency
-                  <select value={variant.currency} onChange={(e) => updateVariant(index, { currency: e.target.value as (typeof SUPPORTED_CURRENCIES)[number] })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#14777a]">
+                  <select value={variant.currency} onChange={(e) => updateVariant(index, { currency: e.target.value as (typeof SUPPORTED_CURRENCIES)[number] })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#2563EB]">
                     {SUPPORTED_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </label>
@@ -258,7 +258,7 @@ export function ProductForm(props: Props) {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-4">
-        <button type="submit" disabled={submitting} className="rounded-full bg-[#103d42] px-6 py-3 text-sm font-bold text-white disabled:opacity-50">
+        <button type="submit" disabled={submitting} className="rounded-full bg-[#0B1D3A] px-6 py-3 text-sm font-bold text-white disabled:opacity-50">
           {submitting ? "Saving…" : props.mode === "edit" ? "Save changes" : "Create product"}
         </button>
         {props.mode === "edit" && (

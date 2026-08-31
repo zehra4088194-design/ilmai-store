@@ -82,7 +82,7 @@ button, input, select, textarea { font: inherit; }
   color: var(--navy);
   transition: transform .2s ease, background .2s ease, border-color .2s ease;
 }
-.icon-button:hover { transform: translateY(-1px); background: var(--gray); border-color: #cbd5e1; }
+.icon-button:hover { transform: translateY(-1px); background: var(--gray); border-color: #CBD5E1; }
 
 .hero-panel {
   position: relative;
@@ -366,7 +366,7 @@ button, input, select, textarea { font: inherit; }
   box-shadow: 0 4px 16px rgba(15,23,42,.04);
   transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
-.product-card-grid:hover { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(15,23,42,.09); border-color: #cbd5e1; }
+.product-card-grid:hover { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(15,23,42,.09); border-color: #CBD5E1; }
 
 .tab-btn {
   padding: 12px 4px;

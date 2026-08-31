@@ -57,18 +57,18 @@ export function ProductMediaManager({ productId, media, role = "admin" }: { prod
   return (
     <div className="mt-6 rounded-3xl border bg-white p-6 sm:p-8">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#14777a]">Product photos</p>
-        <h2 className="display-font mt-1 text-2xl text-[#103d42]">Make it look good.</h2>
-        <p className="mt-1 text-sm text-[#668084]">The first photo (or the one marked ★) is used as the cover everywhere on the store. JPG, PNG, WebP or AVIF, up to 8MB each.</p>
+        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">Product photos</p>
+        <h2 className="display-font mt-1 text-2xl text-[#0B1D3A]">Make it look good.</h2>
+        <p className="mt-1 text-sm text-[#64748B]">The first photo (or the one marked ★) is used as the cover everywhere on the store. JPG, PNG, WebP or AVIF, up to 8MB each.</p>
       </div>
 
       {media.length > 0 && (
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {media.map((item) => (
-            <div key={item.id} className="group relative aspect-square overflow-hidden rounded-2xl border bg-[#f5f7f3]">
+            <div key={item.id} className="group relative aspect-square overflow-hidden rounded-2xl border bg-[#F1F5F9]">
               <img src={item.url} alt={item.altText ?? "Product photo"} className="h-full w-full object-cover" />
               {item.isPrimary && (
-                <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#f5bc50] px-2 py-1 text-[10px] font-black text-[#103d42]">
+                <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#2563EB] px-2 py-1 text-[10px] font-black text-[#0B1D3A]">
                   <Star size={10} fill="currentColor" /> Cover
                 </span>
               )}
@@ -95,17 +95,17 @@ export function ProductMediaManager({ productId, media, role = "admin" }: { prod
           if (e.dataTransfer.files.length) void uploadFiles(e.dataTransfer.files);
         }}
         onClick={() => inputRef.current?.click()}
-        className={`mt-5 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-10 text-center transition ${dragOver ? "border-[#14777a] bg-[#eef7f5]" : "border-[#d7e3e0] bg-[#fafbf8] hover:bg-[#f5f7f3]"}`}
+        className={`mt-5 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-10 text-center transition ${dragOver ? "border-[#2563EB] bg-[#eef7f5]" : "border-[#E2E8F0] bg-[#fafbf8] hover:bg-[#F1F5F9]"}`}
       >
         {uploading ? (
-          <><Loader2 size={22} className="animate-spin text-[#14777a]" /><p className="text-sm font-bold text-[#103d42]">Uploading…</p></>
+          <><Loader2 size={22} className="animate-spin text-[#2563EB]" /><p className="text-sm font-bold text-[#0B1D3A]">Uploading…</p></>
         ) : (
           <>
-            <div className="grid h-11 w-11 place-items-center rounded-full bg-[#eef4ee] text-[#1a7775]">
+            <div className="grid h-11 w-11 place-items-center rounded-full bg-[#F1F5F9] text-[#2563EB]">
               {media.length ? <ImagePlus size={20} /> : <Upload size={20} />}
             </div>
-            <p className="text-sm font-bold text-[#103d42]">Click to upload, or drag photos here</p>
-            <p className="text-xs text-[#9db1b3]">You can add more than one at a time.</p>
+            <p className="text-sm font-bold text-[#0B1D3A]">Click to upload, or drag photos here</p>
+            <p className="text-xs text-[#64748B]">You can add more than one at a time.</p>
           </>
         )}
         <input

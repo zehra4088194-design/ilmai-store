@@ -32,8 +32,8 @@ export function CouponForm() {
       </select>
       <input required type="number" min="1" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder="Value" className="rounded-xl border px-4 py-3" />
       <input type="number" min="0" value={minOrderMinor} onChange={(e) => setMinOrderMinor(e.target.value)} placeholder="Min order (minor units)" className="rounded-xl border px-4 py-3" />
-      <button className="rounded-full bg-[#103d42] px-5 py-3 text-sm font-bold text-white">Create coupon</button>
-      <span className="text-xs text-[#668084] sm:col-span-5">{message}</span>
+      <button className="rounded-full bg-[#0B1D3A] px-5 py-3 text-sm font-bold text-white">Create coupon</button>
+      <span className="text-xs text-[#64748B] sm:col-span-5">{message}</span>
     </form>
   );
 }

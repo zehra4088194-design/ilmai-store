@@ -10,17 +10,17 @@ const escapeHtml = (value: string) =>
 function emailShell(bodyHtml: string): string {
   return `<!doctype html>
 <html>
-  <body style="margin:0;padding:0;background:#f3f6f1;font-family:Arial,Helvetica,sans-serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f6f1;padding:24px 0;">
+  <body style="margin:0;padding:0;background:#F1F5F9;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F1F5F9;padding:24px 0;">
       <tr>
         <td align="center">
           <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#ffffff;border-radius:20px;overflow:hidden;">
             <tr>
-              <td style="background:#103d42;padding:22px 32px;">
+              <td style="background:#0B1D3A;padding:22px 32px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <td style="font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#ffffff;letter-spacing:0.2px;">
-                      Ilm<span style="color:#f5bc50;">AI</span> Store
+                      Ilm<span style="color:#2563EB;">AI</span> Store
                     </td>
                   </tr>
                 </table>
@@ -35,9 +35,9 @@ function emailShell(bodyHtml: string): string {
               <td style="padding:28px 32px 32px 32px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e3ebe4;padding-top:20px;">
                   <tr>
-                    <td style="font-size:12px;line-height:1.7;color:#789094;font-family:Arial,Helvetica,sans-serif;">
-                      Questions? Write to <a href="mailto:ilmai.study1@gmail.com" style="color:#14777a;text-decoration:none;">ilmai.study1@gmail.com</a><br />
-                      <a href="https://ilmai.study" style="color:#14777a;text-decoration:none;">ilmai.study</a> &middot; Learn deeply. Build boldly.
+                    <td style="font-size:12px;line-height:1.7;color:#64748B;font-family:Arial,Helvetica,sans-serif;">
+                      Questions? Write to <a href="mailto:ilmai.study1@gmail.com" style="color:#2563EB;text-decoration:none;">ilmai.study1@gmail.com</a><br />
+                      <a href="https://ilmai.study" style="color:#2563EB;text-decoration:none;">ilmai.study</a> &middot; Learn deeply. Build boldly.
                     </td>
                   </tr>
                 </table>
@@ -52,19 +52,19 @@ function emailShell(bodyHtml: string): string {
 }
 
 function heading(text: string): string {
-  return `<h1 style="margin:0 0 16px 0;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1.2;color:#103d42;">${escapeHtml(text)}</h1>`;
+  return `<h1 style="margin:0 0 16px 0;font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1.2;color:#0B1D3A;">${escapeHtml(text)}</h1>`;
 }
 
 function paragraph(html: string): string {
-  return `<p style="margin:0 0 16px 0;font-size:15px;line-height:1.7;color:#486267;font-family:Arial,Helvetica,sans-serif;">${html}</p>`;
+  return `<p style="margin:0 0 16px 0;font-size:15px;line-height:1.7;color:#64748B;font-family:Arial,Helvetica,sans-serif;">${html}</p>`;
 }
 
 function amountChip(label: string, amountDisplay: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 20px 0;"><tr><td style="background:#f5bc50;border-radius:999px;padding:10px 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#103d42;">${escapeHtml(label)}: ${escapeHtml(amountDisplay)}</td></tr></table>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 20px 0;"><tr><td style="background:#2563EB;border-radius:999px;padding:10px 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#0B1D3A;">${escapeHtml(label)}: ${escapeHtml(amountDisplay)}</td></tr></table>`;
 }
 
 function button(label: string, url: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:12px 0 20px 0;"><tr><td style="background:#103d42;border-radius:999px;"><a href="${escapeHtml(url)}" style="display:inline-block;padding:13px 24px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;">${escapeHtml(label)}</a></td></tr></table>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:12px 0 20px 0;"><tr><td style="background:#0B1D3A;border-radius:999px;"><a href="${escapeHtml(url)}" style="display:inline-block;padding:13px 24px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;">${escapeHtml(label)}</a></td></tr></table>`;
 }
 
 export interface OrderConfirmationData { orderNumber: string; customerName?: string; totalDisplay: string; }
@@ -73,7 +73,7 @@ export function orderConfirmationTemplate(data: OrderConfirmationData) {
   const greeting = data.customerName ? `Thanks, ${escapeHtml(data.customerName)}!` : "Thanks for your order!";
   const html = emailShell(
     heading("Order received") +
-      paragraph(`${greeting} Your order <strong style="color:#103d42;">${order}</strong> has been received and is on its way to fulfillment.`) +
+      paragraph(`${greeting} Your order <strong style="color:#0B1D3A;">${order}</strong> has been received and is on its way to fulfillment.`) +
       amountChip("Order total", data.totalDisplay) +
       paragraph(`We'll send another email as soon as your payment is confirmed and your order is ready.`)
   );
@@ -85,7 +85,7 @@ export function paymentConfirmationTemplate(data: PaymentConfirmationData) {
   const order = escapeHtml(data.orderNumber);
   const html = emailShell(
     heading("Payment received") +
-      paragraph(`We've received your payment for order <strong style="color:#103d42;">${order}</strong>.`) +
+      paragraph(`We've received your payment for order <strong style="color:#0B1D3A;">${order}</strong>.`) +
       amountChip("Amount paid", data.totalDisplay) +
       paragraph(`Your digital downloads are now available from your order page — no further action needed.`)
   );
@@ -98,7 +98,7 @@ export function digitalDeliveryTemplate(data: DigitalDeliveryData) {
   const title = escapeHtml(data.productTitle);
   const html = emailShell(
     heading("Your download is ready") +
-      paragraph(`<strong style="color:#103d42;">${title}</strong> from order <strong style="color:#103d42;">${order}</strong> is ready to download.`) +
+      paragraph(`<strong style="color:#0B1D3A;">${title}</strong> from order <strong style="color:#0B1D3A;">${order}</strong> is ready to download.`) +
       button(`Download ${data.productTitle}`, data.downloadUrl) +
       paragraph(`This link expires shortly for security. You can always get back to your files from your order page.`)
   );
@@ -111,7 +111,7 @@ export function adminNewOrderTemplate(data: AdminNewOrderData) {
   const email = escapeHtml(data.customerEmail);
   const html = emailShell(
     heading("New order placed") +
-      paragraph(`Order <strong style="color:#103d42;">${order}</strong> was just placed by <strong style="color:#103d42;">${email}</strong>.`) +
+      paragraph(`Order <strong style="color:#0B1D3A;">${order}</strong> was just placed by <strong style="color:#0B1D3A;">${email}</strong>.`) +
       amountChip("Order total", data.totalDisplay) +
       paragraph(`Open the Store Admin orders queue to review payment and fulfillment.`)
   );
@@ -123,7 +123,7 @@ export function refundNotificationTemplate(data: RefundNotificationData) {
   const order = escapeHtml(data.orderNumber);
   const html = emailShell(
     heading("Refund processed") +
-      paragraph(`A refund has been processed for order <strong style="color:#103d42;">${order}</strong>.`) +
+      paragraph(`A refund has been processed for order <strong style="color:#0B1D3A;">${order}</strong>.`) +
       amountChip("Amount refunded", data.amountDisplay) +
       paragraph(`It may take a few business days to appear on your original payment method, depending on your bank or provider.`)
   );

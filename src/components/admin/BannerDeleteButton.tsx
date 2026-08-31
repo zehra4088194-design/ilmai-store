@@ -10,7 +10,7 @@ export function BannerDeleteButton({ bannerId }: { bannerId: string }) {
     if (response.ok) router.refresh();
   }
   return (
-    <button type="button" onClick={remove} className="text-[#668084] hover:text-red-700" title="Delete banner">
+    <button type="button" onClick={remove} className="text-[#64748B] hover:text-red-700" title="Delete banner">
       <Trash2 size={16} />
     </button>
   );

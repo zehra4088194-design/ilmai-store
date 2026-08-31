@@ -37,7 +37,7 @@ export default async function ProductPage({ params }: { params: Params }) {
       <div className="store-container py-8 sm:py-12">
         <div className="flex items-center justify-between gap-4">
           <Link href="/store" className="section-link">← Back to the shelf</Link>
-          <span className="hidden rounded-full border border-[var(--line)] bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[.16em] text-[#718184] sm:inline-flex">
+          <span className="hidden rounded-full border border-[var(--line)] bg-white px-3 py-2 text-[10px] font-black uppercase tracking-[.16em] text-[#64748B] sm:inline-flex">
             IlmAI original
           </span>
         </div>

@@ -42,8 +42,8 @@ export function BannerForm() {
       </select>
       <input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="Link URL (optional)" className="rounded-xl border px-4 py-3" />
       <input type="number" value={priority} onChange={(e) => setPriority(e.target.value)} placeholder="Priority" className="rounded-xl border px-4 py-3" />
-      <button className="rounded-full bg-[#103d42] px-5 py-3 text-sm font-bold text-white sm:col-span-5">Create banner</button>
-      <span className="text-xs text-[#668084] sm:col-span-5">{message}</span>
+      <button className="rounded-full bg-[#0B1D3A] px-5 py-3 text-sm font-bold text-white sm:col-span-5">Create banner</button>
+      <span className="text-xs text-[#64748B] sm:col-span-5">{message}</span>
     </form>
   );
 }

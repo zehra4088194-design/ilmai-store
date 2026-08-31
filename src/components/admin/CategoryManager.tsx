@@ -118,7 +118,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
         onSubmit={handleCreate}
         className="rounded-3xl border bg-white p-6 shadow-sm lg:p-8"
       >
-        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#14777a]">New category</p>
+        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">New category</p>
         <div className="mt-4 grid gap-4 lg:grid-cols-5">
           <input
             required
@@ -164,14 +164,14 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
         <button
           type="submit"
           disabled={creating}
-          className="mt-4 rounded-full bg-[#103d42] px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+          className="mt-4 rounded-full bg-[#0B1D3A] px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
         >
           {creating ? "Creating…" : "+ Add category"}
         </button>
       </form>
 
       <div className="overflow-hidden rounded-3xl border bg-white">
-        <div className="grid grid-cols-[1fr_1fr_1fr_100px_80px] gap-4 border-b px-5 py-4 text-xs font-bold uppercase tracking-widest text-[#668084]">
+        <div className="grid grid-cols-[1fr_1fr_1fr_100px_80px] gap-4 border-b px-5 py-4 text-xs font-bold uppercase tracking-widest text-[#64748B]">
           <span>Name</span>
           <span>Slug</span>
           <span>Description</span>
@@ -184,7 +184,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
           return (
             <div
               key={c.id}
-              className="grid grid-cols-[1fr_1fr_1fr_100px_80px] items-center gap-4 border-b px-5 py-4 text-sm hover:bg-[#f5f7f3]"
+              className="grid grid-cols-[1fr_1fr_1fr_100px_80px] items-center gap-4 border-b px-5 py-4 text-sm hover:bg-[#F1F5F9]"
             >
               {isEditing ? (
                 <>
@@ -220,11 +220,11 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
                       onClick={() => handleSave(c.id)}
                       disabled={savingId === c.id}
                       title="Save"
-                      className="text-[#14777a] hover:text-[#103d42]"
+                      className="text-[#2563EB] hover:text-[#0B1D3A]"
                     >
                       <Check size={16} />
                     </button>
-                    <button onClick={cancelEdit} title="Cancel" className="text-[#668084] hover:text-[#103d42]">
+                    <button onClick={cancelEdit} title="Cancel" className="text-[#64748B] hover:text-[#0B1D3A]">
                       <X size={16} />
                     </button>
                   </div>
@@ -232,18 +232,18 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
               ) : (
                 <>
                   <span className="font-bold">{c.name}</span>
-                  <span className="text-[#668084]">{c.slug}</span>
-                  <span className="truncate text-[#668084]">{c.description ?? "—"}</span>
-                  <span className="text-[#668084]">{parent?.name ?? "—"}</span>
+                  <span className="text-[#64748B]">{c.slug}</span>
+                  <span className="truncate text-[#64748B]">{c.description ?? "—"}</span>
+                  <span className="text-[#64748B]">{parent?.name ?? "—"}</span>
                   <div className="flex items-center gap-3">
-                    <button onClick={() => startEdit(c)} title="Edit" className="text-[#668084] hover:text-[#14777a]">
+                    <button onClick={() => startEdit(c)} title="Edit" className="text-[#64748B] hover:text-[#2563EB]">
                       <Pencil size={16} />
                     </button>
                     <button
                       onClick={() => handleDelete(c.id)}
                       disabled={deletingId === c.id}
                       title="Delete"
-                      className="text-[#668084] hover:text-red-600"
+                      className="text-[#64748B] hover:text-red-600"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -253,7 +253,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
             </div>
           );
         })}
-        {!categories.length && <p className="p-10 text-center text-[#668084]">No categories yet.</p>}
+        {!categories.length && <p className="p-10 text-center text-[#64748B]">No categories yet.</p>}
       </div>
       {rowError && <p className="text-sm font-semibold text-red-600">{rowError}</p>}
     </div>

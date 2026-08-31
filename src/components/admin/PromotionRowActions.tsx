@@ -42,11 +42,11 @@ export function PromotionRowActions({ kind, id, isActive }: { kind: Kind; id: st
         onClick={toggle}
         disabled={busy !== null}
         title={isActive ? "Deactivate" : "Activate"}
-        className={isActive ? "text-[#14777a] hover:text-[#103d42]" : "text-[#668084] hover:text-[#14777a]"}
+        className={isActive ? "text-[#2563EB] hover:text-[#0B1D3A]" : "text-[#64748B] hover:text-[#2563EB]"}
       >
         {busy === "toggle" ? <Loader2 size={16} className="animate-spin" /> : <Power size={16} />}
       </button>
-      <button type="button" onClick={remove} disabled={busy !== null} title="Delete" className="text-[#668084] hover:text-red-600">
+      <button type="button" onClick={remove} disabled={busy !== null} title="Delete" className="text-[#64748B] hover:text-red-600">
         {busy === "delete" ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
       </button>
     </div>

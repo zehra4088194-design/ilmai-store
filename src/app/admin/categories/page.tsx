@@ -6,7 +6,7 @@ export default async function AdminCategoriesPage() {
   return (
     <main className="mx-auto max-w-6xl p-6 lg:p-10">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#14777a]">Catalog control</p>
+        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">Catalog control</p>
         <h1 className="display-font mt-2 text-5xl">Categories</h1>
       </div>
       <CategoryManager categories={categories} />

@@ -30,7 +30,7 @@ export function MarkPaidButton({ orderId }: { orderId: string }) {
         type="button"
         onClick={markPaid}
         disabled={loading}
-        className="inline-flex items-center gap-2 rounded-full bg-[#103d42] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-full bg-[#0B1D3A] px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
       >
         {loading ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
         Mark JazzCash paid
