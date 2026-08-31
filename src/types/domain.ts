@@ -130,6 +130,7 @@ export interface Order {
   total: Money;
   couponCode?: string;
   customerEmail: string;
+  customerPhone?: string;
   shippingAddress?: Address;
   billingAddress?: Address;
   createdAt: string;

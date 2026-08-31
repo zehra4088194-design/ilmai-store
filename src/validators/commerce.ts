@@ -27,6 +27,10 @@ export const updateCartItemSchema = z.object({
 export const checkoutSchema = z.object({
   cartId: z.string().uuid(),
   customerEmail: z.string().email(),
+  // Always collected at checkout regardless of product type — a contact
+  // number for order updates/support, separate from the full shipping
+  // address (which is only required for physical/book items).
+  customerPhone: z.string().trim().min(7).max(20).optional(),
   shippingAddress: addressSchema.optional(), // required only if cart has physical items
   billingAddress: addressSchema.optional(),
   couponCode: z.string().max(40).optional(),
