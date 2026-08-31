@@ -48,7 +48,9 @@ export class B2Provider implements StorageProvider {
   // digital downloads still go through their own short-TTL, ownership-
   // checked path in StorageService.getDownloadUrl().
   async getSignedUrl(key: string, ttlSeconds: number): Promise<string> {
-    try { return await getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: key }), { expiresIn: Math.min(Math.max(ttlSeconds, 60), 21600) }); } catch (error) { throw new StorageError("Signed URL generation failed.", error); }
+    // AWS SigV4 presigned URLs cap out at 7 days (604800s) — 86400 (24h) is
+    // the current ceiling actually used (product/banner media), well inside that.
+    try { return await getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: key }), { expiresIn: Math.min(Math.max(ttlSeconds, 60), 86400) }); } catch (error) { throw new StorageError("Signed URL generation failed.", error); }
   }
 
   /** @deprecated Bucket is private — nothing is reachable via a bare public URL. Use getSignedUrl. */
