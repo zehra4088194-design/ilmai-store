@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { ImagePlus, Loader2, Star, Trash2, Upload } from "lucide-react";
 import type { ProductMedia } from "@/types/domain";
 
-export function ProductMediaManager({ productId, media }: { productId: string; media: ProductMedia[] }) {
+export function ProductMediaManager({ productId, media, role = "admin" }: { productId: string; media: ProductMedia[]; role?: "admin" | "seller" }) {
   const router = useRouter();
+  const apiBase = role === "seller" ? "/api/seller/products" : "/api/admin/products";
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export function ProductMediaManager({ productId, media }: { productId: string; m
         form.set("file", file);
         form.set("mediaType", "image");
         form.set("isPrimary", String(media.length === 0));
-        const response = await fetch(`/api/admin/products/${productId}/media`, { method: "POST", body: form });
+        const response = await fetch(`${apiBase}/${productId}/media`, { method: "POST", body: form });
         if (!response.ok) {
           const body = (await response.json().catch(() => ({}))) as { error?: string };
           throw new Error(body.error ?? "Image could not be uploaded.");
@@ -40,7 +41,7 @@ export function ProductMediaManager({ productId, media }: { productId: string; m
     if (!confirm("Remove this image?")) return;
     setDeletingId(mediaId);
     try {
-      const response = await fetch(`/api/admin/products/${productId}/media/${mediaId}`, { method: "DELETE" });
+      const response = await fetch(`${apiBase}/${productId}/media/${mediaId}`, { method: "DELETE" });
       if (!response.ok) {
         const body = (await response.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? "Image could not be removed.");

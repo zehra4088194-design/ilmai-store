@@ -33,6 +33,7 @@ export async function mapProduct(row: Raw): Promise<Product> {
     categories: (row.product_categories ?? []).map((x: Raw) => x.category).filter(Boolean).map((c: Raw) => ({ id: c.id, slug: c.slug, name: c.name, description: c.description ?? undefined, parentId: c.parent_id ?? undefined })),
     // Digital files are private entitlements, never public product media.
     media,
+    sellerId: row.seller_id ?? undefined,
   };
 }
 
@@ -115,5 +116,63 @@ export const ProductService = {
   async adminDelete(productId: string): Promise<void> {
     const { error } = await createSupabaseAdminClient().from("products").delete().eq("id", productId);
     if (error) throw new Error(error.message);
+  },
+
+  // ── Seller-scoped: every query below is filtered to seller_id = sellerId,
+  // both for listing (so a seller only ever sees their own catalog) and for
+  // update/delete (so even a tampered request body naming another
+  // product's id can never touch a product this seller doesn't own — the
+  // ownership check lives in the query itself, not just in app logic). ──
+
+  async sellerList(sellerId: string): Promise<Product[]> {
+    const { data, error } = await createSupabaseAdminClient().from("products").select(select).eq("seller_id", sellerId).order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return Promise.all((data ?? []).map(mapProduct));
+  },
+
+  async sellerGetById(sellerId: string, id: string): Promise<Product> {
+    const { data, error } = await createSupabaseAdminClient().from("products").select(select).eq("id", id).eq("seller_id", sellerId).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) throw new NotFoundError("Product not found.");
+    return mapProduct(data);
+  },
+
+  async sellerCreate(sellerId: string, input: z.infer<typeof adminCreateProductSchema>): Promise<Product> {
+    const db = createSupabaseAdminClient();
+    // A seller-created listing starts in 'draft' regardless of what the
+    // form sent — an admin (or the seller, once reviewed) publishes it
+    // deliberately rather than a seller being able to go live unmoderated.
+    const { data, error } = await db.from("products").insert({ slug: input.slug, title: input.title, description: input.description, product_type: input.productType, status: "draft", base_price_minor: input.basePriceMinor, currency: input.currency, is_featured: false, seller_id: sellerId }).select("id").single();
+    if (error || !data) throw new ValidationError(error?.message ?? "Product could not be created.");
+    const { data: variants, error: variantsError } = await db.from("product_variants").insert(input.variants.map((v) => ({ product_id: data.id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams }))).select("id,requires_shipping");
+    if (variantsError) throw new ValidationError(variantsError.message);
+    const stockRows = (variants ?? []).filter((v: Raw) => v.requires_shipping).map((v: Raw) => ({ variant_id: v.id, quantity_available: 0 }));
+    if (stockRows.length) { const { error: stockError } = await db.from("inventory_items").insert(stockRows); if (stockError) throw new ValidationError(stockError.message); }
+    if (input.categoryIds.length) await db.from("product_categories").insert(input.categoryIds.map((categoryId) => ({ product_id: data.id, category_id: categoryId })));
+    const { data: full, error: readError } = await db.from("products").select(select).eq("id", data.id).single();
+    if (readError || !full) throw new Error(readError?.message ?? "Product could not be loaded.");
+    return mapProduct(full);
+  },
+
+  async sellerUpdate(sellerId: string, input: z.infer<typeof adminUpdateProductSchema>): Promise<Product> {
+    const db = createSupabaseAdminClient();
+    const { id, variants, categoryIds, status: _status, isFeatured: _isFeatured, ...fields } = input;
+    void _status; void _isFeatured; // a seller edits their listing's content, not its publish/featured state — admin-only.
+    const update: Raw = {};
+    for (const [key, value] of Object.entries(fields)) if (value !== undefined) update[key.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`)] = value;
+    const { data: updated, error } = await db.from("products").update(update).eq("id", id).eq("seller_id", sellerId).select("id");
+    if (error) throw new ValidationError(error.message);
+    if (!updated?.length) throw new NotFoundError("Product not found.");
+    if (variants) { await db.from("product_variants").delete().eq("product_id", id); const { data: inserted, error: variantError } = await db.from("product_variants").insert(variants.map((v) => ({ product_id: id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams }))).select("id,requires_shipping"); if (variantError) throw new ValidationError(variantError.message); const stockRows = (inserted ?? []).filter((v: Raw) => v.requires_shipping).map((v: Raw) => ({ variant_id: v.id, quantity_available: 0 })); if (stockRows.length) { const { error: stockError } = await db.from("inventory_items").insert(stockRows); if (stockError) throw new ValidationError(stockError.message); } }
+    if (categoryIds) { await db.from("product_categories").delete().eq("product_id", id); if (categoryIds.length) await db.from("product_categories").insert(categoryIds.map((categoryId) => ({ product_id: id, category_id: categoryId }))); }
+    const { data, error: readError } = await db.from("products").select(select).eq("id", id).single();
+    if (readError || !data) throw new NotFoundError("Product not found.");
+    return mapProduct(data);
+  },
+
+  async sellerDelete(sellerId: string, productId: string): Promise<void> {
+    const { data: deleted, error } = await createSupabaseAdminClient().from("products").delete().eq("id", productId).eq("seller_id", sellerId).select("id");
+    if (error) throw new Error(error.message);
+    if (!deleted?.length) throw new NotFoundError("Product not found.");
   },
 };

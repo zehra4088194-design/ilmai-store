@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { ProductService } from "@/services/ProductService";
 import { ReviewService } from "@/services/ReviewService";
+import { ProductEventService } from "@/services/ProductEventService";
 import { NotFoundError } from "@/lib/errors";
 import { ProductDetail } from "@/components/store/product-detail";
 import { ProductReviews } from "@/components/store/product-reviews";
@@ -25,6 +27,9 @@ export default async function ProductPage({ params }: { params: Params }) {
     ReviewService.listForProduct(product.id),
     getPlatformSettings(),
   ]);
+
+  // Fire-and-forget: runs after the response is sent, never delays the page.
+  after(() => ProductEventService.recordView(product.id));
 
   return (
     <main className="store-shell">

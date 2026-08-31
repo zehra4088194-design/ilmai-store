@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { CartService } from "@/services/CartService";
+import { ProductEventService } from "@/services/ProductEventService";
 import { addToCartSchema, updateCartItemSchema } from "@/validators/commerce";
 import { isAppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
@@ -28,6 +30,8 @@ export async function POST(request: NextRequest) {
     const body = addToCartSchema.parse(await request.json());
     const cart = await CartService.getOrCreateCart();
     const updated = await CartService.addItem(cart.id, body);
+    const addedProductId = updated.items.find((item) => item.variantId === body.variantId)?.productId;
+    if (addedProductId) after(() => ProductEventService.recordAddToCart(addedProductId));
     return NextResponse.json(updated);
   } catch (err) {
     if (isAppError(err)) return NextResponse.json({ error: err.publicMessage }, { status: err.statusCode });

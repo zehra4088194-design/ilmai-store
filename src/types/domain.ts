@@ -60,6 +60,7 @@ export interface Product {
   media: ProductMedia[];
   variants: ProductVariant[];
   categories: Category[];
+  sellerId?: string;
 }
 
 export interface Address {

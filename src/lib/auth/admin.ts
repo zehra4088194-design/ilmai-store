@@ -54,3 +54,38 @@ export async function requireUser(): Promise<{ userId: string; email: string | n
 
   return { userId: user.id, email: user.email ?? null };
 }
+
+/**
+ * The choke point for every `/api/seller/**` route handler and every
+ * /seller/** page. Mirrors requireAdmin() exactly, just against the
+ * `sellers` table instead of `admin_users` — a seller can only ever act on
+ * their OWN products (every SellerService method takes the returned
+ * `sellerId` and scopes its query to it), never anyone else's. Full,
+ * unscoped control over every product/order/etc. stays admin-only.
+ */
+export async function requireSeller(): Promise<{ sellerId: string; businessName: string | null; status: string }> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new AuthenticationError();
+  }
+
+  const adminClient = createSupabaseAdminClient();
+  const { data: sellerRow } = await adminClient
+    .from("sellers")
+    .select("id, business_name, status")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!sellerRow) {
+    throw new AuthorizationError("Seller access required.");
+  }
+  if (sellerRow.status !== "active") {
+    throw new AuthorizationError("This seller account is suspended.");
+  }
+
+  return { sellerId: sellerRow.id, businessName: sellerRow.business_name, status: sellerRow.status };
+}

@@ -14,11 +14,11 @@ export default async function AdminProductsPage() {
         <Link href="/admin/products/new" className="rounded-full bg-[#103d42] px-5 py-3 text-sm font-bold text-white">+ New product</Link>
       </div>
       <div className="mt-8 overflow-hidden rounded-3xl border bg-white">
-        <div className="grid grid-cols-[1fr_120px_120px_100px_40px] gap-4 border-b px-5 py-4 text-xs font-bold uppercase tracking-widest text-[#668084]">
-          <span>Product</span><span>Type</span><span>Price</span><span>Status</span><span />
+        <div className="grid grid-cols-[1fr_120px_120px_100px_90px_40px] gap-4 border-b px-5 py-4 text-xs font-bold uppercase tracking-widest text-[#668084]">
+          <span>Product</span><span>Type</span><span>Price</span><span>Status</span><span>Owner</span><span />
         </div>
         {products.map((p) => (
-          <div key={p.id} className="grid grid-cols-[1fr_120px_120px_100px_40px] items-center gap-4 border-b px-5 py-5 text-sm hover:bg-[#f5f7f3]">
+          <div key={p.id} className="grid grid-cols-[1fr_120px_120px_100px_90px_40px] items-center gap-4 border-b px-5 py-5 text-sm hover:bg-[#f5f7f3]">
             <Link href={`/admin/products/${p.id}`} className="font-bold">
               {p.title}
               <small className="mt-1 block font-normal text-[#668084]">{p.slug}</small>
@@ -26,6 +26,9 @@ export default async function AdminProductsPage() {
             <Link href={`/admin/products/${p.id}`}>{p.productType}</Link>
             <Link href={`/admin/products/${p.id}`}>{p.basePrice.amountMinor / 100} {p.basePrice.currency}</Link>
             <Link href={`/admin/products/${p.id}`} className="text-[#14777a]">{p.status}</Link>
+            <Link href={`/admin/products/${p.id}`}>
+              <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${p.sellerId ? "bg-[#e8f1eb] text-[#1a7775]" : "bg-[#f5f7f3] text-[#668084]"}`}>{p.sellerId ? "Seller" : "Platform"}</span>
+            </Link>
             <Link href={`/store/${p.slug}`} title="View live" className="text-[#668084] hover:text-[#14777a]">
               <ArrowUpRight size={16} />
             </Link>

@@ -31,10 +31,13 @@ function toVariantForm(product: Product): VariantForm[] {
   }));
 }
 
-type Props = { mode: "create" } | { mode: "edit"; product: Product };
+type Props = ({ mode: "create" } | { mode: "edit"; product: Product }) & { role?: "admin" | "seller" };
 
 export function ProductForm(props: Props) {
   const router = useRouter();
+  const role = props.role ?? "admin";
+  const apiBase = role === "seller" ? "/api/seller/products" : "/api/admin/products";
+  const basePath = role === "seller" ? "/seller/products" : "/admin/products";
   const initial = props.mode === "edit" ? props.product : null;
 
   const [slug, setSlug] = useState(initial?.slug ?? "");
@@ -95,7 +98,7 @@ export function ProductForm(props: Props) {
         })),
       };
 
-      const url = props.mode === "edit" ? `/api/admin/products/${props.product.id}` : "/api/admin/products";
+      const url = props.mode === "edit" ? `${apiBase}/${props.product.id}` : apiBase;
       const method = props.mode === "edit" ? "PATCH" : "POST";
       const response = await fetch(url, {
         method,
@@ -109,9 +112,9 @@ export function ProductForm(props: Props) {
       }
       if (props.mode === "create") {
         const created = (await response.json()) as { id: string };
-        router.push(`/admin/products/${created.id}`);
+        router.push(`${basePath}/${created.id}`);
       } else {
-        router.push("/admin/products");
+        router.push(basePath);
       }
       router.refresh();
     } catch {
@@ -127,13 +130,13 @@ export function ProductForm(props: Props) {
     setDeleting(true);
     setError(null);
     try {
-      const response = await fetch(`/api/admin/products/${props.product.id}`, { method: "DELETE" });
+      const response = await fetch(`${apiBase}/${props.product.id}`, { method: "DELETE" });
       if (!response.ok) {
         const data = (await response.json()) as { error?: string };
         setError(data.error ?? "Product could not be deleted.");
         return;
       }
-      router.push("/admin/products");
+      router.push(basePath);
       router.refresh();
     } catch {
       setError("Product could not be deleted.");
@@ -164,12 +167,14 @@ export function ProductForm(props: Props) {
               {PRODUCT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </label>
-          <label className="text-sm font-bold">
-            Status
-            <select value={status} onChange={(e) => setStatus(e.target.value as (typeof PRODUCT_STATUSES)[number])} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#14777a]">
-              {PRODUCT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </label>
+          {role === "admin" && (
+            <label className="text-sm font-bold">
+              Status
+              <select value={status} onChange={(e) => setStatus(e.target.value as (typeof PRODUCT_STATUSES)[number])} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#14777a]">
+                {PRODUCT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </label>
+          )}
           <label className="text-sm font-bold">
             Base price (in rupees, converted to minor units)
             <input required type="number" min="0" step="0.01" value={priceRupees} onChange={(e) => setPriceRupees(e.target.value)} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#14777a]" />
@@ -180,10 +185,18 @@ export function ProductForm(props: Props) {
               {SUPPORTED_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </label>
-          <label className="flex items-center gap-2 text-sm font-bold sm:col-span-2">
-            <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} className="h-4 w-4" />
-            Featured on storefront
-          </label>
+          {role === "admin" ? (
+            <label className="flex items-center gap-2 text-sm font-bold sm:col-span-2">
+              <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} className="h-4 w-4" />
+              Featured on storefront
+            </label>
+          ) : (
+            <p className="rounded-xl bg-[#f5f7f3] px-4 py-3 text-xs leading-5 text-[#668084] sm:col-span-2">
+              {props.mode === "create"
+                ? "New listings start as a draft — an admin reviews and publishes it before it goes live on the store."
+                : `Status: ${initial?.status ?? "draft"} — only an admin can publish, unpublish or feature a listing.`}
+            </p>
+          )}
         </div>
       </div>
 
