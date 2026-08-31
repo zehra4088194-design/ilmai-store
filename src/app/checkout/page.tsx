@@ -20,14 +20,14 @@ export default async function CheckoutPage() {
         <div>
           <span className="eyebrow">Secure checkout</span>
           <h1 className="section-title mt-3">Finish with confidence.</h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-[#718184]">Your order is created server-side, payment status is verified, and digital access is issued only after confirmation.</p>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-[#64748B]">Your order is created server-side, payment status is verified, and digital access is issued only after confirmation.</p>
         </div>
         <div className="mt-9">
           {cart?.items.length ? (
             <CheckoutOptions cart={cart} exchangeRate={exchangeRate} totalPkr={totalPkr} />
           ) : (
             <div className="empty-state">
-              <h2 className="text-2xl font-black text-[#112d33]">Your bag is empty.</h2>
+              <h2 className="text-2xl font-black text-[#0B1D3A]">Your bag is empty.</h2>
               <Link href="/store" className="gold-btn mt-6 inline-flex min-h-12 px-6">Browse the store</Link>
             </div>
           )}

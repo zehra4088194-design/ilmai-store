@@ -80,12 +80,12 @@ export function SignupForm() {
   if (needsConfirmation) {
     return (
       <div className="mt-8">
-        <div className="rounded-xl bg-[#eaf5ee] px-5 py-5 text-sm leading-6 text-[#2f6b45]">
+        <div className="rounded-xl bg-[#DCFCE7] px-5 py-5 text-sm leading-6 text-[#15803D]">
           Almost there — we&apos;ve sent a confirmation email to <strong>{email}</strong>. Either open the link in it, or enter the verification code from that same email below.
         </div>
         {error && <p className="mt-4 rounded-xl bg-[#fbeaea] px-4 py-3 text-sm font-semibold text-[#a13f3f]">{error}</p>}
         <form onSubmit={onVerifyCode} className="mt-5 grid gap-4">
-          <label className="grid gap-2 text-sm font-semibold text-[#103d42]">
+          <label className="grid gap-2 text-sm font-semibold text-[#0B1D3A]">
             Verification code
             <input
               inputMode="numeric"
@@ -93,21 +93,21 @@ export function SignupForm() {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="e.g. 32358890"
-              className="rounded-xl border bg-white px-4 py-3 text-center text-lg font-bold tracking-[.2em] text-[#103d42] outline-none placeholder:font-normal placeholder:tracking-normal placeholder:text-[#9db1b3] focus:border-[#14777a]"
+              className="rounded-xl border bg-white px-4 py-3 text-center text-lg font-bold tracking-[.2em] text-[#0B1D3A] outline-none placeholder:font-normal placeholder:tracking-normal placeholder:text-[#64748B] focus:border-[#2563EB]"
             />
           </label>
           <button
             type="submit"
             disabled={verifying || !code.trim()}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#103d42] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#14777a] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#0B1D3A] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {verifying ? <><Loader2 size={16} className="animate-spin" /> Verifying…</> : "Verify and continue"}
           </button>
         </form>
-        <p className="mt-4 text-center text-sm text-[#6b7f82]">
+        <p className="mt-4 text-center text-sm text-[#64748B]">
           Didn&apos;t get it?{" "}
-          <button type="button" onClick={resendCode} className="font-bold text-[#14777a] underline">Resend the code</button>
-          {resent && <span className="ml-2 text-[#2f6b45]">Sent.</span>}
+          <button type="button" onClick={resendCode} className="font-bold text-[#2563EB] underline">Resend the code</button>
+          {resent && <span className="ml-2 text-[#15803D]">Sent.</span>}
         </p>
       </div>
     );
@@ -116,7 +116,7 @@ export function SignupForm() {
   return (
     <form onSubmit={onSubmit} className="mt-8 grid gap-4">
       {error && <p className="rounded-xl bg-[#fbeaea] px-4 py-3 text-sm font-semibold text-[#a13f3f]">{error}</p>}
-      <label className="grid gap-2 text-sm font-semibold text-[#103d42]">
+      <label className="grid gap-2 text-sm font-semibold text-[#0B1D3A]">
         Email
         <input
           type="email"
@@ -124,10 +124,10 @@ export function SignupForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="rounded-xl border bg-white px-4 py-3 text-sm font-normal text-[#103d42] outline-none placeholder:text-[#9db1b3] focus:border-[#14777a]"
+          className="rounded-xl border bg-white px-4 py-3 text-sm font-normal text-[#0B1D3A] outline-none placeholder:text-[#64748B] focus:border-[#2563EB]"
         />
       </label>
-      <label className="grid gap-2 text-sm font-semibold text-[#103d42]">
+      <label className="grid gap-2 text-sm font-semibold text-[#0B1D3A]">
         Password
         <input
           type="password"
@@ -136,19 +136,19 @@ export function SignupForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="At least 6 characters"
-          className="rounded-xl border bg-white px-4 py-3 text-sm font-normal text-[#103d42] outline-none placeholder:text-[#9db1b3] focus:border-[#14777a]"
+          className="rounded-xl border bg-white px-4 py-3 text-sm font-normal text-[#0B1D3A] outline-none placeholder:text-[#64748B] focus:border-[#2563EB]"
         />
       </label>
       <button
         type="submit"
         disabled={loading}
-        className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-[#103d42] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#14777a] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-[#0B1D3A] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? <><Loader2 size={16} className="animate-spin" /> Creating account…</> : <>Create account <ArrowRight size={16} /></>}
       </button>
-      <p className="mt-2 text-center text-sm text-[#6b7f82]">
+      <p className="mt-2 text-center text-sm text-[#64748B]">
         Already have an account?{" "}
-        <Link href={`/login${redirectTo !== "/account" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`} className="font-bold text-[#14777a]">
+        <Link href={`/login${redirectTo !== "/account" ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`} className="font-bold text-[#2563EB]">
           Sign in
         </Link>
       </p>

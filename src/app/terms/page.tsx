@@ -13,7 +13,7 @@ export default function TermsOfServicePage() {
       <div className="store-container py-10 sm:py-14">
         <span className="eyebrow">Legal</span>
         <h1 className="section-title mt-3">Terms of Service</h1>
-        <p className="mt-3 text-sm text-[#718184]">Last updated: {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
+        <p className="mt-3 text-sm text-[#64748B]">Last updated: {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
 
         <div className="prose-policy mt-10 max-w-3xl">
           <p>
@@ -87,7 +87,7 @@ export default function TermsOfServicePage() {
           <h2>Contact</h2>
           <p>
             Questions about these terms — email{" "}
-            <a href={`mailto:${siteConfig.supportEmail}`} className="font-bold text-[#1a7775]">{siteConfig.supportEmail}</a>.
+            <a href={`mailto:${siteConfig.supportEmail}`} className="font-bold text-[#2563EB]">{siteConfig.supportEmail}</a>.
           </p>
         </div>
       </div>

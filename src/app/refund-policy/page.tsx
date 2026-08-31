@@ -13,7 +13,7 @@ export default function RefundPolicyPage() {
       <div className="store-container py-10 sm:py-14">
         <span className="eyebrow">Legal</span>
         <h1 className="section-title mt-3">Shipping &amp; Refund Policy</h1>
-        <p className="mt-3 text-sm text-[#718184]">Last updated: {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
+        <p className="mt-3 text-sm text-[#64748B]">Last updated: {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
 
         <div className="prose-policy mt-10 max-w-3xl">
           <h2>Digital products (notes, courses, test series, other downloads)</h2>
@@ -51,9 +51,9 @@ export default function RefundPolicyPage() {
 
           <h2>Need help?</h2>
           <p>
-            Email <a href={`mailto:${siteConfig.supportEmail}`} className="font-bold text-[#1a7775]">{siteConfig.supportEmail}</a>{" "}
+            Email <a href={`mailto:${siteConfig.supportEmail}`} className="font-bold text-[#2563EB]">{siteConfig.supportEmail}</a>{" "}
             or message us on{" "}
-            <a href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="font-bold text-[#1a7775]">WhatsApp</a>{" "}
+            <a href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="font-bold text-[#2563EB]">WhatsApp</a>{" "}
             with your order number and we&apos;ll help sort it out.
           </p>
         </div>

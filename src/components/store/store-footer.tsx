@@ -27,7 +27,7 @@ function NewsletterForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Enter your email"
-        className="min-w-0 flex-1 border-0 bg-transparent px-4 py-3 text-sm text-white outline-none placeholder:text-[#8ea9a6]"
+        className="min-w-0 flex-1 border-0 bg-transparent px-4 py-3 text-sm text-white outline-none placeholder:text-[#B9C4E0]"
       />
       <button type="submit" disabled={status === "loading"} className="gold-btn min-w-[46px] rounded-none px-4">
         {status === "loading" ? <Loader2 size={15} className="animate-spin" /> : status === "done" ? <Check size={15} /> : "Subscribe"}
@@ -59,12 +59,12 @@ function AccountLinks() {
   }
 
   return (
-    <div className="mt-5 grid gap-3 text-sm text-[#c2d4d2]">
+    <div className="mt-5 grid gap-3 text-sm text-[#B9C4E0]">
       <Link href="/account">My Account</Link>
       <Link href="/orders">My Orders</Link>
       <Link href="/cart">Cart</Link>
       {email ? (
-        <button type="button" onClick={signOut} disabled={signingOut} className="flex items-center gap-2 text-left text-[#c2d4d2] hover:text-[#f4bf43]">
+        <button type="button" onClick={signOut} disabled={signingOut} className="flex items-center gap-2 text-left text-[#B9C4E0] hover:text-[#2563EB]">
           {signingOut && <Loader2 size={13} className="animate-spin" />} Sign out {email ? `(${email})` : ""}
         </button>
       ) : (
@@ -76,14 +76,14 @@ function AccountLinks() {
 
 export function StoreFooter() {
   return (
-    <footer className="mt-20 bg-[#112d33] text-white">
+    <footer className="mt-20 bg-[#0B1D3A] text-white">
       <div className="store-container grid gap-12 py-16 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Link href="/" className="flex items-center gap-2">
             <span className="text-lg font-black text-white">IlmAI</span>
-            <span className="rounded-md bg-[#f4bf43] px-1.5 py-0.5 text-[10px] font-black uppercase text-[#112d33]">.store</span>
+            <span className="rounded-md bg-[#2563EB] px-1.5 py-0.5 text-[10px] font-black uppercase text-[#0B1D3A]">.store</span>
           </Link>
-          <p className="mt-5 max-w-xs text-sm leading-6 text-[#b5ccca]">
+          <p className="mt-5 max-w-xs text-sm leading-6 text-[#B9C4E0]">
             Your one-stop shop for study materials, books, notes and test series — everything a student actually needs, in one place.
           </p>
           <div className="mt-5 flex items-center gap-3">
@@ -94,8 +94,8 @@ export function StoreFooter() {
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#f4bf43]">Shop</h3>
-          <div className="mt-5 grid gap-3 text-sm text-[#c2d4d2]">
+          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#2563EB]">Shop</h3>
+          <div className="mt-5 grid gap-3 text-sm text-[#B9C4E0]">
             <Link href="/store">All Products</Link>
             <Link href="/store?search=books">Books</Link>
             <Link href="/store?search=notes">Notes</Link>
@@ -107,8 +107,8 @@ export function StoreFooter() {
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#f4bf43]">Customer Service</h3>
-          <div className="mt-5 grid gap-3 text-sm text-[#c2d4d2]">
+          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#2563EB]">Customer Service</h3>
+          <div className="mt-5 grid gap-3 text-sm text-[#B9C4E0]">
             <a href="mailto:ilmai.study1@gmail.com">Contact Us</a>
             <Link href="/orders">Track Order</Link>
             <Link href="/account">My Orders</Link>
@@ -119,31 +119,31 @@ export function StoreFooter() {
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#f4bf43]">Account</h3>
+          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#2563EB]">Account</h3>
           <AccountLinks />
-          <h3 className="mt-7 text-xs font-black uppercase tracking-[.2em] text-[#f4bf43]">Newsletter</h3>
-          <p className="mt-2 text-xs leading-5 text-[#9eb6b3]">Subscribe to get updates on new products and offers.</p>
+          <h3 className="mt-7 text-xs font-black uppercase tracking-[.2em] text-[#2563EB]">Newsletter</h3>
+          <p className="mt-2 text-xs leading-5 text-[#B9C4E0]">Subscribe to get updates on new products and offers.</p>
           <NewsletterForm />
         </div>
       </div>
 
       <div className="border-t border-white/10">
-        <div className="store-container flex flex-col gap-4 py-6 text-xs text-[#8ea9a6] sm:flex-row sm:items-center sm:justify-between">
+        <div className="store-container flex flex-col gap-4 py-6 text-xs text-[#B9C4E0] sm:flex-row sm:items-center sm:justify-between">
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span>© {new Date().getFullYear()} IlmAI Store. All Rights Reserved.</span>
             <span className="hidden text-white/20 sm:inline">·</span>
-            <Link href="/privacy" className="hover:text-[#f4bf43]">Privacy</Link>
+            <Link href="/privacy" className="hover:text-[#2563EB]">Privacy</Link>
             <span className="text-white/20">·</span>
-            <Link href="/terms" className="hover:text-[#f4bf43]">Terms</Link>
+            <Link href="/terms" className="hover:text-[#2563EB]">Terms</Link>
             <span className="text-white/20">·</span>
-            <Link href="/refund-policy" className="hover:text-[#f4bf43]">Refunds</Link>
+            <Link href="/refund-policy" className="hover:text-[#2563EB]">Refunds</Link>
           </span>
           <div className="flex items-center gap-3">
             {["VISA", "Mastercard", "JazzCash", "Easypaisa"].map((p) => (
-              <span key={p} className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-[#cfe0dd]">{p}</span>
+              <span key={p} className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-[#B9C4E0]">{p}</span>
             ))}
           </div>
-          <Link href={siteConfig.ilmaiStudyUrl} className="inline-flex items-center gap-1.5 font-bold text-[#f4bf43]">
+          <Link href={siteConfig.ilmaiStudyUrl} className="inline-flex items-center gap-1.5 font-bold text-[#2563EB]">
             Visit IlmAI Study <ArrowUpRight size={13} />
           </Link>
           <span className="inline-flex items-center gap-1.5"><Mail size={12} /> {siteConfig.supportEmail}</span>

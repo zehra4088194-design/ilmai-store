@@ -27,7 +27,7 @@ export function CartBadge() {
   return (
     <a href="/cart" aria-label="Shopping bag" className="relative rounded-full border bg-white/60 p-3 hover:bg-white">
       <ShoppingBag size={18} />
-      {count > 0 && <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[#f5bc50] text-[10px] font-bold text-[#103d42]">{count}</span>}
+      {count > 0 && <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[#2563EB] text-[10px] font-bold text-[#0B1D3A]">{count}</span>}
     </a>
   );
 }
