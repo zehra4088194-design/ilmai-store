@@ -9,7 +9,7 @@ export const addressSchema = z.object({
   line2: z.string().max(200).optional(),
   city: z.string().min(1).max(100),
   state: z.string().max(100).optional(),
-  postalCode: z.string().max(20).optional(),
+  postalCode: z.string().min(1).max(20),
   country: z.string().length(2).default("PK"),
   isDefault: z.boolean().default(false),
 });
@@ -35,6 +35,7 @@ export const checkoutSchema = z.object({
   billingAddress: addressSchema.optional(),
   couponCode: z.string().max(40).optional(),
   customerNote: z.string().max(1000).optional(),
+  recaptchaToken: z.string().optional(),
 });
 
 export const manualPaymentProofSchema = z.object({

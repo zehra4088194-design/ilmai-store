@@ -65,6 +65,22 @@ checks, and webhook handling happen server-side with `PADDLE_API_KEY` /
 | `ADMIN_NOTIFICATION_EMAIL` | server | Where new-order/admin alerts get sent |
 | `NEXT_PUBLIC_DEFAULT_CURRENCY` | public | Default storefront currency, e.g. `PKR` |
 
+## Bot/fraud protection (Google reCAPTCHA v3)
+
+| Var | Exposure | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | public | reCAPTCHA v3 site key — get one at https://www.google.com/recaptcha/admin (register `ilmai.store`, type "reCAPTCHA v3"). Gates checkout (`/api/checkout`, `/api/checkout/jazzcash`) server-side. |
+| `RECAPTCHA_SECRET_KEY` | server | The matching secret key from the same reCAPTCHA admin console entry. |
+
+Both are optional at runtime — if `RECAPTCHA_SECRET_KEY` isn't set, `verifyRecaptcha()` (`src/lib/recaptcha.ts`) passes every request through rather than locking out real customers before it's configured. Set both together, never just one.
+
+To also protect **signup** (`/signup`), separately enable it in the Supabase
+dashboard: **Authentication → Attack Protection → CAPTCHA protection**,
+choose reCAPTCHA, and paste the same secret key there — the app already
+sends `options.captchaToken` on `supabase.auth.signUp()`
+(`src/app/signup/signup-form.tsx`), Supabase's own Auth server verifies it.
+This step can't be done from this repo/CLI — it's a Supabase project setting.
+
 ## ilmai.study account handoff
 
 | Var | Exposure | Purpose |

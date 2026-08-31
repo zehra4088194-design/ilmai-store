@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getRecaptchaToken } from "@/lib/recaptcha-client";
 
 export function SignupForm() {
   const router = useRouter();
@@ -25,7 +26,12 @@ export function SignupForm() {
     setLoading(true);
     try {
       const supabase = createSupabaseBrowserClient();
-      const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+      const captchaToken = await getRecaptchaToken("signup");
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: captchaToken ? { captchaToken } : undefined,
+      });
       if (signUpError) throw new Error(signUpError.message);
       if (!data.session) {
         // Email confirmation is required before a session exists.

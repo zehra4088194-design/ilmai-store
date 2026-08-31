@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Check, Clipboard, CreditCard, Loader2, Smartphone, WalletCards } from "lucide-react";
 import { MANUAL_PAYMENT_OPTIONS, SUPPORT_WHATSAPP_NUMBER, TRANSACTION_FEE_USD } from "@/constants/manual-payment";
 import { siteConfig } from "@/config/site";
+import { getRecaptchaToken } from "@/lib/recaptcha-client";
 import type { Cart } from "@/types/domain";
 
 type Props = {
@@ -51,6 +52,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
   const [phone, setPhone] = useState("");
   const [line1, setLine1] = useState("");
   const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("jazzcash");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [qrError, setQrError] = useState<string | null>(null);
@@ -111,14 +113,15 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
   async function confirmWalletPayment() {
     if (!email) { setWalletOrderError("Enter the email you want this order registered under."); return; }
     if (!customerPhone) { setWalletOrderError("Enter a phone number so we can reach you about this order."); return; }
-    if (requiresShipping && (!fullName || !phone || !line1 || !city)) { setWalletOrderError("Enter your complete shipping address."); return; }
+    if (requiresShipping && (!fullName || !phone || !line1 || !city || !postalCode)) { setWalletOrderError("Enter your complete shipping address, including the city code / postal code."); return; }
     setWalletOrderError(null);
     setWalletOrderLoading(true);
     try {
+      const recaptchaToken = await getRecaptchaToken("checkout");
       const response = await fetch("/api/checkout/jazzcash", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() },
-        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city, country: "PK" } } : {}) }),
+        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, recaptchaToken: recaptchaToken ?? undefined, ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city, postalCode, country: "PK" } } : {}) }),
       });
       const data = await response.json() as { orderId?: string; orderNumber?: string; error?: string };
       if (!response.ok || !data.orderNumber) throw new Error(data.error || "Order could not be recorded.");
@@ -133,14 +136,15 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
 
   async function startCardCheckout() {
     if (!customerPhone) { setCardError("Enter a phone number so we can reach you about this order."); return; }
-    if (requiresShipping && (!fullName || !phone || !line1 || !city)) { setCardError("Enter your complete shipping address."); return; }
+    if (requiresShipping && (!fullName || !phone || !line1 || !city || !postalCode)) { setCardError("Enter your complete shipping address, including the city code / postal code."); return; }
     setCardError(null);
     setCardLoading(true);
     try {
+      const recaptchaToken = await getRecaptchaToken("checkout");
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() },
-        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city, country: country.length === 2 ? country : "PK" } } : {}) }),
+        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, recaptchaToken: recaptchaToken ?? undefined, ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city, postalCode, country: country.length === 2 ? country : "PK" } } : {}) }),
       });
       const data = await response.json() as { session?: { checkoutUrl?: string }; error?: string };
       if (!response.ok) throw new Error(data.error || "Card checkout could not be started.");
@@ -163,7 +167,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
         <label className="block text-sm font-bold text-[#112d33]">Billing country<select value={country} onChange={(event) => { setCountry(event.target.value); if (event.target.value !== "PK") setMethod("paddle"); }} className="mt-2 w-full rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#1a7775]"><option value="PK">Pakistan</option><option value="AE">United Arab Emirates</option><option value="US">United States</option><option value="OTHER">Other</option></select></label>
         <label className="block text-sm font-bold text-[#112d33]">Phone number<input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="03xx xxxxxxx" className="mt-2 w-full rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#1a7775]"/><span className="mt-1 block text-xs font-normal text-[#9db1b3]">So we can reach you about this order.</span></label>
       </div>
-      {requiresShipping && <div className="mt-6 rounded-2xl border bg-[#f6f7f3] p-4"><p className="text-sm font-bold text-[#112d33]">Shipping address</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" className="rounded-xl border bg-white px-4 py-3"/><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" className="rounded-xl border bg-white px-4 py-3"/><input value={line1} onChange={(e) => setLine1(e.target.value)} placeholder="Address" className="rounded-xl border bg-white px-4 py-3 sm:col-span-2"/><input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="rounded-xl border bg-white px-4 py-3"/></div></div>}
+      {requiresShipping && <div className="mt-6 rounded-2xl border bg-[#f6f7f3] p-4"><p className="text-sm font-bold text-[#112d33]">Shipping address</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" className="rounded-xl border bg-white px-4 py-3"/><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" className="rounded-xl border bg-white px-4 py-3"/><input value={line1} onChange={(e) => setLine1(e.target.value)} placeholder="Address" className="rounded-xl border bg-white px-4 py-3 sm:col-span-2"/><input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="rounded-xl border bg-white px-4 py-3"/><input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="City code / postal code" className="rounded-xl border bg-white px-4 py-3"/></div></div>}
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         {country === "PK" && <button type="button" onClick={() => setMethod("jazzcash")} className={`rounded-2xl border p-4 text-left ${method === "jazzcash" ? "border-[#1a7775] bg-[#e8f1eb]" : "bg-white"}`}><div className="flex items-center gap-3"><Smartphone size={19} className="text-[#1a7775]"/><span className="font-bold">Local wallet</span></div><p className="mt-2 text-sm text-[#718184]">JazzCash QR · manual review</p></button>}
         <button type="button" onClick={() => setMethod("paddle")} className={`rounded-2xl border p-4 text-left ${method === "paddle" ? "border-[#1a7775] bg-[#e8f1eb]" : "bg-white"}`}><div className="flex items-center gap-3"><CreditCard size={19} className="text-[#1a7775]"/><span className="font-bold">Card checkout</span></div><p className="mt-2 text-sm text-[#718184]">Secure Paddle checkout</p></button>

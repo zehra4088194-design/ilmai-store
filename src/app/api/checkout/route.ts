@@ -5,6 +5,8 @@ import { isAppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { getClientAddress, rateLimiter } from "@/lib/rate-limit";
 import { orderAccessCookieName } from "@/services/OrderAccessService";
+import { verifyRecaptcha } from "@/lib/recaptcha";
+import { ValidationError } from "@/lib/errors";
 
 /**
  * POST /api/checkout — creates a pending order from the cart and returns a
@@ -16,6 +18,7 @@ export async function POST(request: NextRequest) {
     const rate = await rateLimiter.check(`checkout:${getClientAddress(request)}`, 10, 60);
     if (!rate.allowed) return NextResponse.json({ error: "Too many checkout attempts. Please try again shortly." }, { status: 429, headers: { "Retry-After": String(Math.max(1, Math.ceil((rate.resetAt.getTime() - Date.now()) / 1000))) } });
     const body = checkoutSchema.parse(await request.json());
+    if (!await verifyRecaptcha(body.recaptchaToken, "checkout")) throw new ValidationError("Verification failed — please try again.");
     const result = await CheckoutService.startCheckout(body, request.headers.get("idempotency-key")?.trim() || undefined);
     const response = NextResponse.json(result);
     if (result.guestAccessToken) response.cookies.set({ name: orderAccessCookieName(result.orderId), value: result.guestAccessToken, httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: 60 * 60 * 24 * 30, path: "/" });
