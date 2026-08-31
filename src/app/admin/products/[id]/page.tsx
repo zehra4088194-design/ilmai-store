@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ProductService } from "@/services/ProductService";
 import { NotFoundError } from "@/lib/errors";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { ProductMediaManager } from "@/components/admin/ProductMediaManager";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function EditProductPage({ params }: { params: Params }) {
         </div>
         <Link href={`/store/${product.slug}`} className="text-sm font-bold text-[#14777a]">View live →</Link>
       </div>
+      <ProductMediaManager productId={product.id} media={product.media} />
       <ProductForm mode="edit" product={product} />
     </main>
   );

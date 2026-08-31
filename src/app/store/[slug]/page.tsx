@@ -6,6 +6,7 @@ import { ProductDetail } from "@/components/store/product-detail";
 import { ProductReviews } from "@/components/store/product-reviews";
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
+import { getPlatformSettings } from "@/lib/platform-settings/server";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,10 @@ export default async function ProductPage({ params }: { params: Params }) {
     throw err;
   });
 
-  const reviews = await ReviewService.listForProduct(product.id);
+  const [reviews, settings] = await Promise.all([
+    ReviewService.listForProduct(product.id),
+    getPlatformSettings(),
+  ]);
 
   return (
     <main className="store-shell">
@@ -33,7 +37,7 @@ export default async function ProductPage({ params }: { params: Params }) {
           </span>
         </div>
         <div className="mt-8 rounded-[32px] border border-[var(--line)] bg-white p-5 shadow-[0_20px_60px_rgba(17,45,51,.06)] sm:p-8">
-          <ProductDetail product={product} />
+          <ProductDetail product={product} usdToPkr={settings.exchangeRate.usdToPkr} />
         </div>
         <div className="mt-8 rounded-[32px] border border-[var(--line)] bg-white p-6 sm:p-8">
           <ProductReviews productId={product.id} reviews={reviews} />

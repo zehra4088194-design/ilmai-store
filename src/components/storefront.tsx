@@ -24,6 +24,8 @@ import type { Banner, Category, Product } from "@/types/domain";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
+import { Reveal } from "@/components/store/reveal";
+import { compareAtAmountMinor } from "@/lib/pricing";
 
 type Props = {
   products: Product[];
@@ -32,6 +34,7 @@ type Props = {
   categories?: Category[];
   initialSearch?: string;
   catalogMode?: boolean;
+  usdToPkr?: number;
 };
 
 function money(m: { amountMinor: number; currency: string }) {
@@ -60,13 +63,15 @@ const CATEGORY_ICONS: Record<string, typeof BookOpen> = {
 };
 const FALLBACK_ICONS = [BookOpen, Layers3, GraduationCap, Clock, Boxes, Cloud];
 
-function ProductCard({ product, index }: { product: Product; index: number }) {
+function ProductCard({ product, index, usdToPkr }: { product: Product; index: number; usdToPkr: number }) {
   const image = primaryImage(product);
   const variant = defaultVariant(product);
+  const price = variant?.price ?? product.basePrice;
+  const compareAt = compareAtAmountMinor(price.amountMinor, price.currency, usdToPkr);
   const [liked, setLiked] = useState(false);
 
   return (
-    <article className="product-card-grid group relative overflow-hidden">
+    <article className="product-card-grid group relative overflow-hidden animate-pop-in" style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}>
       <Link href={`/store/${product.slug}`} className="relative block aspect-[4/3.4] overflow-hidden bg-[#eef2ee]">
         {image ? (
           <img src={image.url} alt={image.altText ?? product.title} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]" />
@@ -97,10 +102,11 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
           {Array.from({ length: 5 }).map((_, i) => <Star key={i} size={13} fill="currentColor" />)}
           <span className="ml-1 text-[11px] font-semibold text-[#8698a0]">New</span>
         </div>
-        <div className="mt-2.5 flex items-baseline justify-between gap-2">
-          <span className="text-lg font-black tracking-[-.02em] text-[#112d33]">{money(variant?.price ?? product.basePrice)}</span>
-          {index % 4 === 0 && <span className="discount-badge">POPULAR</span>}
+        <div className="mt-2.5 flex items-baseline gap-2">
+          <span className="text-sm font-bold text-[#b3bec0] line-through">{money(compareAt)}</span>
+          <span className="text-lg font-black tracking-[-.02em] text-[#112d33]">{money(price)}</span>
         </div>
+        <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[.08em] text-[#1a7775]"><Truck size={11} /> Free shipping</p>
         <AddToBagButton
           variantId={variant?.id}
           className="gold-btn mt-3.5 h-11 w-full disabled:cursor-not-allowed"
@@ -179,6 +185,7 @@ export function Storefront({
   categories = [],
   initialSearch = "",
   catalogMode = false,
+  usdToPkr = 280,
 }: Props) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const hero = banners?.[0];
@@ -226,7 +233,7 @@ export function Storefront({
                   <div className="hero-orb orb-b" />
                   <div className="absolute inset-0 flex items-center justify-center p-8">
                     <div className="relative grid h-full w-full max-w-sm place-items-center">
-                      <div className="grid h-40 w-40 place-items-center rounded-[32px] bg-[#f4bf43] shadow-[0_25px_60px_rgba(244,191,67,.35)] sm:h-52 sm:w-52">
+                      <div className="animate-float grid h-40 w-40 place-items-center rounded-[32px] bg-[#f4bf43] shadow-[0_25px_60px_rgba(244,191,67,.35)] sm:h-52 sm:w-52">
                         <BookOpen size={80} className="text-[#112d33]" strokeWidth={1.3} />
                       </div>
                       <div className="absolute -left-2 top-6 flex flex-col gap-2 sm:left-2">
@@ -247,7 +254,7 @@ export function Storefront({
           </section>
 
           {/* Feature strip */}
-          <section className="store-container mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Reveal className="store-container mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               [Sparkles, "High Quality Products", "Carefully selected resources"],
               [ShieldCheck, "Secure Payments", "100% secure checkout"],
@@ -265,7 +272,7 @@ export function Storefront({
                 </div>
               );
             })}
-          </section>
+          </Reveal>
 
           {/* Promo cards */}
           <section className="store-container mt-6 grid gap-4 lg:grid-cols-3">
@@ -308,7 +315,7 @@ export function Storefront({
           </section>
 
           {/* Category strip */}
-          <section id="collections" className="store-container mt-16">
+          <Reveal id="collections" className="store-container mt-16">
             <div className="mb-6 flex items-end justify-between gap-5">
               <div>
                 <span className="eyebrow">Browse by category</span>
@@ -327,10 +334,10 @@ export function Storefront({
                 );
               })}
             </div>
-          </section>
+          </Reveal>
 
           {!!featuredProducts.length && (
-            <section className="store-container mt-16">
+            <Reveal className="store-container mt-16">
               <div className="curated-strip">
                 <div className="grid gap-10 lg:grid-cols-[.5fr_1.5fr] lg:items-end">
                   <div>
@@ -349,7 +356,7 @@ export function Storefront({
                   </div>
                 </div>
               </div>
-            </section>
+            </Reveal>
           )}
         </>
       )}
@@ -392,7 +399,7 @@ export function Storefront({
             )}
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {visibleProducts.map((product, index) => <ProductCard key={product.id} product={product} index={index} />)}
+              {visibleProducts.map((product, index) => <ProductCard key={product.id} product={product} index={index} usdToPkr={usdToPkr} />)}
             </div>
 
             {visibleProducts.length === 0 && (
@@ -409,7 +416,7 @@ export function Storefront({
       </section>
 
       {!catalogMode && (
-        <section id="why-ilmai" className="store-container mt-16">
+        <Reveal id="why-ilmai" className="store-container mt-16">
           <div className="grid overflow-hidden rounded-[28px] border border-[var(--line)] bg-[#f1ead9] lg:grid-cols-[.85fr_1.15fr]">
             <div className="p-8 sm:p-10 lg:p-12">
               <span className="eyebrow">The IlmAI difference</span>
@@ -431,7 +438,7 @@ export function Storefront({
               ))}
             </div>
           </div>
-        </section>
+        </Reveal>
       )}
 
       <StoreFooter />

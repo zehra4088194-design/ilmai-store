@@ -1,5 +1,19 @@
 import { TRANSACTION_FEE_USD } from "@/constants/manual-payment";
 
+/**
+ * "Compare at" anchor price shown crossed out next to the real price — a
+ * flat $2 (or currency-equivalent) above what's actually charged, so every
+ * product reads as a small discount off a slightly higher price. Purely a
+ * display computation: nothing is stored, the real price everywhere else
+ * (cart, checkout, order, Paddle) is always the actual base/variant price.
+ */
+export function compareAtAmountMinor(amountMinor: number, currency: string, usdToPkrRate: number): { amountMinor: number; currency: string } {
+  const extraUsd = 2;
+  const upper = currency.toUpperCase();
+  const extraMinor = upper === "PKR" ? Math.round(extraUsd * usdToPkrRate) * 100 : extraUsd * 100;
+  return { amountMinor: amountMinor + extraMinor, currency: upper };
+}
+
 /** Converts a USD major-unit price to a whole PKR rupee amount. */
 export function usdToPkr(usdPrice: number, exchangeRate: number): number {
   return Math.round(usdPrice * exchangeRate);

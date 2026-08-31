@@ -107,7 +107,12 @@ export function ProductForm(props: Props) {
         setError(data.error ?? "Product could not be saved.");
         return;
       }
-      router.push("/admin/products");
+      if (props.mode === "create") {
+        const created = (await response.json()) as { id: string };
+        router.push(`/admin/products/${created.id}`);
+      } else {
+        router.push("/admin/products");
+      }
       router.refresh();
     } catch {
       setError("Product could not be saved.");

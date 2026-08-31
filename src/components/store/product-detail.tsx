@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 import { BadgeCheck, BookOpen, Download, Facebook, Heart, Minus, Plus, Share2, ShieldCheck, Star, Truck, Twitter } from "lucide-react";
 import type { Product, ProductVariant } from "@/types/domain";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
+import { compareAtAmountMinor } from "@/lib/pricing";
 
 function money(m: { amountMinor: number; currency: string }) {
   return `${m.currency} ${new Intl.NumberFormat("en-PK").format(m.amountMinor / 100)}`;
 }
 
-export function ProductDetail({ product }: { product: Product }) {
+export function ProductDetail({ product, usdToPkr = 280 }: { product: Product; usdToPkr?: number }) {
   const [variant, setVariant] = useState<ProductVariant | undefined>(product.variants.find((v) => v.isDefault) ?? product.variants[0]);
   const [activeImage, setActiveImage] = useState(0);
   const [liked, setLiked] = useState(false);
@@ -20,6 +21,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const [buying, setBuying] = useState(false);
   const images = product.media.filter((item) => item.mediaType !== "digital_file");
   const price = variant?.price ?? product.basePrice;
+  const compareAt = compareAtAmountMinor(price.amountMinor, price.currency, usdToPkr);
   const digital = ["digital", "course", "notes", "test_series"].includes(product.productType);
 
   const bullets = useMemo(() => [
@@ -72,10 +74,12 @@ export function ProductDetail({ product }: { product: Product }) {
           <span className="text-[#7a8d90]">New listing</span>
         </div>
 
-        <div className="mt-5 flex items-baseline gap-3">
+        <div className="mt-5 flex flex-wrap items-baseline gap-3">
+          <span className="text-lg font-bold text-[#b3bec0] line-through">{money(compareAt)}</span>
           <span className="text-4xl font-black tracking-[-.03em] text-[#112d33]">{money(price)}</span>
           {digital && <span className="rounded-full bg-[#e8f1eb] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] text-[#1a7775]">Instant access</span>}
         </div>
+        <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[#1a7775]"><Truck size={13} /> Free shipping on this order</p>
 
         {product.description && <p className="mt-5 text-[15px] leading-7 text-[#5f7476]">{product.description}</p>}
 
