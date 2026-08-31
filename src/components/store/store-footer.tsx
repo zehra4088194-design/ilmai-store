@@ -112,9 +112,9 @@ export function StoreFooter() {
             <a href="mailto:ilmai.study1@gmail.com">Contact Us</a>
             <Link href="/orders">Track Order</Link>
             <Link href="/account">My Orders</Link>
-            <a href="mailto:ilmai.study1@gmail.com">Shipping Policy</a>
-            <a href="mailto:ilmai.study1@gmail.com">Return Policy</a>
-            <a href="mailto:ilmai.study1@gmail.com">FAQ</a>
+            <Link href="/refund-policy">Shipping &amp; Refund Policy</Link>
+            <Link href="/terms">Terms of Service</Link>
+            <Link href="/privacy">Privacy Policy</Link>
           </div>
         </div>
 
@@ -129,7 +129,15 @@ export function StoreFooter() {
 
       <div className="border-t border-white/10">
         <div className="store-container flex flex-col gap-4 py-6 text-xs text-[#8ea9a6] sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} IlmAI Store. All Rights Reserved.</span>
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>© {new Date().getFullYear()} IlmAI Store. All Rights Reserved.</span>
+            <span className="hidden text-white/20 sm:inline">·</span>
+            <Link href="/privacy" className="hover:text-[#f4bf43]">Privacy</Link>
+            <span className="text-white/20">·</span>
+            <Link href="/terms" className="hover:text-[#f4bf43]">Terms</Link>
+            <span className="text-white/20">·</span>
+            <Link href="/refund-policy" className="hover:text-[#f4bf43]">Refunds</Link>
+          </span>
           <div className="flex items-center gap-3">
             {["VISA", "Mastercard", "JazzCash", "Easypaisa"].map((p) => (
               <span key={p} className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-[#cfe0dd]">{p}</span>

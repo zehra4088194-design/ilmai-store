@@ -204,6 +204,61 @@ export function Storefront({
 
   const featuredProducts = featured.length ? featured : products.slice(0, 4);
 
+  const productGrid = (
+    <section className={`store-container ${catalogMode ? "pt-10" : "mt-10"}`}>
+      <div className="flex flex-col gap-4 border-b border-[var(--line)] pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <span className="eyebrow">{catalogMode ? "All Products" : "On the shelf right now"}</span>
+          <h2 className="section-title mt-2 !text-3xl sm:!text-4xl">{catalogMode ? "Everything worth studying with." : "Start somewhere good."}</h2>
+        </div>
+        {initialSearch && (
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-xs font-bold text-[#5f7476]">
+            Results for &ldquo;{initialSearch}&rdquo;
+          </div>
+        )}
+      </div>
+
+      <div className={catalogMode ? "mt-8 flex flex-col gap-8 lg:flex-row" : "mt-8"}>
+        {catalogMode && (
+          <FilterSidebar
+            categories={categories}
+            activeCategory={activeCategory}
+            onSelect={setActiveCategory}
+            minPrice={0}
+            maxPrice={maxPrice}
+            price={price}
+            onPrice={setPrice}
+          />
+        )}
+
+        <div className="min-w-0 flex-1">
+          {catalogMode && categories.length > 0 && (
+            <div className="mb-5 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+              <button type="button" onClick={() => setActiveCategory(null)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black ${!activeCategory ? "border-[#112d33] bg-[#112d33] text-white" : "border-[var(--line)] bg-white text-[#112d33]"}`}>All</button>
+              {categories.slice(0, 10).map((category) => (
+                <button key={category.id} type="button" onClick={() => setActiveCategory(category.id)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black ${activeCategory === category.id ? "border-[#112d33] bg-[#112d33] text-white" : "border-[var(--line)] bg-white text-[#112d33]"}`}>{category.name}</button>
+              ))}
+            </div>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {visibleProducts.map((product, index) => <ProductCard key={product.id} product={product} index={index} usdToPkr={usdToPkr} />)}
+          </div>
+
+          {visibleProducts.length === 0 && (
+            <div className="empty-state">
+              <h3 className="text-xl font-black text-[#112d33]">Nothing on the shelf yet.</h3>
+              <p className="mt-2 text-sm text-[#718184]">Try another search or browse all products.</p>
+              <Link href="/store" className="gold-btn mt-6 min-h-12 px-6">Browse all products <ArrowRight size={15} /></Link>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {!catalogMode && <div className="mt-8 flex justify-center"><Link href="/store" className="secondary-cta">Explore the full store <ArrowRight size={15} /></Link></div>}
+    </section>
+  );
+
   return (
     <main className="store-shell">
       <StoreHeader initialSearch={initialSearch} categories={categories} />
@@ -252,6 +307,9 @@ export function Storefront({
               </div>
             </div>
           </section>
+
+          {/* Real products, right up front — not buried under marketing sections. */}
+          {productGrid}
 
           {/* Feature strip */}
           <Reveal className="store-container mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -361,59 +419,8 @@ export function Storefront({
         </>
       )}
 
-      {/* Product grid */}
-      <section className={`store-container ${catalogMode ? "pt-10" : "mt-16"}`}>
-        <div className="flex flex-col gap-4 border-b border-[var(--line)] pb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <span className="eyebrow">{catalogMode ? "All Products" : "Fresh from IlmAI"}</span>
-            <h2 className="section-title mt-2 !text-3xl sm:!text-4xl">{catalogMode ? "Everything worth studying with." : "Start somewhere good."}</h2>
-          </div>
-          {initialSearch && (
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-xs font-bold text-[#5f7476]">
-              Results for &ldquo;{initialSearch}&rdquo;
-            </div>
-          )}
-        </div>
-
-        <div className={catalogMode ? "mt-8 flex flex-col gap-8 lg:flex-row" : "mt-8"}>
-          {catalogMode && (
-            <FilterSidebar
-              categories={categories}
-              activeCategory={activeCategory}
-              onSelect={setActiveCategory}
-              minPrice={0}
-              maxPrice={maxPrice}
-              price={price}
-              onPrice={setPrice}
-            />
-          )}
-
-          <div className="min-w-0 flex-1">
-            {catalogMode && categories.length > 0 && (
-              <div className="mb-5 flex gap-2 overflow-x-auto pb-1 lg:hidden">
-                <button type="button" onClick={() => setActiveCategory(null)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black ${!activeCategory ? "border-[#112d33] bg-[#112d33] text-white" : "border-[var(--line)] bg-white text-[#112d33]"}`}>All</button>
-                {categories.slice(0, 10).map((category) => (
-                  <button key={category.id} type="button" onClick={() => setActiveCategory(category.id)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black ${activeCategory === category.id ? "border-[#112d33] bg-[#112d33] text-white" : "border-[var(--line)] bg-white text-[#112d33]"}`}>{category.name}</button>
-                ))}
-              </div>
-            )}
-
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {visibleProducts.map((product, index) => <ProductCard key={product.id} product={product} index={index} usdToPkr={usdToPkr} />)}
-            </div>
-
-            {visibleProducts.length === 0 && (
-              <div className="empty-state">
-                <h3 className="text-xl font-black text-[#112d33]">Nothing on the shelf yet.</h3>
-                <p className="mt-2 text-sm text-[#718184]">Try another search or browse all products.</p>
-                <Link href="/store" className="gold-btn mt-6 min-h-12 px-6">Browse all products <ArrowRight size={15} /></Link>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {!catalogMode && <div className="mt-8 flex justify-center"><Link href="/store" className="secondary-cta">Explore the full store <ArrowRight size={15} /></Link></div>}
-      </section>
+      {/* catalogMode never entered the fragment above, so its product grid renders here instead. */}
+      {catalogMode && productGrid}
 
       {!catalogMode && (
         <Reveal id="why-ilmai" className="store-container mt-16">

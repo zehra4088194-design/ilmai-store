@@ -414,3 +414,21 @@ button, input, select, textarea { font: inherit; }
   background: #fafbf8;
 }
 .detail-trust svg { color: var(--teal); }
+
+/* ── Static legal/policy pages ────────────────────────────────────────── */
+
+.prose-policy { color: #4c6265; font-size: 15px; line-height: 1.8; }
+.prose-policy h2 {
+  margin: 2.25em 0 .75em;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -.01em;
+  color: #112d33;
+}
+.prose-policy h2:first-child { margin-top: 0; }
+.prose-policy p { margin: 0 0 1em; }
+.prose-policy ul { margin: 0 0 1em; padding-left: 1.25em; display: grid; gap: .5em; }
+.prose-policy li { list-style: disc; }
+.prose-policy a { color: var(--teal); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.prose-policy code { background: #eef2ee; border-radius: 6px; padding: .15em .45em; font-size: .9em; }
+.prose-policy strong { color: #112d33; }
