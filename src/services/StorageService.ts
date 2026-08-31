@@ -31,8 +31,13 @@ export const StorageService = {
     return provider.getSignedUrl(storageKey, 10 * 60);
   },
 
-  getProductMediaUrl(key: string): string {
-    return provider.getPublicUrl(key);
+  // The B2 bucket is Private (see B2Provider), so product photos are served
+  // via a signed URL too — just a long-lived one (6h), re-signed on every
+  // server render. Ownership is never checked here on purpose: this is
+  // catalog imagery anyone browsing the store should see, unlike
+  // getDownloadUrl() below (paid digital files).
+  async getProductMediaUrl(key: string): Promise<string> {
+    return provider.getSignedUrl(key, 6 * 60 * 60);
   },
 
   /**

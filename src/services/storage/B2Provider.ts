@@ -40,11 +40,18 @@ export class B2Provider implements StorageProvider {
     try { const result = await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key })); return { key, sizeBytes: result.ContentLength ?? 0, contentType: result.ContentType ?? "application/octet-stream", lastModified: (result.LastModified ?? new Date()).toISOString() }; } catch (error) { throw new StorageError("File metadata lookup failed.", error); }
   }
 
+  // The bucket is Private (Backblaze has no per-prefix ACL — it's bucket-
+  // wide), so even "public" product media is only ever reachable through a
+  // signed URL, never a bare public link. getProductMediaUrl() (below the
+  // 900s cap this method used to enforce) re-signs on every server render,
+  // so a longer TTL here just means fewer re-signs, not a security change —
+  // digital downloads still go through their own short-TTL, ownership-
+  // checked path in StorageService.getDownloadUrl().
   async getSignedUrl(key: string, ttlSeconds: number): Promise<string> {
-    if (!key.startsWith(this.privatePrefix)) throw new StorageError("Only private files can receive download URLs.");
-    try { return await getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: key }), { expiresIn: Math.min(Math.max(ttlSeconds, 60), 900) }); } catch (error) { throw new StorageError("Download URL generation failed.", error); }
+    try { return await getSignedUrl(this.client, new GetObjectCommand({ Bucket: this.bucket, Key: key }), { expiresIn: Math.min(Math.max(ttlSeconds, 60), 21600) }); } catch (error) { throw new StorageError("Signed URL generation failed.", error); }
   }
 
+  /** @deprecated Bucket is private — nothing is reachable via a bare public URL. Use getSignedUrl. */
   getPublicUrl(key: string): string {
     if (!key.startsWith(this.publicPrefix)) throw new StorageError("Only public media can receive public URLs.");
     return `${this.endpoint.replace(/\/$/, "")}/${this.bucket}/${key.split("/").map(encodeURIComponent).join("/")}`;

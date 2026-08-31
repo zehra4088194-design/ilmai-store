@@ -13,7 +13,18 @@ import type { productListQuerySchema, adminCreateProductSchema, adminUpdateProdu
 type Raw = Record<string, any>;
 const select = "*, product_variants(*), product_media(*), product_categories(category:categories(*))";
 
-function mapProduct(row: Raw): Product {
+// Exported so PromotionService.getFeaturedProducts can map raw product rows
+// the same way instead of skipping the media-URL step entirely.
+export async function mapProduct(row: Raw): Promise<Product> {
+  const mediaRows = (row.product_media ?? []).filter((m: Raw) => m.media_type !== "digital_file");
+  const media = await Promise.all(mediaRows.map(async (m: Raw) => ({
+    id: m.id,
+    url: await StorageService.getProductMediaUrl(m.storage_key),
+    mediaType: m.media_type,
+    altText: m.alt_text ?? undefined,
+    isPrimary: m.is_primary,
+    sortOrder: m.sort_order,
+  })));
   return {
     id: row.id, slug: row.slug, title: row.title, description: row.description ?? undefined,
     productType: row.product_type, status: row.status,
@@ -21,7 +32,7 @@ function mapProduct(row: Raw): Product {
     variants: (row.product_variants ?? []).map((v: Raw) => ({ id: v.id, productId: v.product_id, sku: v.sku, name: v.name, price: { amountMinor: v.price_minor, currency: v.currency }, isDefault: v.is_default, requiresShipping: v.requires_shipping, weightGrams: v.weight_grams ?? undefined, providerPriceId: typeof v.metadata?.paddle_price_id === "string" ? v.metadata.paddle_price_id : undefined })),
     categories: (row.product_categories ?? []).map((x: Raw) => x.category).filter(Boolean).map((c: Raw) => ({ id: c.id, slug: c.slug, name: c.name, description: c.description ?? undefined, parentId: c.parent_id ?? undefined })),
     // Digital files are private entitlements, never public product media.
-    media: (row.product_media ?? []).filter((m: Raw) => m.media_type !== "digital_file").map((m: Raw) => ({ id: m.id, url: StorageService.getProductMediaUrl(m.storage_key), mediaType: m.media_type, altText: m.alt_text ?? undefined, isPrimary: m.is_primary, sortOrder: m.sort_order })),
+    media,
   };
 }
 
@@ -29,7 +40,7 @@ export const ProductService = {
   async adminList(): Promise<Product[]> {
     const { data, error } = await createSupabaseAdminClient().from("products").select(select).order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return (data ?? []).map(mapProduct);
+    return Promise.all((data ?? []).map(mapProduct));
   },
   async list(query: z.infer<typeof productListQuerySchema>): Promise<{ items: Product[]; total: number }> {
     const db = await createSupabaseServerClient();
@@ -42,7 +53,7 @@ export const ProductService = {
     const from = (query.page - 1) * query.pageSize;
     const { data, error, count } = await request.range(from, from + query.pageSize - 1);
     if (error) throw new Error(error.message);
-    let items = (data ?? []).map(mapProduct);
+    let items = await Promise.all((data ?? []).map(mapProduct));
     if (query.categorySlug) items = items.filter((p) => p.categories.some((c) => c.slug === query.categorySlug));
     return { items, total: count ?? items.length };
   },
