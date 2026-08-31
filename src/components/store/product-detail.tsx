@@ -7,6 +7,7 @@ import { BadgeCheck, BookOpen, Download, Facebook, Heart, Minus, Plus, Share2, S
 import type { Product, ProductVariant } from "@/types/domain";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
 import { compareAtAmountMinor } from "@/lib/pricing";
+import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 
 function money(m: { amountMinor: number; currency: string }) {
   return `${m.currency} ${new Intl.NumberFormat("en-PK").format(m.amountMinor / 100)}`;
@@ -27,7 +28,7 @@ export function ProductDetail({ product, usdToPkr = 280 }: { product: Product; u
   const bullets = useMemo(() => [
     "Complete, topic-wise coverage — nothing skipped.",
     "Easy to learn and revise before exams.",
-    digital ? "Instant access after successful payment." : "Made for delivery within Pakistan.",
+    digital || !PHYSICAL_GOODS_ENABLED ? "Instant access after successful payment." : "Made for delivery within Pakistan.",
     "Follows the latest board/curriculum syllabus.",
   ], [digital]);
 
@@ -79,7 +80,9 @@ export function ProductDetail({ product, usdToPkr = 280 }: { product: Product; u
           <span className="text-4xl font-black tracking-[-.03em] text-[#0B1D3A]">{money(price)}</span>
           {digital && <span className="rounded-full bg-[#DCFCE7] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] text-[#2563EB]">Instant access</span>}
         </div>
-        <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[#2563EB]"><Truck size={13} /> Free shipping on this order</p>
+        <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[#2563EB]">
+          {digital || !PHYSICAL_GOODS_ENABLED ? <><Download size={13} /> Instant digital delivery</> : <><Truck size={13} /> Free shipping on this order</>}
+        </p>
 
         {product.description && <p className="mt-5 text-[15px] leading-7 text-[#64748B]">{product.description}</p>}
 

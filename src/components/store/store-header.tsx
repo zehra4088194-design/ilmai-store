@@ -6,6 +6,7 @@ import { ChevronDown, Heart, LifeBuoy, Loader2, LogOut, Menu, PackageSearch, Pho
 import { useEffect, useState } from "react";
 import { CartBadge } from "@/components/store/cart-badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 import type { Category } from "@/types/domain";
 
 type Props = { initialSearch?: string; categories?: Category[] };
@@ -14,7 +15,7 @@ const NAV_LINKS: Array<[string, string]> = [
   ["Home", "/store"],
   ["Shop", "/store"],
   ["Digital Products", "/store?search=digital"],
-  ["Books", "/store?search=books"],
+  ...(PHYSICAL_GOODS_ENABLED ? [["Books", "/store?search=books"] as [string, string]] : []),
   ["Courses", "/store?search=courses"],
   ["Bundles", "/store?search=bundle"],
 ];
@@ -52,7 +53,7 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
       <div className="utility-bar hidden sm:block">
         <div className="store-container flex min-h-9 items-center justify-between gap-4">
           <span className="inline-flex items-center gap-1.5"><Star size={12} className="text-[#2563EB]" fill="currentColor" /> Welcome to IlmAI Store</span>
-          <span className="inline-flex items-center gap-1.5 text-[#2563EB]"><PackageSearch size={13} /> Free delivery on orders over PKR 2,000</span>
+          <span className="inline-flex items-center gap-1.5 text-[#2563EB]"><PackageSearch size={13} /> {PHYSICAL_GOODS_ENABLED ? "Free delivery on orders over PKR 2,000" : "Instant access after checkout"}</span>
           <span className="flex items-center gap-4">
             <Link href="/orders" className="inline-flex items-center gap-1.5 hover:text-[#2563EB]"><PackageSearch size={12} /> Track order</Link>
             <a href="mailto:ilmai.study1@gmail.com" className="inline-flex items-center gap-1.5 hover:text-[#2563EB]"><LifeBuoy size={12} /> Help</a>
@@ -77,7 +78,7 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
               name="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search for books, notes, courses…"
+              placeholder={PHYSICAL_GOODS_ENABLED ? "Search for books, notes, courses…" : "Search for notes, courses, test series…"}
               className="min-w-0 flex-1 border-0 px-4 text-sm text-[#0B1D3A] outline-none"
             />
             <button type="submit" aria-label="Search" className="grid w-14 shrink-0 place-items-center bg-[#2563EB] text-[#0B1D3A] transition hover:bg-[#1d4fd1]">
@@ -135,7 +136,7 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
                     {c.name}
                   </Link>
                 ))}
-                {!categories.length && ["Notes", "Books", "Courses", "Test Series", "Bundles", "Digital Products"].map((label) => (
+                {!categories.length && (PHYSICAL_GOODS_ENABLED ? ["Notes", "Books", "Courses", "Test Series", "Bundles", "Digital Products"] : ["Notes", "Courses", "Test Series", "Bundles", "Digital Products"]).map((label) => (
                   <Link key={label} href={`/store?search=${encodeURIComponent(label)}`} onClick={() => setCatOpen(false)} className="block px-4 py-2.5 text-sm font-semibold text-[#0B1D3A] hover:bg-[#F1F5F9]">
                     {label}
                   </Link>

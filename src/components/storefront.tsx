@@ -25,6 +25,7 @@ import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
 import { Reveal } from "@/components/store/reveal";
 import { compareAtAmountMinor } from "@/lib/pricing";
+import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 
 type Props = {
   products: Product[];
@@ -185,7 +186,11 @@ function FilterSidebar({
         <p className="filter-heading">Why shop with us</p>
         <div className="grid gap-3 text-xs leading-5 text-[var(--muted)]">
           <div className="flex items-center gap-2"><ShieldCheck size={15} className="text-[var(--blue)]" /> Secure checkout</div>
-          <div className="flex items-center gap-2"><Truck size={15} className="text-[var(--blue)]" /> Delivery across Pakistan</div>
+          {PHYSICAL_GOODS_ENABLED ? (
+            <div className="flex items-center gap-2"><Truck size={15} className="text-[var(--blue)]" /> Delivery across Pakistan</div>
+          ) : (
+            <div className="flex items-center gap-2"><ShieldCheck size={15} className="text-[var(--blue)]" /> Verified content</div>
+          )}
           <div className="flex items-center gap-2"><Download size={15} className="text-[var(--blue)]" /> Instant digital access</div>
         </div>
       </div>
@@ -291,7 +296,9 @@ export function Storefront({
                     Everything a <span className="hero-accent">Smart Student</span> Needs.
                   </h1>
                   <p className="mt-6 max-w-md text-[15px] leading-7 text-[var(--muted)]">
-                    Premium study resources, AI tools, books and digital products to help you learn, create and excel.
+                    {PHYSICAL_GOODS_ENABLED
+                      ? "Premium study resources, AI tools, books and digital products to help you learn, create and excel."
+                      : "Premium study resources, AI tools and digital products to help you learn, create and excel."}
                   </p>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Link href="/store" className="gold-btn min-h-12 px-6">Explore Products <ArrowRight size={16} /></Link>
@@ -350,13 +357,23 @@ export function Storefront({
 
           {/* Promo cards */}
           <section className="store-container mt-6 grid gap-4 lg:grid-cols-3">
-            <div className="promo-card text-[var(--navy)]" style={{ background: "linear-gradient(135deg,#FFF3E8,#FFE4CC)" }}>
-              <span className="badge badge-sale">Special offer</span>
-              <h3 className="mt-4 text-xl font-bold leading-tight sm:text-2xl">Up to 30% off<br />on selected books</h3>
-              <p className="mt-2 text-xs text-[#9A5B26]">On selected books &amp; study materials</p>
-              <Link href="/store?search=books" className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--navy)]">Shop now <ArrowRight size={13} /></Link>
-              <Package size={90} className="pointer-events-none absolute -bottom-4 -right-4 text-[var(--navy)]/8" />
-            </div>
+            {PHYSICAL_GOODS_ENABLED ? (
+              <div className="promo-card text-[var(--navy)]" style={{ background: "linear-gradient(135deg,#FFF3E8,#FFE4CC)" }}>
+                <span className="badge badge-sale">Special offer</span>
+                <h3 className="mt-4 text-xl font-bold leading-tight sm:text-2xl">Up to 30% off<br />on selected books</h3>
+                <p className="mt-2 text-xs text-[#9A5B26]">On selected books &amp; study materials</p>
+                <Link href="/store?search=books" className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--navy)]">Shop now <ArrowRight size={13} /></Link>
+                <Package size={90} className="pointer-events-none absolute -bottom-4 -right-4 text-[var(--navy)]/8" />
+              </div>
+            ) : (
+              <div className="promo-card text-[var(--navy)]" style={{ background: "linear-gradient(135deg,#FFF3E8,#FFE4CC)" }}>
+                <span className="badge badge-sale">Special offer</span>
+                <h3 className="mt-4 text-xl font-bold leading-tight sm:text-2xl">Up to 30% off<br />on selected notes</h3>
+                <p className="mt-2 text-xs text-[#9A5B26]">On selected notes &amp; study materials</p>
+                <Link href="/store?search=notes" className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--navy)]">Shop now <ArrowRight size={13} /></Link>
+                <Package size={90} className="pointer-events-none absolute -bottom-4 -right-4 text-[var(--navy)]/8" />
+              </div>
+            )}
 
             <div className="promo-card bg-white border border-[var(--border)]">
               <div className="flex items-center justify-between">
@@ -364,9 +381,11 @@ export function Storefront({
                 <Link href="/store" className="text-[11px] font-bold text-[var(--blue)]">View all</Link>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3">
-                {(categories.length ? categories.slice(0, 6) : [
-                  { id: "books", name: "Books" }, { id: "notes", name: "Notes" }, { id: "courses", name: "Courses" },
-                ] as Category[]).slice(0, 6).map((c, i) => {
+                {(categories.length ? categories.slice(0, 6) : (
+                  PHYSICAL_GOODS_ENABLED
+                    ? [{ id: "books", name: "Books" }, { id: "notes", name: "Notes" }, { id: "courses", name: "Courses" }]
+                    : [{ id: "notes", name: "Notes" }, { id: "courses", name: "Courses" }, { id: "test-series", name: "Test Series" }]
+                ) as Category[]).slice(0, 6).map((c, i) => {
                   const Icon = CATEGORY_ICONS[c.id] ?? BookOpen;
                   const chip = categoryChipClass(c.slug ?? c.id, i);
                   return (
@@ -399,7 +418,7 @@ export function Storefront({
               <Link href="/store" className="section-link">View all <ArrowRight size={14} /></Link>
             </div>
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-              {(categories.length ? categories : ["Notes", "Books", "Courses", "Test Series", "Bundles", "Digital"].map((n, i) => ({ id: String(i), name: n, slug: n } as Category))).slice(0, 6).map((category, index) => {
+              {(categories.length ? categories : (PHYSICAL_GOODS_ENABLED ? ["Notes", "Books", "Courses", "Test Series", "Bundles", "Digital"] : ["Notes", "Courses", "Test Series", "Bundles", "Digital"]).map((n, i) => ({ id: String(i), name: n, slug: n } as Category))).slice(0, 6).map((category, index) => {
                 const Icon = CATEGORY_ICONS[category.id] ?? FALLBACK_ICONS[index % FALLBACK_ICONS.length] ?? BookOpen;
                 const chip = categoryChipClass(category.slug ?? category.id, index);
                 return (

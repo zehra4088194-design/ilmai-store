@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, Check, Facebook, Instagram, Loader2, Mail, Youtube } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 
 function NewsletterForm() {
   const [email, setEmail] = useState("");
@@ -84,7 +85,9 @@ export function StoreFooter() {
             <span className="rounded-md bg-[#2563EB] px-1.5 py-0.5 text-[10px] font-black uppercase text-[#0B1D3A]">.store</span>
           </Link>
           <p className="mt-5 max-w-xs text-sm leading-6 text-[#B9C4E0]">
-            Your one-stop shop for study materials, books, notes and test series — everything a student actually needs, in one place.
+            {PHYSICAL_GOODS_ENABLED
+              ? "Your one-stop shop for study materials, books, notes and test series — everything a student actually needs, in one place."
+              : "Your one-stop shop for study materials, notes, courses and test series — everything a student actually needs, in one place."}
           </p>
           <div className="mt-5 flex items-center gap-3">
             <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" className="footer-social"><Facebook size={16} /></a>
@@ -97,7 +100,7 @@ export function StoreFooter() {
           <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#2563EB]">Shop</h3>
           <div className="mt-5 grid gap-3 text-sm text-[#B9C4E0]">
             <Link href="/store">All Products</Link>
-            <Link href="/store?search=books">Books</Link>
+            {PHYSICAL_GOODS_ENABLED && <Link href="/store?search=books">Books</Link>}
             <Link href="/store?search=notes">Notes</Link>
             <Link href="/store?search=courses">Courses</Link>
             <Link href="/store?search=test+series">Test Series</Link>
@@ -112,7 +115,7 @@ export function StoreFooter() {
             <a href="mailto:ilmai.study1@gmail.com">Contact Us</a>
             <Link href="/orders">Track Order</Link>
             <Link href="/account">My Orders</Link>
-            <Link href="/refund-policy">Shipping &amp; Refund Policy</Link>
+            <Link href="/refund-policy">{PHYSICAL_GOODS_ENABLED ? "Shipping & Refund Policy" : "Refund Policy"}</Link>
             <Link href="/terms">Terms of Service</Link>
             <Link href="/privacy">Privacy Policy</Link>
           </div>
