@@ -38,7 +38,7 @@ export function isDigitalProductType(type: ProductType): boolean {
  * products from public listing/detail/sitemap — admin/seller management of
  * physical products is untouched, so nothing is lost while this is off.
  */
-export const PHYSICAL_GOODS_ENABLED = false;
+export const PHYSICAL_GOODS_ENABLED = true;
 
 export const PRODUCT_STATUSES = ["draft", "published", "archived"] as const;
 export type ProductStatus = (typeof PRODUCT_STATUSES)[number];
