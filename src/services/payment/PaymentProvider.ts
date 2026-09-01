@@ -1,7 +1,7 @@
 /**
  * Provider-agnostic payment interface. `PaymentService` is the only thing
  * the rest of the app imports; it depends on this interface, not on
- * `PaddleProvider` directly, so adding a second provider later never
+ * `SafepayProvider` directly, so adding a second provider later never
  * touches checkout/order code. See CLAUDE_CONTEXT.md §7.
  */
 

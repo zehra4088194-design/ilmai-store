@@ -203,7 +203,7 @@ export interface OrderAddressRow {
 export interface PaymentRow {
   id: UUID;
   order_id: UUID;
-  provider: "paddle" | "jazzcash";
+  provider: "safepay" | "jazzcash";
   provider_customer_id: string | null;
   provider_transaction_id: string;
   status: "pending" | "paid" | "failed" | "refunded";

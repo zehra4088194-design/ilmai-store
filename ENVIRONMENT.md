@@ -44,19 +44,26 @@ never reach the browser (see `SECURITY.md` §1).
 | `B2_PUBLIC_MEDIA_PREFIX` | server | Prefix for public product images (served via signed/public read as appropriate) |
 | `B2_PRIVATE_DOWNLOADS_PREFIX` | server | Prefix for private digital files, signed-URL only |
 
-## Paddle
+## Safepay
 
 | Var | Exposure | Purpose |
 |---|---|---|
-| `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` | public | Paddle.js client-side token for rendering checkout |
-| `NEXT_PUBLIC_PADDLE_ENVIRONMENT` | public | `sandbox` or `production` |
-| `PADDLE_API_KEY` | server | Server-side API key for creating transactions/checkouts |
-| `PADDLE_WEBHOOK_SECRET` | server | Used to verify incoming webhook signatures |
+| `NEXT_PUBLIC_SAFEPAY_ENVIRONMENT` | public | `sandbox` or `production` — also picks the API/checkout base URLs |
+| `SAFEPAY_API_KEY` | server | Merchant API key ("beacon") used to create orders and build the checkout redirect URL |
+| `SAFEPAY_SECRET_KEY` | server | Merchant secret key, if your Safepay integration requires it for signed requests |
+| `SAFEPAY_WEBHOOK_SECRET` | server | Used to verify incoming webhook signatures |
 
-Paddle client/public config is limited strictly to what's needed to render
-Paddle's hosted/overlay checkout widget. All transaction creation, status
-checks, and webhook handling happen server-side with `PADDLE_API_KEY` /
-`PADDLE_WEBHOOK_SECRET`, which are never exposed to the browser.
+All order creation, status checks, and webhook handling happen server-side
+with `SAFEPAY_API_KEY` / `SAFEPAY_WEBHOOK_SECRET`, which are never exposed
+to the browser — the shopper is redirected to Safepay's hosted checkout page
+instead of a client-side widget.
+
+Endpoint paths and the webhook signature header used in
+`SafepayProvider.ts` / `/api/webhooks/safepay` are best-effort from
+Safepay's public Order API docs and have not been exercised against a real
+Safepay account yet — confirm them against the "Integration" page in your
+Safepay dashboard once sandbox keys are issued, and run a full sandbox
+checkout + webhook round-trip before sending live traffic.
 
 ## Admin / Misc
 

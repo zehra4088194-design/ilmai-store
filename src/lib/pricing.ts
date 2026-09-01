@@ -5,7 +5,7 @@ import { TRANSACTION_FEE_USD } from "@/constants/manual-payment";
  * flat $2 (or currency-equivalent) above what's actually charged, so every
  * product reads as a small discount off a slightly higher price. Purely a
  * display computation: nothing is stored, the real price everywhere else
- * (cart, checkout, order, Paddle) is always the actual base/variant price.
+ * (cart, checkout, order, Safepay) is always the actual base/variant price.
  */
 export function compareAtAmountMinor(amountMinor: number, currency: string, usdToPkrRate: number): { amountMinor: number; currency: string } {
   const extraUsd = 2;

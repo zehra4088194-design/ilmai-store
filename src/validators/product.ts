@@ -12,7 +12,7 @@ export const createProductVariantSchema = z.object({
   isDefault: z.boolean().default(false),
   requiresShipping: z.boolean().default(false),
   weightGrams: z.number().int().positive().optional(),
-  paddlePriceId: z.string().regex(/^pri_[a-z0-9]+$/).optional(),
+  providerPriceId: z.string().min(1).max(120).optional(),
 });
 
 export const adminCreateProductSchema = z.object({

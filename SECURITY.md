@@ -2,7 +2,7 @@
 
 ## Secrets
 
-`SUPABASE_SERVICE_ROLE_ID_KEY`, Paddle private/webhook keys, B2 secret keys, and
+`SUPABASE_SERVICE_ROLE_ID_KEY`, Safepay private/webhook keys, B2 secret keys, and
 `RESEND_API_KEY` are server-only. They must never be prefixed `NEXT_PUBLIC_`,
 imported by client components, returned in an API response, or logged.
 
@@ -16,14 +16,14 @@ an HttpOnly cookie.
 
 ## Payment integrity
 
-The browser can only show payment UX. A verified Paddle webhook or an
+The browser can only show payment UX. A verified Safepay webhook or an
 authenticated admin verification of a JazzCash claim calls the shared
 `OrderCompletionService`; only that server-side flow marks payments paid.
 
-Paddle signatures are checked against the raw request body and rejected when
+Safepay signatures are checked against the raw request body and rejected when
 the timestamp is outside the configured tolerance. Webhook event IDs and
 provider transaction IDs are unique, so retries are idempotent. Amount and
-currency are compared with the server-side order snapshot for Paddle.
+currency are compared with the server-side order snapshot for Safepay.
 
 ## Digital delivery
 

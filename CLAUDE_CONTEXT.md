@@ -31,7 +31,7 @@ marketplace features (those are explicitly out of scope for v1 — see §13).
 | Styling | Tailwind CSS, shadcn/ui-compatible primitives |
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth |
-| Payments | Paddle (via a provider-agnostic `PaymentProvider` abstraction) |
+| Payments | Safepay (via a provider-agnostic `PaymentProvider` abstraction) |
 | Object storage | Backblaze B2 (S3-compatible), via a `StorageProvider` abstraction |
 | Email | Resend, via an `EmailService` abstraction |
 | Hosting | Oracle Cloud VM + Coolify (Docker) |
@@ -57,13 +57,13 @@ Next.js Route Handlers (src/app/api/**)  ── thin, validate + call services
 Services (src/services/**)  ── all business logic lives here
         │
         ├── Supabase (Postgres + Auth + RLS)
-        ├── PaymentProvider → PaddleProvider
+        ├── PaymentProvider → SafepayProvider
         ├── StorageProvider → B2Provider
         └── EmailService → ResendProvider
 ```
 
 Rules:
-- **Route handlers never talk to Supabase/Paddle/B2/Resend directly.** They
+- **Route handlers never talk to Supabase/Safepay/B2/Resend directly.** They
   call a service. This keeps provider swaps (e.g. adding Stripe later)
   localized to one file.
 - **Server vs client boundary is strict.** Anything importing a secret env var
@@ -86,14 +86,14 @@ src/
 │       ├── checkout/
 │       ├── orders/
 │       ├── payments/
-│       ├── webhooks/paddle/
+│       ├── webhooks/safepay/
 │       ├── promotions/
 │       └── admin/
 ├── components/              # shared, mostly presentational UI (shadcn-style)
 ├── config/                  # env parsing, site config, feature flags
 ├── constants/                # enums / string constants, no magic strings
 ├── hooks/                    # shared React hooks (client-side)
-├── lib/                      # low-level clients: supabase, paddle, b2, resend
+├── lib/                      # low-level clients: supabase, safepay, b2, resend
 ├── services/                 # business logic (Product/Cart/Order/... Service)
 ├── types/                    # shared TS types (db + domain)
 ├── validators/                # Zod schemas
@@ -110,7 +110,7 @@ src/
 ```
 
 `lib/` holds thin SDK wrappers (the only place `@supabase/supabase-js`,
-Paddle's SDK, the B2/S3 client, and Resend's SDK are imported). `services/`
+Safepay's SDK, the B2/S3 client, and Resend's SDK are imported). `services/`
 is where business rules live and is what the rest of the app calls.
 
 ---
@@ -169,16 +169,16 @@ Key principles baked into the schema:
 
 `src/services/payment/PaymentProvider.ts` defines a provider-agnostic
 interface (`createCheckout`, `getTransaction`, `verifyWebhookSignature`,
-`parseWebhookEvent`). `src/services/payment/PaddleProvider.ts` implements it.
+`parseWebhookEvent`). `src/services/payment/SafepayProvider.ts` implements it.
 `PaymentService` (src/services/PaymentService.ts) is what the rest of the app
-calls — it never imports Paddle's SDK directly.
+calls — it never imports Safepay's SDK directly.
 
 **Non-negotiable rule:** the frontend receiving a "checkout succeeded" event
-from Paddle.js is *never* sufficient to mark an order as paid. Only a
-signature-verified webhook hitting `POST /api/webhooks/paddle`, processed by
-`PaddleProvider.verifyWebhookSignature` + `PaymentService.handleWebhookEvent`,
+from Safepay.js is *never* sufficient to mark an order as paid. Only a
+signature-verified webhook hitting `POST /api/webhooks/safepay`, processed by
+`SafepayProvider.verifyWebhookSignature` + `PaymentService.handleWebhookEvent`,
 is allowed to transition `orders.payment_status` to `paid`. This is enforced
-in code (see `src/app/api/webhooks/paddle/route.ts` stub) and documented in
+in code (see `src/app/api/webhooks/safepay/route.ts` stub) and documented in
 `SECURITY.md`.
 
 Order state machine (`order_status`): `pending` → `processing` → `fulfilled` →
@@ -208,7 +208,7 @@ the requesting user owns a `digital_entitlements` row for that
 product/order, matching this flow:
 
 ```
-Paddle → verified webhook → order.payment_status = 'paid'
+Safepay → verified webhook → order.payment_status = 'paid'
      → digital_entitlements row created (order_id, user_id, product_id)
      → user requests download → entitlement checked → signed B2 URL (short TTL) issued
 ```
@@ -230,7 +230,7 @@ password/account email, admin new-order notification, refund/cancellation.
 ## 10. Security Rules
 
 Full detail in `SECURITY.md`. Highlights:
-- `SUPABASE_SERVICE_ROLE_ID_KEY`, Paddle private/webhook secrets,
+- `SUPABASE_SERVICE_ROLE_ID_KEY`, Safepay private/webhook secrets,
   `B2_SECRET_ACCESS_KEY`, `RESEND_API_KEY` are **server-only** — never
   prefixed `NEXT_PUBLIC_`, never imported by client components, never logged.
 - All external input (API bodies, query params, webhook payloads) is validated
@@ -238,7 +238,7 @@ Full detail in `SECURITY.md`. Highlights:
 - RLS is enabled on every table; the service-role key (which bypasses RLS) is
   only used inside `src/lib/supabase/server-admin.ts`, which is only imported
   by admin-authorized service code.
-- Paddle webhooks are signature-verified before any state change.
+- Safepay webhooks are signature-verified before any state change.
 - Digital downloads are always short-lived signed URLs, never public object
   URLs.
 
@@ -273,7 +273,7 @@ Full detail in `SECURITY.md`. Highlights:
 - Domain types (`src/types/*.ts`)
 - Constants (`src/constants/*.ts`)
 - Zod validators for core entities (`src/validators/*.ts`)
-- Service interfaces + Paddle/B2/Resend provider stubs
+- Service interfaces + Safepay/B2/Resend provider stubs
   (`src/services/**`, `src/lib/**`)
 - Error model (`src/lib/errors.ts`)
 - Logging abstraction (`src/lib/logger.ts`)
@@ -291,7 +291,7 @@ Full detail in `SECURITY.md`. Highlights:
 2. Implement the actual `ProductService`, `CartService`, `OrderService`,
    `PaymentService`, `PromotionService`, `ReviewService`, `CustomerService`
    business logic bodies (interfaces/signatures are already defined).
-3. Implement `PaddleProvider` against Paddle's actual current SDK/API
+3. Implement `SafepayProvider` against Safepay's actual current SDK/API
    (checkout creation, transaction retrieval, webhook signature verification)
    — the interface is fixed, the implementation is a TODO.
 4. Implement `B2Provider` with `@aws-sdk/client-s3` against B2's S3 endpoint.
@@ -319,7 +319,7 @@ Full detail in `SECURITY.md`. Highlights:
 - The service/provider abstraction boundaries in §3.
 - The order-snapshot pattern in `order_items` (§5) — required for financial
   integrity.
-- The rule that only a verified Paddle webhook can set `payment_status =
+- The rule that only a verified Safepay webhook can set `payment_status =
   'paid'` (§7).
 - The signed-URL-only digital delivery pattern (§8).
 - Money-as-integer-minor-units convention.
@@ -352,7 +352,7 @@ visual system beyond Tailwind config tokens left intentionally minimal.
 ## 16. Implementation update
 
 The implementation pass has completed the core checkout and operations:
-Paddle Billing transaction creation, verified/idempotent webhooks, JazzCash
+Safepay Billing transaction creation, verified/idempotent webhooks, JazzCash
 manual claims and proof uploads, shared paid-order fulfillment, ad conversion
 reporting for both payment paths, guest order access, private digital delivery,
 inventory reservations, coupon reservations, rate limiting, shipping tracking

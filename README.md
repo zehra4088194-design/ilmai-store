@@ -6,7 +6,7 @@ platform. Live at `https://ilmai.store`.
 ## Stack
 
 Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS · Supabase
-(Postgres + Auth) · Paddle · Backblaze B2 · Resend · Oracle Cloud + Coolify.
+(Postgres + Auth) · Safepay · Backblaze B2 · Resend · Oracle Cloud + Coolify.
 
 ## Getting Started
 
@@ -50,14 +50,13 @@ The daily exchange-rate workflow calls `/api/cron/usd-pkr-rate` at 20:00 UTC
 `/api/cron/release-inventory` every 15 minutes. Both use `APP_URL` and
 `CRON_SECRET` repository secrets.
 
-For Paddle, store a `paddle_price_id` in a product variant's `metadata` when
-using catalog prices. If it is absent, the server creates a non-catalog
-one-time item from the server-side order snapshot. Configure Paddle's webhook
-at `/api/webhooks/paddle`.
+Safepay's Order API doesn't use catalog price IDs — every checkout is
+created from the server-side order snapshot directly. Configure Safepay's
+webhook at `/api/webhooks/safepay`.
 
 ## Implemented
 
-The core storefront, cart, guest checkout, Paddle checkout, JazzCash manual
+The core storefront, cart, guest checkout, Safepay checkout, JazzCash manual
 review, payment proof upload, digital delivery, ad attribution callback,
 inventory reservations, coupon reservations, shipping tracking fields, and
 admin operations are implemented. Run all migrations and configure secrets

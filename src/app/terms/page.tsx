@@ -38,7 +38,7 @@ export default function TermsOfServicePage() {
           <h2>3. Orders and payment</h2>
           <p>
             Placing an order is an offer to buy — we accept it once payment is confirmed (automatically for card
-            payments via Paddle, or manually for JazzCash wallet payments once our team verifies your transaction).
+            payments via Safepay, or manually for JazzCash wallet payments once our team verifies your transaction).
             We may decline or cancel an order — for example, for suspected fraud, an out-of-stock item, or a pricing
             error — in which case any payment already made will be refunded.
           </p>

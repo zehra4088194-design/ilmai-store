@@ -26,7 +26,7 @@ export default function PrivacyPolicyPage() {
           <ul>
             <li><strong>Account information</strong> — email address and password (handled by Supabase Auth) when you sign up or sign in.</li>
             <li><strong>Order information</strong> — the products you buy, your email, a phone number, and for physical orders your shipping address (name, address, city, phone), so we can deliver your order and contact you about it.</li>
-            <li><strong>Payment information</strong> — we never see or store your card details. Card payments are processed entirely by Paddle, our card payment provider. For local wallet payments (JazzCash), you send payment directly to our wallet and share a transaction reference/screenshot with our team for manual verification — we don&apos;t store wallet PINs or credentials.</li>
+            <li><strong>Payment information</strong> — we never see or store your card details. Card payments are processed entirely by Safepay, our payment gateway. For local wallet payments (JazzCash), you send payment directly to our wallet and share a transaction reference/screenshot with our team for manual verification — we don&apos;t store wallet PINs or credentials.</li>
             <li><strong>Usage information</strong> — basic interactions like product page views and cart activity, used only in aggregate to understand what&apos;s useful on the store (e.g. for sellers to see how their own listings are doing).</li>
           </ul>
 
@@ -43,7 +43,7 @@ export default function PrivacyPolicyPage() {
           <p>We don&apos;t sell your data. We only share what&apos;s necessary to operate the store, with:</p>
           <ul>
             <li><strong>Supabase</strong> — hosts our database and handles authentication.</li>
-            <li><strong>Paddle</strong> — processes card payments and, for those transactions, acts as the merchant of record.</li>
+            <li><strong>Safepay</strong> — processes card payments on our behalf as our payment gateway.</li>
             <li><strong>Backblaze (B2)</strong> — stores product images and digital files; digital files are only ever reachable through a private, ownership-checked, time-limited link.</li>
             <li><strong>Resend</strong> — sends transactional emails (order confirmations, etc.).</li>
           </ul>

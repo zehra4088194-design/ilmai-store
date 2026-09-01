@@ -144,15 +144,15 @@ export interface Order {
   deliveredAt?: string;
   // Latest payment row's provider, if any — 'jazzcash' is the manual wallet
   // method (see ManualPaymentService); lets admin UI show a "Mark paid"
-  // action only where it's actually meaningful (never for a 'paddle' order,
+  // action only where it's actually meaningful (never for a 'safepay' order,
   // which resolves via its webhook).
-  paymentProvider?: "paddle" | "jazzcash";
+  paymentProvider?: "safepay" | "jazzcash";
 }
 
 export interface Payment {
   id: string;
   orderId: string;
-  provider: "paddle" | "jazzcash";
+  provider: "safepay" | "jazzcash";
   providerTransactionId: string;
   status: PaymentStatus;
   amount: Money;

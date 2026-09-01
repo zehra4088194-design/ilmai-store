@@ -22,7 +22,7 @@ export const FULFILLMENT_STATUSES = [
 export type FulfillmentStatus = (typeof FULFILLMENT_STATUSES)[number];
 
 /**
- * Only the verified Paddle webhook or authenticated JazzCash admin review
+ * Only the verified Safepay webhook or authenticated JazzCash admin review
  * webhook) may ever set payment_status to 'paid'. See SECURITY.md §3.
  */
 export const PAYMENT_STATUS_PAID: PaymentStatus = "paid";

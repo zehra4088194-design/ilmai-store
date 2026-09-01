@@ -109,8 +109,3 @@ export const reviewSchema = z.object({
   body: z.string().max(5000).optional(),
 });
 
-export const paddleWebhookEnvelopeSchema = z.object({
-  event_id: z.string(),
-  event_type: z.string(),
-  data: z.record(z.unknown()),
-});

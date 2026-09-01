@@ -10,8 +10,8 @@ import { ValidationError } from "@/lib/errors";
 
 /**
  * POST /api/checkout — creates a pending order from the cart and returns a
- * Paddle checkout session. Never marks anything paid — that only happens
- * via the verified webhook at /api/webhooks/paddle. See SECURITY.md §3.
+ * Safepay checkout session. Never marks anything paid — that only happens
+ * via the verified webhook at /api/webhooks/safepay. See SECURITY.md §3.
  */
 export async function POST(request: NextRequest) {
   try {

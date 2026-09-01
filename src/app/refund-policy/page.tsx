@@ -42,7 +42,7 @@ export default function RefundPolicyPage() {
 
           <h2>How refunds are paid</h2>
           <p>
-            A refund always goes back the way you paid: card payments (via Paddle) are refunded to the same card;
+            A refund always goes back the way you paid: card payments (via Safepay) are refunded to the same card;
             JazzCash payments are refunded to the same wallet, coordinated with our support team over WhatsApp/email
             since those payments are verified manually.
           </p>

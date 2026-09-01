@@ -13,7 +13,7 @@ const DIGITAL_TYPES = ["digital", "course", "notes", "test_series"];
 
 type PaidInput = {
   orderId: string;
-  provider: "paddle" | "jazzcash";
+  provider: "safepay" | "jazzcash";
   transaction: ProviderTransaction;
   rawEvent?: unknown;
 };
@@ -48,7 +48,7 @@ export const OrderCompletionService = {
     if (input.transaction.status !== "paid") throw new PaymentError("The payment is not completed.");
     const order = await OrderService.getByIdAdmin(input.orderId);
     if (order.paymentStatus === "refunded") throw new PaymentError("A refunded order cannot be paid again.");
-    const paymentMatchesOrder = input.provider === "paddle"
+    const paymentMatchesOrder = input.provider === "safepay"
       ? order.total.amountMinor === input.transaction.amountMinor && order.total.currency.toUpperCase() === input.transaction.currency.toUpperCase()
       : input.transaction.amountMinor > 0 && input.transaction.currency.toUpperCase() === "PKR";
     if (!paymentMatchesOrder) {
@@ -98,7 +98,7 @@ export const OrderCompletionService = {
   async markFailed(orderId: string, transaction?: ProviderTransaction) {
     await OrderService.markPaymentFailed(orderId);
     if (transaction) {
-      const { error } = await createSupabaseAdminClient().from("payments").upsert({ order_id: orderId, provider: "paddle", provider_transaction_id: transaction.providerTransactionId, status: "failed", amount_minor: transaction.amountMinor, currency: transaction.currency }, { onConflict: "provider,provider_transaction_id" });
+      const { error } = await createSupabaseAdminClient().from("payments").upsert({ order_id: orderId, provider: "safepay", provider_transaction_id: transaction.providerTransactionId, status: "failed", amount_minor: transaction.amountMinor, currency: transaction.currency }, { onConflict: "provider,provider_transaction_id" });
       if (error) throw new Error(error.message);
     }
   },
@@ -109,7 +109,7 @@ export const OrderCompletionService = {
     if (error) throw new Error(error.message);
     await InventoryService.refundForOrder(orderId);
     if (transaction) {
-      const { error: paymentError } = await db.from("payments").upsert({ order_id: orderId, provider: "paddle", provider_transaction_id: transaction.providerTransactionId, status: "refunded", amount_minor: transaction.amountMinor, currency: transaction.currency }, { onConflict: "provider,provider_transaction_id" });
+      const { error: paymentError } = await db.from("payments").upsert({ order_id: orderId, provider: "safepay", provider_transaction_id: transaction.providerTransactionId, status: "refunded", amount_minor: transaction.amountMinor, currency: transaction.currency }, { onConflict: "provider,provider_transaction_id" });
       if (paymentError) throw new Error(paymentError.message);
     }
   },

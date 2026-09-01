@@ -6,15 +6,16 @@ import { OrderCompletionService } from "@/services/OrderCompletionService";
 import { ManualPaymentService } from "@/services/ManualPaymentService";
 
 /**
- * POST /api/admin/orders/[id]/mark-paid — the manual counterpart to Paddle's
- * webhook-driven payment_status flip, for the JazzCash wallet method only.
+ * POST /api/admin/orders/[id]/mark-paid — the manual counterpart to
+ * Safepay's webhook-driven payment_status flip, for the JazzCash wallet
+ * method only.
  *
- * Deliberately refuses to touch a 'paddle' order: CLAUDE_CONTEXT.md §7's rule
- * ("only a signature-verified webhook may set payment_status = 'paid'") is
- * about automated provider events specifically, and this endpoint is the
+ * Deliberately refuses to touch a 'safepay' order: CLAUDE_CONTEXT.md §7's
+ * rule ("only a signature-verified webhook may set payment_status = 'paid'")
+ * is about automated provider events specifically, and this endpoint is the
  * accepted manual-verification alternative for a provider (JazzCash) that
  * has no webhook at all — but it must not become a backdoor for skipping
- * Paddle's real webhook verification, so it only acts on orders whose most
+ * Safepay's real webhook verification, so it only acts on orders whose most
  * recent payment row is 'jazzcash'.
  */
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {

@@ -19,7 +19,7 @@ Route Handler  src/app/api/<resource>/route.ts
 Service  src/services/<Resource>Service.ts
    │  business rules, orchestration across providers
    ▼
-lib/ clients ── Supabase / Paddle / B2 / Resend
+lib/ clients ── Supabase / Safepay / B2 / Resend
 ```
 
 ## Provider Abstraction Pattern
@@ -43,11 +43,11 @@ export interface PaymentProvider {
   parseWebhookEvent(rawBody: string): PaymentWebhookEvent;
 }
 
-// PaddleProvider.ts
-export class PaddleProvider implements PaymentProvider { /* ... */ }
+// SafepayProvider.ts
+export class SafepayProvider implements PaymentProvider { /* ... */ }
 
 // PaymentService.ts — the only thing route handlers import
-const provider: PaymentProvider = new PaddleProvider();
+const provider: PaymentProvider = new SafepayProvider();
 ```
 
 Swapping or adding a payment provider later means writing a new
@@ -59,11 +59,11 @@ provider — no route handler or UI code changes.
 ```
 1. User adds items → CartService (carts/cart_items rows)
 2. User checks out → CheckoutService validates cart, computes totals,
-   calls PaymentService.createCheckout() → PaddleProvider → Paddle
+   calls PaymentService.createCheckout() → SafepayProvider → Safepay
    → returns a checkout session/URL to the client
-3. User completes payment on Paddle's hosted checkout
-4. Paddle sends a webhook → POST /api/webhooks/paddle
-5. Route handler verifies signature (PaddleProvider.verifyWebhookSignature)
+3. User completes payment on Safepay's hosted checkout
+4. Safepay sends a webhook → POST /api/webhooks/safepay
+5. Route handler verifies signature (SafepayProvider.verifyWebhookSignature)
 6. PaymentService.handleWebhookEvent():
      - creates/updates `payments` row
      - transitions `orders.payment_status` → 'paid'
@@ -120,7 +120,7 @@ Coolify (on Oracle Cloud VM)
 Next.js container (standalone output)
    │
    ├── Supabase (managed, external)
-   ├── Paddle (external)
+   ├── Safepay (external)
    ├── Backblaze B2 (external)
    └── Resend (external)
 ```

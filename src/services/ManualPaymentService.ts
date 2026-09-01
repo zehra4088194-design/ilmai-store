@@ -16,14 +16,14 @@ import { ValidationError } from "@/lib/errors";
  * no API to call, no checkout session, no webhook. A buyer sends money
  * out-of-band (scans the QR, pays via the JazzCash app) and a human verifies
  * it later from a WhatsApp/email screenshot. This service exists to give that
- * flow the same order trail Paddle gets automatically from its webhook:
- *   1. create a `pending` order (OrderService.createFromCart, shared with Paddle)
+ * flow the same order trail Safepay gets automatically from its webhook:
+ *   1. create a `pending` order (OrderService.createFromCart, shared with Safepay)
  *   2. record a `pending` 'jazzcash' payment row for it, so it shows up
  *      wherever payments are queried by provider
  *   3. notify the admin inbox so the WhatsApp screenshot has an order to match
  * An admin then calls the shared OrderCompletionService (via
  * POST /api/admin/orders/[id]/mark-paid) once they've verified the transfer —
- * this NEVER happens automatically, unlike the Paddle webhook path. See
+ * this NEVER happens automatically, unlike the Safepay webhook path. See
  * SECURITY.md's "only a verified webhook can mark paid" rule: that rule is
  * about *automated* provider events specifically; a human admin explicitly
  * confirming a manual bank transfer is the accepted alternative for a

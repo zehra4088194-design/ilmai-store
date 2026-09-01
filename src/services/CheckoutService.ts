@@ -10,14 +10,14 @@ import type { CheckoutSession } from "./payment/PaymentProvider";
 /**
  * Orchestrates the cart → order → provider-checkout-session hand-off.
  * This is what POST /api/checkout calls — it never talks to Supabase or
- * Paddle directly, only to OrderService/PaymentService/PromotionService.
+ * Safepay directly, only to OrderService/PaymentService/PromotionService.
  */
 export const CheckoutService = {
   async startCheckout(
     input: z.infer<typeof checkoutSchema>,
     idempotencyKey?: string,
   ): Promise<{ orderId: string; session: CheckoutSession; guestAccessToken?: string }> {
-    // Paddle's webhook is a separate request and cannot read the shopper's
+    // Safepay's webhook is a separate request and cannot read the shopper's
     // browser cookies. Snapshot the referral on the pending order now so the
     // verified paid event can report it later.
     const adReferral = normalizeAdReferral((await cookies()).get(AD_REFERRAL_COOKIE)?.value);

@@ -24,7 +24,7 @@ async function context() {
 }
 
 function mapCart(row: Row): Cart {
-  const items = (row.cart_items ?? []).map((item: Row) => { const v = item.product_variants ?? {}; const p = v.products ?? {}; const providerPriceId = typeof v.metadata?.paddle_price_id === "string" ? v.metadata.paddle_price_id : undefined; return { id: item.id, variantId: item.variant_id, productId: v.product_id, productTitle: p.title ?? "Product", productType: p.product_type ?? "digital", variantName: v.name ?? "Default", quantity: item.quantity, unitPrice: { amountMinor: v.price_minor ?? item.unit_price_snapshot_minor, currency: v.currency ?? "PKR" }, providerPriceId }; });
+  const items = (row.cart_items ?? []).map((item: Row) => { const v = item.product_variants ?? {}; const p = v.products ?? {}; const providerPriceId = typeof v.metadata?.provider_price_id === "string" ? v.metadata.provider_price_id : undefined; return { id: item.id, variantId: item.variant_id, productId: v.product_id, productTitle: p.title ?? "Product", productType: p.product_type ?? "digital", variantName: v.name ?? "Default", quantity: item.quantity, unitPrice: { amountMinor: v.price_minor ?? item.unit_price_snapshot_minor, currency: v.currency ?? "PKR" }, providerPriceId }; });
   const currency = items[0]?.unitPrice.currency ?? "PKR";
   return { id: row.id, userId: row.user_id ?? undefined, items, subtotal: { amountMinor: items.reduce((sum: number, item: { unitPrice: { amountMinor: number }; quantity: number }) => sum + item.unitPrice.amountMinor * item.quantity, 0), currency } };
 }
