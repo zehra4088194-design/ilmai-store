@@ -46,6 +46,12 @@ function ManualPaymentProofForm({ orderId }: { orderId: string }) {
 
 export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
   const requiresShipping = useMemo(() => cart.items.some((item) => ["physical", "book"].includes(item.productType)), [cart.items]);
+  // Mirrors OrderService.createFromCart: one order = one parcel, priced at
+  // the single highest delivery fee among shippable items in the cart.
+  const deliveryMinor = useMemo(() => {
+    const shippable = cart.items.filter((item) => ["physical", "book"].includes(item.productType));
+    return shippable.length ? Math.max(...shippable.map((item) => item.deliveryFeeMinor)) : 0;
+  }, [cart.items]);
   const [country, setCountry] = useState("PK");
   const [customerPhone, setCustomerPhone] = useState("");
   const [fullName, setFullName] = useState("");
@@ -182,6 +188,6 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
       <p className="mt-6 text-xs leading-5 text-[#64748B]">Need help? Email <a className="font-bold text-[#2563EB]" href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>.</p>
     </section>
     {walletOrderId && <ManualPaymentProofForm orderId={walletOrderId} />}
-    <aside className="h-fit rounded-[2rem] border bg-[#0B1D3A] p-6 text-white sm:p-8"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">Your order</p><div className="mt-6 grid gap-4">{cart.items.map((item) => <div key={item.id} className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">{item.productTitle} × {item.quantity}</span><span className="font-bold">{item.unitPrice.currency} {(item.unitPrice.amountMinor * item.quantity / 100).toFixed(2)}</span></div>)}</div><div className="mt-6 border-t border-white/20 pt-5"><div className="flex justify-between text-sm text-[#B9C4E0]"><span>Wallet total</span><span>PKR</span></div><div className="mt-2 text-3xl font-black">{new Intl.NumberFormat("en-PK").format(totalPkr)}</div><p className="mt-3 text-xs leading-5 text-[#B9C4E0]">USD 1 = PKR {exchangeRate.toFixed(2)}. The wallet total includes the flat processing fee.</p></div></aside>
+    <aside className="h-fit rounded-[2rem] border bg-[#0B1D3A] p-6 text-white sm:p-8"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">Your order</p><div className="mt-6 grid gap-4">{cart.items.map((item) => <div key={item.id} className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">{item.productTitle} × {item.quantity}</span><span className="font-bold">{item.unitPrice.currency} {(item.unitPrice.amountMinor * item.quantity / 100).toFixed(2)}</span></div>)}{requiresShipping && <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Delivery</span><span className="font-bold">{deliveryMinor ? `${cart.subtotal.currency} ${(deliveryMinor / 100).toFixed(2)}` : "Free"}</span></div>}</div><div className="mt-6 border-t border-white/20 pt-5"><div className="flex justify-between text-sm text-[#B9C4E0]"><span>Wallet total</span><span>PKR</span></div><div className="mt-2 text-3xl font-black">{new Intl.NumberFormat("en-PK").format(totalPkr)}</div><p className="mt-3 text-xs leading-5 text-[#B9C4E0]">USD 1 = PKR {exchangeRate.toFixed(2)}. The wallet total includes the flat processing fee.</p></div></aside>
   </div>;
 }

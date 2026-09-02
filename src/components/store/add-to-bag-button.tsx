@@ -10,11 +10,14 @@ type Props = {
   quantity?: number;
   className?: string;
   label?: string;
+  // Caller-forced disable (e.g. the selected variant is out of stock) —
+  // combined with the button's own loading/no-variant states below.
+  disabled?: boolean;
 };
 
 /** POSTs to /api/cart and broadcasts the fresh cart so the header badge
  * (and anything else listening) updates without a full reload. */
-export function AddToBagButton({ variantId, quantity = 1, className, label = "Add to bag" }: Props) {
+export function AddToBagButton({ variantId, quantity = 1, className, label = "Add to bag", disabled = false }: Props) {
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
 
   async function addToBag(event: React.MouseEvent) {
@@ -41,7 +44,7 @@ export function AddToBagButton({ variantId, quantity = 1, className, label = "Ad
   return (
     <button
       onClick={addToBag}
-      disabled={!variantId || state === "loading"}
+      disabled={disabled || !variantId || state === "loading"}
       className={className ?? "mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F1F5F9] py-3 text-sm font-bold text-[#0B1D3A] transition group-hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"}
     >
       {state === "loading" && <><Loader2 size={15} className="animate-spin" /> Adding…</>}

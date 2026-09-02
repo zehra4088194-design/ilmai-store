@@ -5,14 +5,12 @@ import { AuthenticationError, NotFoundError } from "@/lib/errors";
 import { OrderService } from "@/services/OrderService";
 import type { OrderItem } from "@/types/domain";
 import { DownloadButton } from "./download-button";
+import { formatMoney } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
 const DIGITAL_TYPES = new Set(["digital", "course", "notes", "test_series"]);
-
-function money(m: { amountMinor: number; currency: string }) {
-  return `${m.currency} ${new Intl.NumberFormat("en-PK").format(m.amountMinor / 100)}`;
-}
+const money = formatMoney;
 
 function AddressBlock({ label, address }: { label: string; address?: { fullName: string; phone: string; line1: string; line2?: string; city: string; state?: string; postalCode?: string; country: string } }) {
   if (!address) return null;

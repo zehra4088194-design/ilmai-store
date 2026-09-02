@@ -11,6 +11,13 @@ export const createProductVariantSchema = z.object({
   currency: z.enum(SUPPORTED_CURRENCIES).default("PKR"),
   isDefault: z.boolean().default(false),
   requiresShipping: z.boolean().default(false),
+  // Units on hand for a shippable variant; ignored for digital variants
+  // (nothing to run out of). Omit/0 to start with no stock.
+  stockQuantity: z.number().int().min(0).optional(),
+  // Stock level at/below which the admin/seller inventory view flags this
+  // variant as running low. Ignored for digital variants; DB defaults to 5
+  // when omitted.
+  lowStockThreshold: z.number().int().min(0).optional(),
   weightGrams: z.number().int().positive().optional(),
   providerPriceId: z.string().min(1).max(120).optional(),
 });
@@ -27,6 +34,11 @@ export const adminCreateProductSchema = z.object({
   status: z.enum(PRODUCT_STATUSES).default("draft"),
   basePriceMinor: moneyMinorSchema,
   currency: z.enum(SUPPORTED_CURRENCIES).default("PKR"),
+  // "Was" price shown struck through next to the real price when set;
+  // omit/undefined to show no strike-through at all.
+  compareAtPriceMinor: moneyMinorSchema.nullable().optional(),
+  // Flat delivery fee for this product; 0 (default) means free delivery.
+  deliveryFeeMinor: moneyMinorSchema.default(0),
   isFeatured: z.boolean().default(false),
   categoryIds: z.array(z.string().uuid()).default([]),
   variants: z.array(createProductVariantSchema).min(1),

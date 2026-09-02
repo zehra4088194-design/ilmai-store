@@ -31,16 +31,18 @@ export async function POST(request: NextRequest) {
     if (!cart || !cart.items.length) throw new ValidationError("Your cart is empty.");
 
     // Must mirror OrderService.createFromCart's own total_minor computation
-    // exactly (subtotal - coupon discount) — validateCoupon is a read-only
-    // check (no reservation side effect; that happens separately inside
-    // createFromCart), so calling it here just to preview the discount is
-    // safe. Without this, a couponCode on the request would discount the
-    // order's own total_minor but leave the QR/payments.amount_minor
-    // demanding the full pre-discount amount.
+    // exactly (subtotal - coupon discount + shipping) — validateCoupon is a
+    // read-only check (no reservation side effect; that happens separately
+    // inside createFromCart), so calling it here just to preview the
+    // discount is safe. Without this, a couponCode or a paid delivery fee
+    // would change the order's own total_minor but leave the QR/
+    // payments.amount_minor demanding a different amount.
     const discountMinor = body.couponCode
       ? (await PromotionService.validateCoupon(body.couponCode, cart.subtotal.amountMinor)).discountMinor
       : 0;
-    const netAmountMinor = Math.max(0, cart.subtotal.amountMinor - discountMinor);
+    const shippableItems = cart.items.filter((item) => ["physical", "book"].includes(item.productType));
+    const shippingMinor = shippableItems.length ? Math.max(...shippableItems.map((item) => item.deliveryFeeMinor)) : 0;
+    const netAmountMinor = Math.max(0, cart.subtotal.amountMinor - discountMinor + shippingMinor);
 
     const walletTotalPkr = manualPaymentTotalPkr(
       netAmountMinor,

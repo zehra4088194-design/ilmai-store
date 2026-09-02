@@ -37,6 +37,12 @@ export interface ProductVariant {
   requiresShipping: boolean;
   weightGrams?: number;
   inStock?: boolean; // derived, not raw quantity, for public display
+  // Units currently on hand; only meaningful when requiresShipping is
+  // true (digital variants never run out, so this stays undefined for them).
+  stockQuantity?: number;
+  // Stock level at/below which this variant is flagged as running low;
+  // only meaningful alongside stockQuantity.
+  lowStockThreshold?: number;
   providerPriceId?: string;
 }
 
@@ -56,6 +62,13 @@ export interface Product {
   productType: ProductType;
   status: "draft" | "published" | "archived";
   basePrice: Money;
+  // "Was" price shown struck through next to basePrice/variant price when
+  // set — a real discount the seller/admin chose at listing time, not a
+  // computed markup.
+  compareAtPrice?: Money;
+  // Flat delivery fee for this product; 0 = free delivery. Only relevant
+  // for physical/book product types — digital listings never charge it.
+  deliveryFee: Money;
   isFeatured: boolean;
   media: ProductMedia[];
   variants: ProductVariant[];
@@ -93,6 +106,10 @@ export interface CartItem {
   quantity: number;
   unitPrice: Money;
   providerPriceId?: string;
+  // Product's flat delivery fee, snapshotted onto the cart line so
+  // OrderService can compute the order's shipping total without a second
+  // product lookup. 0 for digital items (never contributes to shipping).
+  deliveryFeeMinor: number;
 }
 
 export interface Cart {

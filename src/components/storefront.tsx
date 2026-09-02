@@ -24,7 +24,7 @@ import { AddToBagButton } from "@/components/store/add-to-bag-button";
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
 import { Reveal } from "@/components/store/reveal";
-import { compareAtAmountMinor } from "@/lib/pricing";
+import { formatMoney } from "@/lib/pricing";
 import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 
 type Props = {
@@ -37,9 +37,7 @@ type Props = {
   usdToPkr?: number;
 };
 
-function money(m: { amountMinor: number; currency: string }) {
-  return `${m.currency} ${new Intl.NumberFormat("en-PK").format(m.amountMinor / 100)}`;
-}
+const money = formatMoney;
 
 function defaultVariant(product: Product) {
   return product.variants.find((v) => v.isDefault) ?? product.variants[0];
@@ -70,6 +68,20 @@ function categoryChipClass(slug: string | undefined, fallbackIndex = 0) {
   return COLOR_ROTATION[fallbackIndex % COLOR_ROTATION.length];
 }
 
+// Missing-photo placeholder tile — rotated per the same chip color so a grid
+// of un-photographed products reads as varied, not a wall of navy blocks.
+const PLACEHOLDER_GRADIENT: Record<string, string> = {
+  "chip-blue": "from-[#2563EB] to-[#1d4fd1]",
+  "chip-mint": "from-[#22C55E] to-[#16a34a]",
+  "chip-lavender": "from-[#A78BFA] to-[#8b5cf6]",
+  "chip-sky": "from-[#38BDF8] to-[#0ea5e9]",
+  "chip-peach": "from-[#FDBA74] to-[#fb923c]",
+  "chip-navy": "from-[var(--navy)] to-[#142a52]",
+};
+function placeholderGradient(chip: string | undefined) {
+  return (chip && PLACEHOLDER_GRADIENT[chip]) || "from-[#2563EB] to-[#1d4fd1]";
+}
+
 const CATEGORY_ICONS: Record<string, typeof BookOpen> = {
   books: BookOpen,
   notes: Layers3,
@@ -81,15 +93,16 @@ const CATEGORY_ICONS: Record<string, typeof BookOpen> = {
 const FALLBACK_ICONS = [BookOpen, Layers3, GraduationCap, Clock, Boxes, Cloud];
 
 /** Compact by design (spec §9) — this is a marketplace grid, not a hero card. */
-function ProductCard({ product, index, usdToPkr }: { product: Product; index: number; usdToPkr: number }) {
+function ProductCard({ product, index }: { product: Product; index: number }) {
   const image = primaryImage(product);
   const variant = defaultVariant(product);
   const price = variant?.price ?? product.basePrice;
-  const compareAt = compareAtAmountMinor(price.amountMinor, price.currency, usdToPkr);
+  const compareAt = product.compareAtPrice && product.compareAtPrice.amountMinor > price.amountMinor ? product.compareAtPrice : undefined;
   const digital = isDigital(product);
   const category = product.categories[0];
   const chip = categoryChipClass(category?.slug, index);
   const [liked, setLiked] = useState(false);
+  const outOfStock = variant?.requiresShipping && variant.stockQuantity !== undefined && variant.stockQuantity <= 0;
 
   return (
     <article className="product-card-grid group relative overflow-hidden animate-pop-in" style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}>
@@ -97,8 +110,8 @@ function ProductCard({ product, index, usdToPkr }: { product: Product; index: nu
         {image ? (
           <img src={image.url} alt={image.altText ?? product.title} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.05]" />
         ) : (
-          <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[var(--navy)] to-[#142a52]">
-            <BookOpen size={48} strokeWidth={1} className="text-white/25" />
+          <div className={`absolute inset-0 grid place-items-center bg-gradient-to-br ${placeholderGradient(chip)}`}>
+            <BookOpen size={48} strokeWidth={1} className="text-white/35" />
           </div>
         )}
         <button
@@ -110,6 +123,7 @@ function ProductCard({ product, index, usdToPkr }: { product: Product; index: nu
           <Heart size={13} fill={liked ? "currentColor" : "none"} />
         </button>
         {digital && <span className="badge badge-digital absolute left-2 top-2">Digital</span>}
+        {outOfStock && <span className="badge absolute left-2 top-2 bg-[#0B1D3A] text-white">Out of stock</span>}
       </Link>
 
       <div className="p-2.5 sm:p-3">
@@ -121,10 +135,12 @@ function ProductCard({ product, index, usdToPkr }: { product: Product; index: nu
         </Link>
         <div className="mt-1.5 flex items-baseline gap-1.5">
           <span className="text-sm font-bold text-[var(--navy)] sm:text-[15px]">{money(price)}</span>
-          <span className="text-[11px] font-medium text-[#94A3B8] line-through">{money(compareAt)}</span>
+          {compareAt && <span className="text-[11px] font-medium text-[#94A3B8] line-through">{money(compareAt)}</span>}
         </div>
         <AddToBagButton
           variantId={variant?.id}
+          label={outOfStock ? "Out of stock" : undefined}
+          disabled={outOfStock}
           className="gold-btn mt-2.5 h-9 w-full text-[12px] disabled:cursor-not-allowed"
         />
       </div>
@@ -205,7 +221,6 @@ export function Storefront({
   categories = [],
   initialSearch = "",
   catalogMode = false,
-  usdToPkr = 280,
 }: Props) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const hero = banners?.[0];
@@ -263,7 +278,7 @@ export function Storefront({
 
           {/* Mobile-first: always 2 columns on phones, growing on larger screens. Cards stay compact at every size (see .product-card-grid). */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-            {visibleProducts.map((product, index) => <ProductCard key={product.id} product={product} index={index} usdToPkr={usdToPkr} />)}
+            {visibleProducts.map((product, index) => <ProductCard key={product.id} product={product} index={index} />)}
           </div>
 
           {visibleProducts.length === 0 && (

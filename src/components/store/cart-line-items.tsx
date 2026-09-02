@@ -5,10 +5,9 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Loader2, Minus, Plus, ShieldCheck, ShoppingBag, Trash2, Truck } from "lucide-react";
 import type { Cart } from "@/types/domain";
 import { broadcastCartUpdate } from "./cart-events";
+import { formatMoney } from "@/lib/pricing";
 
-function money(m: { amountMinor: number; currency: string }) {
-  return `${m.currency} ${new Intl.NumberFormat("en-PK").format(m.amountMinor / 100)}`;
-}
+const money = formatMoney;
 
 export function CartLineItems({ cart: initialCart }: { cart: Cart }) {
   const [cart, setCart] = useState(initialCart);
@@ -42,7 +41,11 @@ export function CartLineItems({ cart: initialCart }: { cart: Cart }) {
     );
   }
 
-  const delivery = cart.items.some((i) => i.productType === "physical" || i.productType === "book") ? 150_00 : 0;
+  // One order = one parcel: mirrors OrderService.createFromCart, which
+  // charges the single highest delivery fee among shippable items rather
+  // than stacking every item's fee.
+  const shippableItems = cart.items.filter((i) => i.productType === "physical" || i.productType === "book");
+  const delivery = shippableItems.length ? Math.max(...shippableItems.map((i) => i.deliveryFeeMinor)) : 0;
   const total = cart.subtotal.amountMinor + delivery;
 
   return (

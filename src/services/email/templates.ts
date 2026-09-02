@@ -1,3 +1,5 @@
+import { siteConfig } from "@/config/site";
+
 const escapeHtml = (value: string) =>
   value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[character] ?? character);
 
@@ -36,7 +38,7 @@ function emailShell(bodyHtml: string): string {
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e3ebe4;padding-top:20px;">
                   <tr>
                     <td style="font-size:12px;line-height:1.7;color:#64748B;font-family:Arial,Helvetica,sans-serif;">
-                      Questions? Write to <a href="mailto:ilmai.study1@gmail.com" style="color:#2563EB;text-decoration:none;">ilmai.study1@gmail.com</a><br />
+                      Questions? Write to <a href="mailto:${siteConfig.supportEmail}" style="color:#2563EB;text-decoration:none;">${siteConfig.supportEmail}</a><br />
                       <a href="https://ilmai.study" style="color:#2563EB;text-decoration:none;">ilmai.study</a> &middot; Learn deeply. Build boldly.
                     </td>
                   </tr>

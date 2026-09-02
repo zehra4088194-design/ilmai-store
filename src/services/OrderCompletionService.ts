@@ -1,5 +1,6 @@
 import "server-only";
 import { PaymentError } from "@/lib/errors";
+import { formatMoney } from "@/lib/pricing";
 import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
 import { AdReferralService } from "./AdReferralService";
 import { EmailService } from "./EmailService";
@@ -82,7 +83,7 @@ export const OrderCompletionService = {
     await createDigitalEntitlements(order);
 
     if (!await hasEvent(order.id, "payment_confirmation_email")) {
-      await EmailService.sendPaymentConfirmation(order.customerEmail, { orderNumber: order.orderNumber, totalDisplay: `${order.total.currency} ${(order.total.amountMinor / 100).toFixed(2)}` });
+      await EmailService.sendPaymentConfirmation(order.customerEmail, { orderNumber: order.orderNumber, totalDisplay: formatMoney(order.total) });
       await saveEvent(order.id, "payment_confirmation_email");
     }
 

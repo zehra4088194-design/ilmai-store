@@ -47,10 +47,15 @@ export const OrderService = {
     if (!cart.items.length) throw new ValidationError("Your cart is empty.");
     const userId = await currentUserId();
     const discount = input.couponCode ? (await PromotionService.validateCoupon(input.couponCode, cart.subtotal.amountMinor)).discountMinor : 0;
-    const hasShipping = cart.items.some((item) => ["physical", "book"].includes(item.productType));
+    const shippableItems = cart.items.filter((item) => ["physical", "book"].includes(item.productType));
+    const hasShipping = shippableItems.length > 0;
     if (hasShipping && !input.shippingAddress) throw new ValidationError("A shipping address is required for physical products.");
+    // One order = one parcel: when the cart mixes products with different
+    // delivery fees, charge the single highest one rather than stacking
+    // every item's fee — mirrors how a real shipment is priced.
+    const shipping = shippableItems.length ? Math.max(...shippableItems.map((item) => item.deliveryFeeMinor)) : 0;
     const orderNumber = `IL-${new Date().getFullYear()}-${randomInt(100000, 999999)}`;
-    const { data: row, error } = await db.from("orders").insert({ order_number: orderNumber, user_id: userId ?? null, status: "pending", payment_status: "pending", fulfillment_status: "unfulfilled", subtotal_minor: cart.subtotal.amountMinor, discount_minor: discount, shipping_minor: 0, tax_minor: 0, total_minor: Math.max(0, cart.subtotal.amountMinor - discount), currency: cart.subtotal.currency, coupon_code: input.couponCode?.toUpperCase() ?? null, customer_email: input.customerEmail, customer_phone: input.customerPhone ?? null, customer_note: input.customerNote, checkout_idempotency_key: options.idempotencyKey ?? null, ...(options.adReferral ? { metadata: { ad_referral: options.adReferral } } : {}) }).select("id").single();
+    const { data: row, error } = await db.from("orders").insert({ order_number: orderNumber, user_id: userId ?? null, status: "pending", payment_status: "pending", fulfillment_status: "unfulfilled", subtotal_minor: cart.subtotal.amountMinor, discount_minor: discount, shipping_minor: shipping, tax_minor: 0, total_minor: Math.max(0, cart.subtotal.amountMinor - discount + shipping), currency: cart.subtotal.currency, coupon_code: input.couponCode?.toUpperCase() ?? null, customer_email: input.customerEmail, customer_phone: input.customerPhone ?? null, customer_note: input.customerNote, checkout_idempotency_key: options.idempotencyKey ?? null, ...(options.adReferral ? { metadata: { ad_referral: options.adReferral } } : {}) }).select("id").single();
     if (error || !row) throw new Error(error?.message ?? "Order could not be created.");
     try {
       const source = cart.items.map((item) => ({ order_id: row.id, product_id: item.productId, variant_id: item.variantId, product_name_snapshot: item.productTitle, variant_name_snapshot: item.variantName, product_type_snapshot: item.productType, sku_snapshot: null, provider_price_id: item.providerPriceId ?? null, unit_price_snapshot_minor: item.unitPrice.amountMinor, quantity: item.quantity, line_total_minor: item.unitPrice.amountMinor * item.quantity }));

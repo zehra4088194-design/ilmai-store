@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { CartBadge } from "@/components/store/cart-badge";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
+import { siteConfig } from "@/config/site";
 import type { Category } from "@/types/domain";
 
 type Props = { initialSearch?: string; categories?: Category[] };
@@ -56,8 +57,8 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
           <span className="inline-flex items-center gap-1.5 text-[#2563EB]"><PackageSearch size={13} /> {PHYSICAL_GOODS_ENABLED ? "Free delivery on orders over PKR 2,000" : "Instant access after checkout"}</span>
           <span className="flex items-center gap-4">
             <Link href="/orders" className="inline-flex items-center gap-1.5 hover:text-[#2563EB]"><PackageSearch size={12} /> Track order</Link>
-            <a href="mailto:ilmai.study1@gmail.com" className="inline-flex items-center gap-1.5 hover:text-[#2563EB]"><LifeBuoy size={12} /> Help</a>
-            <a href="mailto:ilmai.study1@gmail.com" className="inline-flex items-center gap-1.5 hover:text-[#2563EB]"><Phone size={12} /> Contact us</a>
+            <a href={`mailto:${siteConfig.supportEmail}`} className="inline-flex items-center gap-1.5 hover:text-[#2563EB]"><LifeBuoy size={12} /> Help</a>
+            <a href={`mailto:${siteConfig.supportEmail}`} className="inline-flex items-center gap-1.5 hover:text-[#2563EB]"><Phone size={12} /> Contact us</a>
           </span>
         </div>
       </div>

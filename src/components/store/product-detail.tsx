@@ -6,14 +6,12 @@ import { useRouter } from "next/navigation";
 import { BadgeCheck, BookOpen, Download, Facebook, Heart, Minus, Plus, Share2, ShieldCheck, Star, Truck, Twitter } from "lucide-react";
 import type { Product, ProductVariant } from "@/types/domain";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
-import { compareAtAmountMinor } from "@/lib/pricing";
+import { formatMoney } from "@/lib/pricing";
 import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 
-function money(m: { amountMinor: number; currency: string }) {
-  return `${m.currency} ${new Intl.NumberFormat("en-PK").format(m.amountMinor / 100)}`;
-}
+const money = formatMoney;
 
-export function ProductDetail({ product, usdToPkr = 280 }: { product: Product; usdToPkr?: number }) {
+export function ProductDetail({ product }: { product: Product }) {
   const [variant, setVariant] = useState<ProductVariant | undefined>(product.variants.find((v) => v.isDefault) ?? product.variants[0]);
   const [activeImage, setActiveImage] = useState(0);
   const [liked, setLiked] = useState(false);
@@ -22,8 +20,14 @@ export function ProductDetail({ product, usdToPkr = 280 }: { product: Product; u
   const [buying, setBuying] = useState(false);
   const images = product.media.filter((item) => item.mediaType !== "digital_file");
   const price = variant?.price ?? product.basePrice;
-  const compareAt = compareAtAmountMinor(price.amountMinor, price.currency, usdToPkr);
+  const compareAt = product.compareAtPrice && product.compareAtPrice.amountMinor > price.amountMinor ? product.compareAtPrice : undefined;
   const digital = ["digital", "course", "notes", "test_series"].includes(product.productType);
+  const freeDelivery = product.deliveryFee.amountMinor === 0;
+  // Stock only applies to shippable variants — digital variants never
+  // carry an inventory row, so stockQuantity stays undefined for them.
+  const trackingStock = variant?.requiresShipping && variant.stockQuantity !== undefined;
+  const outOfStock = trackingStock && variant!.stockQuantity! <= 0;
+  const lowStock = trackingStock && !outOfStock && variant!.stockQuantity! <= (variant!.lowStockThreshold ?? 5);
 
   const bullets = useMemo(() => [
     "Complete, topic-wise coverage — nothing skipped.",
@@ -76,13 +80,22 @@ export function ProductDetail({ product, usdToPkr = 280 }: { product: Product; u
         </div>
 
         <div className="mt-5 flex flex-wrap items-baseline gap-3">
-          <span className="text-lg font-bold text-[#94A3B8] line-through">{money(compareAt)}</span>
+          {compareAt && <span className="text-lg font-bold text-[#94A3B8] line-through">{money(compareAt)}</span>}
           <span className="text-4xl font-black tracking-[-.03em] text-[#0B1D3A]">{money(price)}</span>
           {digital && <span className="rounded-full bg-[#DCFCE7] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] text-[#2563EB]">Instant access</span>}
         </div>
         <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[#2563EB]">
-          {digital || !PHYSICAL_GOODS_ENABLED ? <><Download size={13} /> Instant digital delivery</> : <><Truck size={13} /> Free shipping on this order</>}
+          {digital || !PHYSICAL_GOODS_ENABLED
+            ? <><Download size={13} /> Instant digital delivery</>
+            : freeDelivery
+              ? <><Truck size={13} /> Free delivery on this order</>
+              : <><Truck size={13} /> Delivery: {money(product.deliveryFee)}</>}
         </p>
+        {trackingStock && (
+          outOfStock
+            ? <p className="mt-2 text-xs font-black uppercase tracking-[.1em] text-red-600">Out of stock</p>
+            : <p className={`mt-2 text-xs font-black uppercase tracking-[.1em] ${lowStock ? "text-amber-600" : "text-[#64748B]"}`}>{lowStock ? `Only ${variant!.stockQuantity} left in stock` : `${variant!.stockQuantity} in stock`}</p>
+        )}
 
         {product.description && <p className="mt-5 text-[15px] leading-7 text-[#64748B]">{product.description}</p>}
 
@@ -116,12 +129,13 @@ export function ProductDetail({ product, usdToPkr = 280 }: { product: Product; u
           <AddToBagButton
             variantId={variant?.id}
             quantity={quantity}
-            label="Add to Cart"
+            label={outOfStock ? "Out of stock" : "Add to Cart"}
+            disabled={outOfStock}
             className="flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#0B1D3A] px-6 text-sm font-black text-[#0B1D3A] transition hover:bg-[#0B1D3A] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           />
           <button
             type="button"
-            disabled={!variant?.id || buying}
+            disabled={!variant?.id || buying || outOfStock}
             onClick={async () => {
               if (!variant?.id) return;
               setBuying(true);
@@ -139,7 +153,7 @@ export function ProductDetail({ product, usdToPkr = 280 }: { product: Product; u
             }}
             className="gold-btn min-h-[46px] flex-1 px-6"
           >
-            {buying ? "Preparing…" : "Buy Now"}
+            {buying ? "Preparing…" : outOfStock ? "Out of stock" : "Buy Now"}
           </button>
         </div>
 

@@ -4,6 +4,7 @@ import { MarkPaidButton } from "@/components/admin/MarkPaidButton";
 import { RejectPaymentButton } from "@/components/admin/RejectPaymentButton";
 import { FulfillmentButton } from "@/components/admin/FulfillmentButton";
 import { CancelOrderButton } from "@/components/admin/CancelOrderButton";
+import { formatMoney } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function AdminOrdersPage() {
             </div>
           </div>
           {claim && <div className="mt-4 rounded-2xl bg-[#F1F5F9] px-4 py-3 text-sm"><span className="font-bold">JazzCash claim:</span> {claim.status}{claim.transactionReference ? ` · transaction ${claim.transactionReference}` : " · proof not submitted"}{claim.customerNote ? ` · ${claim.customerNote}` : ""}{claim.proofStorageKey && <a className="ml-3 font-bold text-[#2563EB]" href={`/api/admin/orders/${order.id}/manual-payment/proof`} target="_blank" rel="noreferrer">View proof</a>}</div>}
-          <div className="mt-5 border-t pt-4 text-sm">{order.items.map((item) => <div className="flex justify-between py-1" key={item.id}><span>{item.productName} × {item.quantity}</span><span>{item.lineTotal.amountMinor / 100} {item.lineTotal.currency}</span></div>)}<div className="mt-3 flex justify-between border-t pt-3 font-bold"><span>Total</span><span>{order.total.amountMinor / 100} {order.total.currency}</span></div></div>
+          <div className="mt-5 border-t pt-4 text-sm">{order.items.map((item) => <div className="flex justify-between py-1" key={item.id}><span>{item.productName} × {item.quantity}</span><span>{formatMoney(item.lineTotal)}</span></div>)}{order.shipping.amountMinor > 0 && <div className="flex justify-between py-1 text-[#64748B]"><span>Delivery</span><span>{formatMoney(order.shipping)}</span></div>}<div className="mt-3 flex justify-between border-t pt-3 font-bold"><span>Total</span><span>{formatMoney(order.total)}</span></div></div>
         </article>;
       })}
       {!orders.length && <p className="rounded-3xl border bg-white p-10 text-center text-[#64748B]">No orders yet.</p>}

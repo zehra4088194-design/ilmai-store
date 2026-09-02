@@ -112,7 +112,7 @@ export function StoreFooter() {
         <div>
           <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#2563EB]">Customer Service</h3>
           <div className="mt-5 grid gap-3 text-sm text-[#B9C4E0]">
-            <a href="mailto:ilmai.study1@gmail.com">Contact Us</a>
+            <a href={`mailto:${siteConfig.supportEmail}`}>Contact Us</a>
             <Link href="/orders">Track Order</Link>
             <Link href="/account">My Orders</Link>
             <Link href="/refund-policy">{PHYSICAL_GOODS_ENABLED ? "Shipping & Refund Policy" : "Refund Policy"}</Link>

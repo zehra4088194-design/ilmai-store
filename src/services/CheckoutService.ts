@@ -31,13 +31,21 @@ export const CheckoutService = {
         amountMinor: order.total.amountMinor,
         discountMinor: order.discount.amountMinor,
         currency: order.total.currency,
-        lineItems: order.items.map((item) => ({
-          name: item.productName,
-          quantity: item.quantity,
-          unitPriceMinor: item.unitPrice.amountMinor,
-          currency: item.unitPrice.currency,
-          priceId: item.providerPriceId,
-        })),
+        lineItems: [
+          ...order.items.map((item) => ({
+            name: item.productName,
+            quantity: item.quantity,
+            unitPriceMinor: item.unitPrice.amountMinor,
+            currency: item.unitPrice.currency,
+            priceId: item.providerPriceId,
+          })),
+          // SafepayProvider checks sum(lineItems) - discount === amountMinor,
+          // so a non-zero shipping total needs its own line — otherwise every
+          // order with a paid delivery fee fails checkout validation.
+          ...(order.shipping.amountMinor > 0
+            ? [{ name: "Delivery", quantity: 1, unitPriceMinor: order.shipping.amountMinor, currency: order.shipping.currency }]
+            : []),
+        ],
         successUrl: `${process.env.NEXT_PUBLIC_STORE_URL ?? process.env.NEXT_PUBLIC_APP_URL}/orders/${order.id}`,
         cancelUrl: `${process.env.NEXT_PUBLIC_STORE_URL ?? process.env.NEXT_PUBLIC_APP_URL}/checkout`,
       });

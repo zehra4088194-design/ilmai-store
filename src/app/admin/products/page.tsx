@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { ProductService } from "@/services/ProductService";
+import { formatMoney } from "@/lib/pricing";
 
 export default async function AdminProductsPage() {
   const products = await ProductService.adminList();
@@ -24,7 +25,7 @@ export default async function AdminProductsPage() {
               <small className="mt-1 block font-normal text-[#64748B]">{p.slug}</small>
             </Link>
             <Link href={`/admin/products/${p.id}`}>{p.productType}</Link>
-            <Link href={`/admin/products/${p.id}`}>{p.basePrice.amountMinor / 100} {p.basePrice.currency}</Link>
+            <Link href={`/admin/products/${p.id}`}>{formatMoney(p.basePrice)}</Link>
             <Link href={`/admin/products/${p.id}`} className="text-[#2563EB]">{p.status}</Link>
             <Link href={`/admin/products/${p.id}`}>
               <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${p.sellerId ? "bg-[#DCFCE7] text-[#2563EB]" : "bg-[#F1F5F9] text-[#64748B]"}`}>{p.sellerId ? "Seller" : "Platform"}</span>

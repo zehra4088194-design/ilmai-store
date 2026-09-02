@@ -5,12 +5,11 @@ import { requireUser } from "@/lib/auth/admin";
 import { AuthenticationError } from "@/lib/errors";
 import { OrderService } from "@/services/OrderService";
 import type { Order } from "@/types/domain";
+import { formatMoney } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
-function money(m: { amountMinor: number; currency: string }) {
-  return `${m.currency} ${new Intl.NumberFormat("en-PK").format(m.amountMinor / 100)}`;
-}
+const money = formatMoney;
 
 const STATUS_LABEL: Record<Order["status"], string> = {
   pending: "Pending",

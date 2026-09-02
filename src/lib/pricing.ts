@@ -1,17 +1,14 @@
 import { TRANSACTION_FEE_USD } from "@/constants/manual-payment";
 
 /**
- * "Compare at" anchor price shown crossed out next to the real price — a
- * flat $2 (or currency-equivalent) above what's actually charged, so every
- * product reads as a small discount off a slightly higher price. Purely a
- * display computation: nothing is stored, the real price everywhere else
- * (cart, checkout, order, Safepay) is always the actual base/variant price.
+ * Shared money formatter for every price shown across the storefront,
+ * cart, checkout, orders and admin/seller panels. USD renders with a `$`
+ * sign (`$4`) instead of the generic `USD 4` — every other currency keeps
+ * the `CODE amount` form (e.g. `PKR 500`).
  */
-export function compareAtAmountMinor(amountMinor: number, currency: string, usdToPkrRate: number): { amountMinor: number; currency: string } {
-  const extraUsd = 2;
-  const upper = currency.toUpperCase();
-  const extraMinor = upper === "PKR" ? Math.round(extraUsd * usdToPkrRate) * 100 : extraUsd * 100;
-  return { amountMinor: amountMinor + extraMinor, currency: upper };
+export function formatMoney(m: { amountMinor: number; currency: string }): string {
+  const amount = new Intl.NumberFormat("en-PK").format(m.amountMinor / 100);
+  return m.currency.toUpperCase() === "USD" ? `$${amount}` : `${m.currency} ${amount}`;
 }
 
 /** Converts a USD major-unit price to a whole PKR rupee amount. */

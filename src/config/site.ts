@@ -8,5 +8,5 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_STORE_URL ?? "https://ilmai.store",
   ilmaiStudyUrl: process.env.NEXT_PUBLIC_ILMAI_STUDY_URL ?? "https://ilmai.study",
   defaultCurrency: process.env.NEXT_PUBLIC_DEFAULT_CURRENCY ?? "PKR",
-  supportEmail: "ilmai.study1@gmail.com",
+  supportEmail: "noorhusnain792@gmail.com",
 };
