@@ -449,7 +449,7 @@ export function Storefront({
           {!!featuredProducts.length && (
             <Reveal className="store-container mt-16">
               <div className="curated-strip">
-                <div className="grid gap-10 lg:grid-cols-[.5fr_1.5fr] lg:items-end">
+                <div className="grid grid-cols-1 gap-10 lg:grid-cols-[.5fr_1.5fr] lg:items-end">
                   <div>
                     <span className="eyebrow text-[var(--sky)]">Editor&apos;s shelf</span>
                     <h2 className="mt-3 text-2xl font-bold leading-tight tracking-[-.01em] text-white sm:text-3xl">Picked for a productive week.</h2>

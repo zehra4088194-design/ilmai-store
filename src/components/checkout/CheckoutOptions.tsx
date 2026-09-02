@@ -163,7 +163,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
     }
   }
 
-  return <div className="grid gap-8 lg:grid-cols-[1fr_.8fr]">
+  return <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_.8fr]">
     <section className="rounded-[2rem] border bg-white p-6 shadow-sm sm:p-8">
       <div className="flex items-start justify-between gap-5">
         <div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">Payment details</p><h1 className="display-font mt-2 text-4xl text-[#0B1D3A]">Choose how to pay.</h1></div>

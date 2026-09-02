@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BadgeCheck, BookOpen, Download, Facebook, Heart, Minus, Plus, Share2, ShieldCheck, Star, Truck, Twitter } from "lucide-react";
@@ -29,6 +29,24 @@ export function ProductDetail({ product }: { product: Product }) {
   const outOfStock = trackingStock && variant!.stockQuantity! <= 0;
   const lowStock = trackingStock && !outOfStock && variant!.stockQuantity! <= (variant!.lowStockThreshold ?? 5);
 
+  // Swipe left/right on the main image to move between photos on touch devices.
+  const touchStartX = useRef<number | null>(null);
+  const SWIPE_THRESHOLD = 40;
+  function onImageTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0]?.clientX ?? null;
+  }
+  function onImageTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null || !images.length) return;
+    const endX = e.changedTouches[0]?.clientX ?? touchStartX.current;
+    const delta = endX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < SWIPE_THRESHOLD) return;
+    setActiveImage((current) => {
+      const next = delta < 0 ? current + 1 : current - 1;
+      return (next + images.length) % images.length;
+    });
+  }
+
   const bullets = useMemo(() => [
     "Complete, topic-wise coverage — nothing skipped.",
     "Easy to learn and revise before exams.",
@@ -37,11 +55,15 @@ export function ProductDetail({ product }: { product: Product }) {
   ], [digital]);
 
   return (
-    <div className="grid gap-9 lg:grid-cols-[1fr_1.05fr] lg:items-start">
+    <div className="grid grid-cols-1 gap-9 lg:grid-cols-[1fr_1.05fr] lg:items-start">
       <div>
-        <div className="relative aspect-square overflow-hidden rounded-2xl border border-[var(--line)] bg-gradient-to-br from-[#142a52] to-[#0B1D3A]">
+        <div
+          className="relative aspect-square touch-pan-y overflow-hidden rounded-2xl border border-[var(--line)] bg-gradient-to-br from-[#142a52] to-[#0B1D3A]"
+          onTouchStart={onImageTouchStart}
+          onTouchEnd={onImageTouchEnd}
+        >
           {images.length ? (
-            <img src={images[activeImage]?.url} alt={images[activeImage]?.altText ?? product.title} className="h-full w-full object-cover" />
+            <img src={images[activeImage]?.url} alt={images[activeImage]?.altText ?? product.title} className="h-full w-full select-none object-cover" draggable={false} />
           ) : (
             <div className="grid h-full place-items-center">
               <BookOpen size={110} strokeWidth={1} className="text-white/25" />
@@ -55,6 +77,13 @@ export function ProductDetail({ product }: { product: Product }) {
           >
             <Heart size={17} fill={liked ? "currentColor" : "none"} />
           </button>
+          {images.length > 1 && (
+            <div className="absolute inset-x-0 bottom-3 flex items-center justify-center gap-1.5 sm:hidden">
+              {images.map((_, i) => (
+                <span key={i} className={`h-1.5 rounded-full transition-all ${i === activeImage ? "w-4 bg-white" : "w-1.5 bg-white/50"}`} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="mt-3 flex gap-3 overflow-x-auto">

@@ -56,7 +56,7 @@ export function CartLineItems({ cart: initialCart }: { cart: Cart }) {
         </div>
         <div className="divide-y divide-[var(--line)]">
           {cart.items.map((item) => (
-            <div key={item.id} className="grid gap-4 p-4 sm:grid-cols-[2.2fr_.8fr_1fr_.9fr] sm:items-center sm:px-5">
+            <div key={item.id} className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-[2.2fr_.8fr_1fr_.9fr] sm:items-center sm:px-5">
               <div className="flex items-center gap-3">
                 <div className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#142a52] to-[#0B1D3A] text-white/30"><ShoppingBag size={22} /></div>
                 <div className="min-w-0">
