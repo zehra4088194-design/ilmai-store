@@ -3,18 +3,19 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BadgeCheck, BookOpen, Download, Facebook, Heart, Minus, Plus, Share2, ShieldCheck, Star, Truck, Twitter } from "lucide-react";
+import { BadgeCheck, BookOpen, Download, Facebook, Minus, Plus, Share2, ShieldCheck, Star, Truck, Twitter } from "lucide-react";
 import type { Product, ProductVariant } from "@/types/domain";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
+import { WishlistButton } from "@/components/store/wishlist-button";
+import { NotifyMeButton } from "@/components/store/notify-me-button";
 import { formatMoney } from "@/lib/pricing";
 import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 
 const money = formatMoney;
 
-export function ProductDetail({ product }: { product: Product }) {
+export function ProductDetail({ product, isWishlisted = false, isLoggedIn = false }: { product: Product; isWishlisted?: boolean; isLoggedIn?: boolean }) {
   const [variant, setVariant] = useState<ProductVariant | undefined>(product.variants.find((v) => v.isDefault) ?? product.variants[0]);
   const [activeImage, setActiveImage] = useState(0);
-  const [liked, setLiked] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const router = useRouter();
   const [buying, setBuying] = useState(false);
@@ -47,6 +48,24 @@ export function ProductDetail({ product }: { product: Product }) {
     });
   }
 
+  function shareTo(network: "facebook" | "twitter" | "native") {
+    if (typeof window === "undefined") return;
+    const url = window.location.href;
+    if (network === "native") {
+      if (typeof navigator.share === "function") {
+        navigator.share({ title: product.title, url }).catch(() => {});
+      } else if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(url).catch(() => {});
+      }
+      return;
+    }
+    const shareUrl =
+      network === "facebook"
+        ? `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+        : `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(product.title)}`;
+    window.open(shareUrl, "_blank", "noopener,noreferrer,width=600,height=520");
+  }
+
   const bullets = useMemo(() => [
     "Complete, topic-wise coverage — nothing skipped.",
     "Easy to learn and revise before exams.",
@@ -69,14 +88,14 @@ export function ProductDetail({ product }: { product: Product }) {
               <BookOpen size={110} strokeWidth={1} className="text-white/25" />
             </div>
           )}
-          <button
-            type="button"
-            onClick={() => setLiked((v) => !v)}
-            aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
-            className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-[#0B1D3A]"
-          >
-            <Heart size={17} fill={liked ? "currentColor" : "none"} />
-          </button>
+          <WishlistButton
+            productId={product.id}
+            initialSaved={isWishlisted}
+            isLoggedIn={isLoggedIn}
+            size={17}
+            className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/90"
+            unsavedColorClass="text-[#0B1D3A]"
+          />
           {images.length > 1 && (
             <div className="absolute inset-x-0 bottom-3 flex items-center justify-center gap-1.5 sm:hidden">
               {images.map((_, i) => (
@@ -91,7 +110,7 @@ export function ProductDetail({ product }: { product: Product }) {
             <button
               key={media?.id ?? index}
               onClick={() => setActiveImage(index)}
-              className={`grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border-2 bg-[#F1F5F9] ${index === activeImage ? "border-[#2563EB]" : "border-[var(--line)]"}`}
+              className={`grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border-2 bg-[#F1F5F9] ${index === activeImage ? "border-[#0F766E]" : "border-[var(--line)]"}`}
             >
               {media ? <img src={media.url} alt={media.altText ?? product.title} className="h-full w-full object-cover" /> : <BookOpen size={20} className="text-[#0B1D3A]/25" />}
             </button>
@@ -111,9 +130,9 @@ export function ProductDetail({ product }: { product: Product }) {
         <div className="mt-5 flex flex-wrap items-baseline gap-3">
           {compareAt && <span className="text-lg font-bold text-[#94A3B8] line-through">{money(compareAt)}</span>}
           <span className="text-4xl font-black tracking-[-.03em] text-[#0B1D3A]">{money(price)}</span>
-          {digital && <span className="rounded-full bg-[#DCFCE7] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] text-[#2563EB]">Instant access</span>}
+          {digital && <span className="rounded-full bg-[#DCFCE7] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] text-[#0F766E]">Instant access</span>}
         </div>
-        <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[#2563EB]">
+        <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[#0F766E]">
           {digital || !PHYSICAL_GOODS_ENABLED
             ? <><Download size={13} /> Instant digital delivery</>
             : freeDelivery
@@ -122,7 +141,7 @@ export function ProductDetail({ product }: { product: Product }) {
         </p>
         {trackingStock && (
           outOfStock
-            ? <p className="mt-2 text-xs font-black uppercase tracking-[.1em] text-red-600">Out of stock</p>
+            ? <><p className="mt-2 text-xs font-black uppercase tracking-[.1em] text-red-600">Out of stock</p><NotifyMeButton variantId={variant!.id} /></>
             : <p className={`mt-2 text-xs font-black uppercase tracking-[.1em] ${lowStock ? "text-amber-600" : "text-[#64748B]"}`}>{lowStock ? `Only ${variant!.stockQuantity} left in stock` : `${variant!.stockQuantity} in stock`}</p>
         )}
 
@@ -131,7 +150,7 @@ export function ProductDetail({ product }: { product: Product }) {
         <div className="mt-6 grid gap-2.5">
           {bullets.map((item) => (
             <div key={item} className="flex items-start gap-2.5 text-sm leading-6 text-[#64748B]">
-              <BadgeCheck size={16} className="mt-0.5 shrink-0 text-[#2563EB]" /> {item}
+              <BadgeCheck size={16} className="mt-0.5 shrink-0 text-[#0F766E]" /> {item}
             </div>
           ))}
         </div>
@@ -190,16 +209,16 @@ export function ProductDetail({ product }: { product: Product }) {
           <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
             <span className="font-bold text-[#0B1D3A]">Categories:</span>
             {product.categories.map((c) => (
-              <Link key={c.id} href={`/store?search=${encodeURIComponent(c.name)}`} className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs font-bold text-[#2563EB] hover:bg-[#DCFCE7]">{c.name}</Link>
+              <Link key={c.id} href={`/store?search=${encodeURIComponent(c.name)}`} className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs font-bold text-[#0F766E] hover:bg-[#DCFCE7]">{c.name}</Link>
             ))}
           </div>
         )}
 
         <div className="mt-4 flex items-center gap-3 text-sm text-[#64748B]">
           <span className="font-bold text-[#0B1D3A]">Share:</span>
-          <a href="#" onClick={(e) => e.preventDefault()} className="icon-button h-9 w-9"><Facebook size={14} /></a>
-          <a href="#" onClick={(e) => e.preventDefault()} className="icon-button h-9 w-9"><Twitter size={14} /></a>
-          <a href="#" onClick={(e) => e.preventDefault()} className="icon-button h-9 w-9"><Share2 size={14} /></a>
+          <button type="button" onClick={() => shareTo("facebook")} aria-label="Share on Facebook" className="icon-button h-9 w-9"><Facebook size={14} /></button>
+          <button type="button" onClick={() => shareTo("twitter")} aria-label="Share on Twitter" className="icon-button h-9 w-9"><Twitter size={14} /></button>
+          <button type="button" onClick={() => shareTo("native")} aria-label="Share this product" className="icon-button h-9 w-9"><Share2 size={14} /></button>
         </div>
 
         <div className="mt-6 grid grid-cols-3 gap-2">

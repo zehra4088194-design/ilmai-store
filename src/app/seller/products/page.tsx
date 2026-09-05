@@ -13,7 +13,7 @@ export default async function SellerProductsPage() {
     <main className="mx-auto max-w-6xl p-6 lg:p-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">Your catalog</p>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Your catalog</p>
           <h1 className="display-font mt-2 text-5xl">Products</h1>
         </div>
         <Link href="/seller/products/new" className="rounded-full bg-[#0B1D3A] px-5 py-3 text-sm font-bold text-white">+ New product</Link>
@@ -31,7 +31,7 @@ export default async function SellerProductsPage() {
                   {stockVariant && ` · ${stockVariant.stockQuantity! > 0 ? `${stockVariant.stockQuantity} in stock` : "Out of stock"}`}
                 </p>
               </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest ${product.status === "published" ? "bg-[#DCFCE7] text-[#2563EB]" : "bg-[#FFF3E8] text-[#C2410C]"}`}>{product.status}</span>
+              <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest ${product.status === "published" ? "bg-[#DCFCE7] text-[#0F766E]" : "bg-[#FFF3E8] text-[#C2410C]"}`}>{product.status}</span>
             </Link>
           );
         })}

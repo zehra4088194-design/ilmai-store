@@ -30,7 +30,7 @@ export function DownloadButton({ orderId, entitlementId }: Props) {
     <button
       onClick={onClick}
       disabled={state === "loading"}
-      className="inline-flex items-center gap-2 rounded-full bg-[#0B1D3A] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex items-center gap-2 rounded-full bg-[#0B1D3A] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#115E59] disabled:cursor-not-allowed disabled:opacity-60"
     >
       {state === "loading" && <><Loader2 size={14} className="animate-spin" /> Preparing…</>}
       {state === "error" && "Try again"}

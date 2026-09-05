@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { ProductService } from "@/services/ProductService";
 import { adminUpdateProductSchema } from "@/validators/product";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 /** PATCH /api/admin/products/[id] — update. DELETE — remove. Admin only. */
@@ -13,7 +13,7 @@ export async function PATCH(
   try {
     await requireAdmin();
     const { id } = await params;
-    const body = adminUpdateProductSchema.parse({ ...(await request.json()), id });
+    const body = parseOrThrow(adminUpdateProductSchema, { ...(await request.json()), id });
     const product = await ProductService.adminUpdate(body);
     return NextResponse.json(product);
   } catch (err) {

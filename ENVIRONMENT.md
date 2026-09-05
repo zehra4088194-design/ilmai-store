@@ -25,12 +25,13 @@ never reach the browser (see `SECURITY.md` §1).
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public | Anon key, RLS-restricted, safe client-side |
 | `SUPABASE_SERVICE_ROLE_ID_KEY` | server | Bypasses RLS — admin/service use only, never client |
 
-## Resend
+## Brevo
 
 | Var | Exposure | Purpose |
 |---|---|---|
-| `RESEND_API_KEY` | server | Sending transactional email |
-| `RESEND_FROM_EMAIL` | server | Default from-address, e.g. `store@ilmai.study` |
+| `BREVO_API_KEY` | server | Sending transactional email |
+| `BREVO_FROM_EMAIL` | server | Default from-address, e.g. `store@ilmai.store` |
+| `BREVO_FROM_NAME` | server | Default from-name, e.g. `IlmAI Store` |
 
 ## Backblaze B2 (S3-compatible)
 

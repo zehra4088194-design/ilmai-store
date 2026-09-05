@@ -66,7 +66,7 @@ export default function PrivacyPolicyPage() {
           <h2>Contact</h2>
           <p>
             Questions about this policy or your data — email{" "}
-            <a href={`mailto:${siteConfig.supportEmail}`} className="font-bold text-[#2563EB]">{siteConfig.supportEmail}</a>.
+            <a href={`mailto:${siteConfig.supportEmail}`} className="font-bold text-[#0F766E]">{siteConfig.supportEmail}</a>.
           </p>
 
           <h2>Changes to this policy</h2>

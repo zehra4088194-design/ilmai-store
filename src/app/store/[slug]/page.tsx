@@ -3,11 +3,15 @@ import { after } from "next/server";
 import { ProductService } from "@/services/ProductService";
 import { ReviewService } from "@/services/ReviewService";
 import { ProductEventService } from "@/services/ProductEventService";
+import { WishlistService } from "@/services/WishlistService";
 import { NotFoundError } from "@/lib/errors";
 import { ProductDetail } from "@/components/store/product-detail";
+import { RelatedProducts } from "@/components/store/related-products";
 import { ProductReviews } from "@/components/store/product-reviews";
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
+import { productListQuerySchema } from "@/validators/product";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +26,15 @@ export default async function ProductPage({ params }: { params: Params }) {
     throw err;
   });
 
-  const reviews = await ReviewService.listForProduct(product.id);
+  const { data: { user } } = await (await createSupabaseServerClient()).auth.getUser();
+  const categorySlug = product.categories[0]?.slug;
+  const [reviews, wishlistProductIds, related] = await Promise.all([
+    ReviewService.listForProduct(product.id),
+    user ? WishlistService.listProductIds(user.id) : Promise.resolve(new Set<string>()),
+    categorySlug
+      ? ProductService.list(productListQuerySchema.parse({ categorySlug, pageSize: 5 })).then((r) => r.items.filter((p) => p.id !== product.id).slice(0, 4))
+      : Promise.resolve([]),
+  ]);
 
   // Fire-and-forget: runs after the response is sent, never delays the page.
   after(() => ProductEventService.recordView(product.id));
@@ -38,8 +50,9 @@ export default async function ProductPage({ params }: { params: Params }) {
           </span>
         </div>
         <div className="mt-8 rounded-[32px] border border-[var(--line)] bg-white p-5 shadow-[0_20px_60px_rgba(17,45,51,.06)] sm:p-8">
-          <ProductDetail product={product} />
+          <ProductDetail product={product} isWishlisted={wishlistProductIds.has(product.id)} isLoggedIn={Boolean(user)} />
         </div>
+        {related.length > 0 && <RelatedProducts products={related} />}
         <div className="mt-8 rounded-[32px] border border-[var(--line)] bg-white p-6 sm:p-8">
           <ProductReviews productId={product.id} reviews={reviews} />
         </div>

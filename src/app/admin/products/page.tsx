@@ -9,10 +9,13 @@ export default async function AdminProductsPage() {
     <main className="mx-auto max-w-6xl p-6 lg:p-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">Catalog control</p>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Catalog control</p>
           <h1 className="display-font mt-2 text-5xl">Products</h1>
         </div>
-        <Link href="/admin/products/new" className="rounded-full bg-[#0B1D3A] px-5 py-3 text-sm font-bold text-white">+ New product</Link>
+        <div className="flex gap-3">
+          <Link href="/admin/products/import" className="rounded-full border px-5 py-3 text-sm font-bold text-[#0B1D3A]">Bulk import</Link>
+          <Link href="/admin/products/new" className="rounded-full bg-[#0B1D3A] px-5 py-3 text-sm font-bold text-white">+ New product</Link>
+        </div>
       </div>
       <div className="mt-8 overflow-hidden rounded-3xl border bg-white">
         <div className="grid grid-cols-[1fr_120px_120px_100px_90px_40px] gap-4 border-b px-5 py-4 text-xs font-bold uppercase tracking-widest text-[#64748B]">
@@ -26,11 +29,11 @@ export default async function AdminProductsPage() {
             </Link>
             <Link href={`/admin/products/${p.id}`}>{p.productType}</Link>
             <Link href={`/admin/products/${p.id}`}>{formatMoney(p.basePrice)}</Link>
-            <Link href={`/admin/products/${p.id}`} className="text-[#2563EB]">{p.status}</Link>
+            <Link href={`/admin/products/${p.id}`} className="text-[#0F766E]">{p.status}</Link>
             <Link href={`/admin/products/${p.id}`}>
-              <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${p.sellerId ? "bg-[#DCFCE7] text-[#2563EB]" : "bg-[#F1F5F9] text-[#64748B]"}`}>{p.sellerId ? "Seller" : "Platform"}</span>
+              <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${p.sellerId ? "bg-[#DCFCE7] text-[#0F766E]" : "bg-[#F1F5F9] text-[#64748B]"}`}>{p.sellerId ? "Seller" : "Platform"}</span>
             </Link>
-            <Link href={`/store/${p.slug}`} title="View live" className="text-[#64748B] hover:text-[#2563EB]">
+            <Link href={`/store/${p.slug}`} title="View live" className="text-[#64748B] hover:text-[#0F766E]">
               <ArrowUpRight size={16} />
             </Link>
           </div>

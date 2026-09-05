@@ -33,7 +33,7 @@ marketplace features (those are explicitly out of scope for v1 — see §13).
 | Auth | Supabase Auth |
 | Payments | Safepay (via a provider-agnostic `PaymentProvider` abstraction) |
 | Object storage | Backblaze B2 (S3-compatible), via a `StorageProvider` abstraction |
-| Email | Resend, via an `EmailService` abstraction |
+| Email | Brevo, via an `EmailService` abstraction |
 | Hosting | Oracle Cloud VM + Coolify (Docker) |
 | Source control | GitHub |
 
@@ -59,11 +59,11 @@ Services (src/services/**)  ── all business logic lives here
         ├── Supabase (Postgres + Auth + RLS)
         ├── PaymentProvider → SafepayProvider
         ├── StorageProvider → B2Provider
-        └── EmailService → ResendProvider
+        └── EmailService → BrevoProvider
 ```
 
 Rules:
-- **Route handlers never talk to Supabase/Safepay/B2/Resend directly.** They
+- **Route handlers never talk to Supabase/Safepay/B2/Brevo directly.** They
   call a service. This keeps provider swaps (e.g. adding Stripe later)
   localized to one file.
 - **Server vs client boundary is strict.** Anything importing a secret env var
@@ -93,7 +93,7 @@ src/
 ├── config/                  # env parsing, site config, feature flags
 ├── constants/                # enums / string constants, no magic strings
 ├── hooks/                    # shared React hooks (client-side)
-├── lib/                      # low-level clients: supabase, safepay, b2, resend
+├── lib/                      # low-level clients: supabase, safepay, b2, brevo
 ├── services/                 # business logic (Product/Cart/Order/... Service)
 ├── types/                    # shared TS types (db + domain)
 ├── validators/                # Zod schemas
@@ -110,7 +110,7 @@ src/
 ```
 
 `lib/` holds thin SDK wrappers (the only place `@supabase/supabase-js`,
-Safepay's SDK, the B2/S3 client, and Resend's SDK are imported). `services/`
+Safepay's SDK, the B2/S3 client, and Brevo's API are called). `services/`
 is where business rules live and is what the rest of the app calls.
 
 ---
@@ -215,7 +215,7 @@ Safepay → verified webhook → order.payment_status = 'paid'
 
 ---
 
-## 9. Email Architecture (Resend)
+## 9. Email Architecture (Brevo)
 
 `src/services/EmailService.ts` is the single call site for all transactional
 email. It never gets imported into a page/component — only into other
@@ -231,7 +231,7 @@ password/account email, admin new-order notification, refund/cancellation.
 
 Full detail in `SECURITY.md`. Highlights:
 - `SUPABASE_SERVICE_ROLE_ID_KEY`, Safepay private/webhook secrets,
-  `B2_SECRET_ACCESS_KEY`, `RESEND_API_KEY` are **server-only** — never
+  `B2_SECRET_ACCESS_KEY`, `BREVO_API_KEY` are **server-only** — never
   prefixed `NEXT_PUBLIC_`, never imported by client components, never logged.
 - All external input (API bodies, query params, webhook payloads) is validated
   with Zod (`src/validators/**`) before touching a service.
@@ -273,7 +273,7 @@ Full detail in `SECURITY.md`. Highlights:
 - Domain types (`src/types/*.ts`)
 - Constants (`src/constants/*.ts`)
 - Zod validators for core entities (`src/validators/*.ts`)
-- Service interfaces + Safepay/B2/Resend provider stubs
+- Service interfaces + Safepay/B2/Brevo provider stubs
   (`src/services/**`, `src/lib/**`)
 - Error model (`src/lib/errors.ts`)
 - Logging abstraction (`src/lib/logger.ts`)
@@ -295,7 +295,7 @@ Full detail in `SECURITY.md`. Highlights:
    (checkout creation, transaction retrieval, webhook signature verification)
    — the interface is fixed, the implementation is a TODO.
 4. Implement `B2Provider` with `@aws-sdk/client-s3` against B2's S3 endpoint.
-5. Implement `ResendProvider` + real HTML email templates matching IlmAI's
+5. Implement `BrevoProvider` + real HTML email templates matching IlmAI's
    brand (teal/gold accents, per `/areas/ilm-ai` conventions).
 6. Build the actual storefront UI: homepage, category/product listing,
    product detail, cart, checkout, order history, digital download page. This

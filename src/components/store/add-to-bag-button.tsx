@@ -45,7 +45,7 @@ export function AddToBagButton({ variantId, quantity = 1, className, label = "Ad
     <button
       onClick={addToBag}
       disabled={disabled || !variantId || state === "loading"}
-      className={className ?? "mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F1F5F9] py-3 text-sm font-bold text-[#0B1D3A] transition group-hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60"}
+      className={className ?? "mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F1F5F9] py-3 text-sm font-bold text-[#0B1D3A] transition group-hover:bg-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-60"}
     >
       {state === "loading" && <><Loader2 size={15} className="animate-spin" /> Adding…</>}
       {state === "done" && <><Check size={15} /> Added</>}

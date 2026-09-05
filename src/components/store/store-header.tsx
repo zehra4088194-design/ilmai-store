@@ -53,12 +53,12 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
       {/* Utility bar */}
       <div className="utility-bar hidden sm:block">
         <div className="store-container flex min-h-9 items-center justify-between gap-4">
-          <span className="inline-flex items-center gap-1.5"><Star size={12} className="text-[#2563EB]" fill="currentColor" /> Welcome to IlmAI Store</span>
-          <span className="inline-flex items-center gap-1.5 text-[#2563EB]"><PackageSearch size={13} /> {PHYSICAL_GOODS_ENABLED ? "Free delivery on orders over PKR 2,000" : "Instant access after checkout"}</span>
+          <span className="inline-flex items-center gap-1.5"><Star size={12} className="text-[#0F766E]" fill="currentColor" /> Welcome to IlmAI Store</span>
+          <span className="inline-flex items-center gap-1.5 text-[#0F766E]"><PackageSearch size={13} /> {PHYSICAL_GOODS_ENABLED ? "Delivery charge (if any) shown at checkout" : "Instant access after checkout"}</span>
           <span className="flex items-center gap-4">
-            <Link href="/orders" className="inline-flex items-center gap-1.5 hover:text-[#2563EB]"><PackageSearch size={12} /> Track order</Link>
-            <a href={`mailto:${siteConfig.supportEmail}`} className="inline-flex items-center gap-1.5 hover:text-[#2563EB]"><LifeBuoy size={12} /> Help</a>
-            <a href={`mailto:${siteConfig.supportEmail}`} className="inline-flex items-center gap-1.5 hover:text-[#2563EB]"><Phone size={12} /> Contact us</a>
+            <Link href="/orders" className="inline-flex items-center gap-1.5 hover:text-[#0F766E]"><PackageSearch size={12} /> Track order</Link>
+            <a href={`mailto:${siteConfig.supportEmail}`} className="inline-flex items-center gap-1.5 hover:text-[#0F766E]"><LifeBuoy size={12} /> Help</a>
+            <a href={`mailto:${siteConfig.supportEmail}`} className="inline-flex items-center gap-1.5 hover:text-[#0F766E]"><Phone size={12} /> Contact us</a>
           </span>
         </div>
       </div>
@@ -68,7 +68,7 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
         <div className="store-container flex min-h-[76px] items-center gap-4">
           <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label="IlmAI Store home">
             <span className="text-xl font-black tracking-[-.04em] text-[#0B1D3A]">IlmAI</span>
-            <span className="rounded-md bg-[#2563EB] px-2 py-1 text-[11px] font-black uppercase tracking-[.06em] text-[#0B1D3A]">.store</span>
+            <span className="rounded-md bg-[#0F766E] px-2 py-1 text-[11px] font-black uppercase tracking-[.06em] text-white">.store</span>
           </Link>
 
           <form action="/store" method="GET" className="hidden min-w-0 flex-1 items-stretch overflow-hidden rounded-xl border border-[var(--line)] md:flex">
@@ -82,15 +82,15 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
               placeholder={PHYSICAL_GOODS_ENABLED ? "Search for books, notes, courses…" : "Search for notes, courses, test series…"}
               className="min-w-0 flex-1 border-0 px-4 text-sm text-[#0B1D3A] outline-none"
             />
-            <button type="submit" aria-label="Search" className="grid w-14 shrink-0 place-items-center bg-[#2563EB] text-[#0B1D3A] transition hover:bg-[#1d4fd1]">
+            <button type="submit" aria-label="Search" className="grid w-14 shrink-0 place-items-center bg-[#0F766E] text-white transition hover:bg-[#115E59]">
               <Search size={18} />
             </button>
           </form>
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
-            <button className="hidden items-center gap-2 text-xs font-bold text-[#0B1D3A] sm:flex" aria-label="Wishlist">
+            <Link href="/account" className="hidden items-center gap-2 text-xs font-bold text-[#0B1D3A] sm:flex" aria-label="Wishlist">
               <Heart size={19} /> <span className="hidden lg:inline">Wishlist</span>
-            </button>
+            </Link>
             <CartBadge />
             {email ? (
               <div className="hidden items-center gap-2 sm:flex">
@@ -116,7 +116,7 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
 
         <form action="/store" method="GET" className="store-container flex items-stretch overflow-hidden rounded-xl border border-[var(--line)] pb-3 md:hidden">
           <input name="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search the store…" className="min-w-0 flex-1 border-0 px-4 text-sm outline-none" />
-          <button type="submit" aria-label="Search" className="grid w-12 shrink-0 place-items-center bg-[#2563EB] text-[#0B1D3A]"><Search size={16} /></button>
+          <button type="submit" aria-label="Search" className="grid w-12 shrink-0 place-items-center bg-[#0F766E] text-white"><Search size={16} /></button>
         </form>
       </div>
 
@@ -126,7 +126,7 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
           <div className="relative">
             <button
               onClick={() => setCatOpen((v) => !v)}
-              className="flex items-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2.5 text-xs font-black text-[#0B1D3A]"
+              className="flex items-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2.5 text-xs font-black text-white"
             >
               <Menu size={15} /> All Categories <ChevronDown size={13} />
             </button>

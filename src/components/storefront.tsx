@@ -11,7 +11,6 @@ import {
   Download,
   GraduationCap,
   Headphones,
-  Heart,
   Layers3,
   Package,
   ShieldCheck,
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 import type { Banner, Category, Product } from "@/types/domain";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
+import { WishlistButton } from "@/components/store/wishlist-button";
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
 import { Reveal } from "@/components/store/reveal";
@@ -35,6 +35,8 @@ type Props = {
   initialSearch?: string;
   catalogMode?: boolean;
   usdToPkr?: number;
+  wishlistProductIds?: string[];
+  isLoggedIn?: boolean;
 };
 
 const money = formatMoney;
@@ -93,7 +95,7 @@ const CATEGORY_ICONS: Record<string, typeof BookOpen> = {
 const FALLBACK_ICONS = [BookOpen, Layers3, GraduationCap, Clock, Boxes, Cloud];
 
 /** Compact by design (spec §9) — this is a marketplace grid, not a hero card. */
-function ProductCard({ product, index }: { product: Product; index: number }) {
+function ProductCard({ product, index, saved, isLoggedIn }: { product: Product; index: number; saved: boolean; isLoggedIn: boolean }) {
   const image = primaryImage(product);
   const variant = defaultVariant(product);
   const price = variant?.price ?? product.basePrice;
@@ -101,7 +103,6 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
   const digital = isDigital(product);
   const category = product.categories[0];
   const chip = categoryChipClass(category?.slug, index);
-  const [liked, setLiked] = useState(false);
   const outOfStock = variant?.requiresShipping && variant.stockQuantity !== undefined && variant.stockQuantity <= 0;
 
   return (
@@ -114,14 +115,12 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
             <BookOpen size={48} strokeWidth={1} className="text-white/35" />
           </div>
         )}
-        <button
-          type="button"
-          aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
-          onClick={(event) => { event.preventDefault(); setLiked((v) => !v); }}
-          className={`absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-white/90 shadow-sm ${liked ? "text-[#E11D48]" : "text-[var(--navy)]"}`}
-        >
-          <Heart size={13} fill={liked ? "currentColor" : "none"} />
-        </button>
+        <WishlistButton
+          productId={product.id}
+          initialSaved={saved}
+          isLoggedIn={isLoggedIn}
+          className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-white/90 shadow-sm"
+        />
         {digital && <span className="badge badge-digital absolute left-2 top-2">Digital</span>}
         {outOfStock && <span className="badge absolute left-2 top-2 bg-[#0B1D3A] text-white">Out of stock</span>}
       </Link>
@@ -190,7 +189,7 @@ function FilterSidebar({
           max={maxPrice}
           value={price}
           onChange={(e) => onPrice(Number(e.target.value))}
-          className="w-full accent-[var(--blue)]"
+          className="w-full accent-[var(--teal)]"
         />
         <div className="mt-2 flex items-center justify-between text-xs font-bold text-[var(--muted)]">
           <span>PKR {minPrice}</span>
@@ -201,13 +200,13 @@ function FilterSidebar({
       <div className="filter-card mt-4">
         <p className="filter-heading">Why shop with us</p>
         <div className="grid gap-3 text-xs leading-5 text-[var(--muted)]">
-          <div className="flex items-center gap-2"><ShieldCheck size={15} className="text-[var(--blue)]" /> Secure checkout</div>
+          <div className="flex items-center gap-2"><ShieldCheck size={15} className="text-[var(--teal)]" /> Secure checkout</div>
           {PHYSICAL_GOODS_ENABLED ? (
-            <div className="flex items-center gap-2"><Truck size={15} className="text-[var(--blue)]" /> Delivery across Pakistan</div>
+            <div className="flex items-center gap-2"><Truck size={15} className="text-[var(--teal)]" /> Delivery across Pakistan</div>
           ) : (
-            <div className="flex items-center gap-2"><ShieldCheck size={15} className="text-[var(--blue)]" /> Verified content</div>
+            <div className="flex items-center gap-2"><ShieldCheck size={15} className="text-[var(--teal)]" /> Verified content</div>
           )}
-          <div className="flex items-center gap-2"><Download size={15} className="text-[var(--blue)]" /> Instant digital access</div>
+          <div className="flex items-center gap-2"><Download size={15} className="text-[var(--teal)]" /> Instant digital access</div>
         </div>
       </div>
     </aside>
@@ -221,9 +220,12 @@ export function Storefront({
   categories = [],
   initialSearch = "",
   catalogMode = false,
+  wishlistProductIds = [],
+  isLoggedIn = false,
 }: Props) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const hero = banners?.[0];
+  const wishlistSet = useMemo(() => new Set(wishlistProductIds), [wishlistProductIds]);
 
   const maxPrice = useMemo(() => Math.max(1000, ...products.map((p) => Math.round(p.basePrice.amountMinor / 100))), [products]);
   const [price, setPrice] = useState(maxPrice);
@@ -278,7 +280,7 @@ export function Storefront({
 
           {/* Mobile-first: always 2 columns on phones, growing on larger screens. Cards stay compact at every size (see .product-card-grid). */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-            {visibleProducts.map((product, index) => <ProductCard key={product.id} product={product} index={index} />)}
+            {visibleProducts.map((product, index) => <ProductCard key={product.id} product={product} index={index} saved={wishlistSet.has(product.id)} isLoggedIn={isLoggedIn} />)}
           </div>
 
           {visibleProducts.length === 0 && (
@@ -326,7 +328,7 @@ export function Storefront({
                   <div className="hero-orb orb-b" />
                   <div className="absolute inset-0 flex items-center justify-center p-8">
                     <div className="relative grid h-full w-full max-w-sm place-items-center">
-                      <div className="animate-float grid h-36 w-36 place-items-center rounded-[32px] bg-[var(--blue)] shadow-[0_25px_60px_rgba(37,99,235,.35)] sm:h-48 sm:w-48">
+                      <div className="animate-float grid h-36 w-36 place-items-center rounded-[32px] bg-[var(--teal)] shadow-[0_25px_60px_rgba(15,118,110,.35)] sm:h-48 sm:w-48">
                         <BookOpen size={72} className="text-white" strokeWidth={1.3} />
                       </div>
                       <div className="absolute -left-2 top-6 flex flex-col gap-2 sm:left-2">
@@ -335,7 +337,7 @@ export function Storefront({
                         ))}
                       </div>
                       <div className="absolute -right-1 bottom-4 rounded-2xl bg-white/95 px-4 py-3 text-center shadow-lg sm:right-3">
-                        <div className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--blue)]">Smart Learning</div>
+                        <div className="text-[10px] font-bold uppercase tracking-[.1em] text-[var(--teal)]">Smart Learning</div>
                         <div className="mt-1 text-lg font-bold text-[var(--navy)]">IlmAI</div>
                       </div>
                     </div>
@@ -393,7 +395,7 @@ export function Storefront({
             <div className="promo-card bg-white border border-[var(--border)]">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-[.1em] text-[var(--muted)]">Top Categories</span>
-                <Link href="/store" className="text-[11px] font-bold text-[var(--blue)]">View all</Link>
+                <Link href="/store" className="text-[11px] font-bold text-[var(--teal)]">View all</Link>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3">
                 {(categories.length ? categories.slice(0, 6) : (

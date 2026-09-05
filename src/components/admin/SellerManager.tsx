@@ -63,7 +63,7 @@ export function SellerManager({ sellers }: { sellers: SellerAccount[] }) {
   return (
     <div className="mt-8 grid gap-8">
       <form onSubmit={handleAdd} className="rounded-3xl border bg-white p-6 shadow-sm lg:p-8">
-        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">Add a seller</p>
+        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Add a seller</p>
         <p className="mt-1 text-sm text-[#64748B]">They must have already signed up on the store with this email — this doesn&apos;t create a new account, only grants seller access to an existing one.</p>
         <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr_auto]">
           <input required type="email" placeholder="seller@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-xl border px-4 py-3 text-sm" />
@@ -84,9 +84,9 @@ export function SellerManager({ sellers }: { sellers: SellerAccount[] }) {
             <span className="font-bold">{seller.email ?? "—"}</span>
             <span className="text-[#64748B]">{seller.businessName ?? "—"}</span>
             <span>{seller.productCount}</span>
-            <span className={seller.status === "active" ? "font-bold text-[#2563EB]" : "text-[#64748B]"}>{seller.status}</span>
+            <span className={seller.status === "active" ? "font-bold text-[#0F766E]" : "text-[#64748B]"}>{seller.status}</span>
             <div className="flex items-center gap-3">
-              <button onClick={() => toggleStatus(seller)} disabled={busyId === seller.id} title={seller.status === "active" ? "Suspend" : "Reactivate"} className={seller.status === "active" ? "text-[#2563EB] hover:text-[#0B1D3A]" : "text-[#64748B] hover:text-[#2563EB]"}>
+              <button onClick={() => toggleStatus(seller)} disabled={busyId === seller.id} title={seller.status === "active" ? "Suspend" : "Reactivate"} className={seller.status === "active" ? "text-[#0F766E] hover:text-[#0B1D3A]" : "text-[#64748B] hover:text-[#0F766E]"}>
                 {busyId === seller.id ? <Loader2 size={16} className="animate-spin" /> : <Power size={16} />}
               </button>
               <button onClick={() => remove(seller)} disabled={busyId === seller.id} title="Remove" className="text-[#64748B] hover:text-red-600">

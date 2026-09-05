@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSeller } from "@/lib/auth/admin";
 import { ProductService } from "@/services/ProductService";
 import { adminCreateProductSchema } from "@/validators/product";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 /** GET /api/seller/products — this seller's own catalog. POST — create (always lands as 'draft'). */
@@ -20,7 +20,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const { sellerId } = await requireSeller();
-    const body = adminCreateProductSchema.parse(await request.json());
+    const body = parseOrThrow(adminCreateProductSchema, await request.json());
     const product = await ProductService.sellerCreate(sellerId, body);
     return NextResponse.json(product, { status: 201 });
   } catch (err) {

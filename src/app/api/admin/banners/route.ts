@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { PromotionService } from "@/services/PromotionService";
 import { bannerSchema } from "@/validators/commerce";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 /**
@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
-    const body = bannerSchema.parse(await request.json());
+    const body = parseOrThrow(bannerSchema, await request.json());
     const banner = await PromotionService.adminCreateBanner(body);
     return NextResponse.json(banner, { status: 201 });
   } catch (err) {

@@ -65,7 +65,7 @@ function AccountLinks() {
       <Link href="/orders">My Orders</Link>
       <Link href="/cart">Cart</Link>
       {email ? (
-        <button type="button" onClick={signOut} disabled={signingOut} className="flex items-center gap-2 text-left text-[#B9C4E0] hover:text-[#2563EB]">
+        <button type="button" onClick={signOut} disabled={signingOut} className="flex items-center gap-2 text-left text-[#B9C4E0] hover:text-[#0F766E]">
           {signingOut && <Loader2 size={13} className="animate-spin" />} Sign out {email ? `(${email})` : ""}
         </button>
       ) : (
@@ -82,7 +82,7 @@ export function StoreFooter() {
         <div>
           <Link href="/" className="flex items-center gap-2">
             <span className="text-lg font-black text-white">IlmAI</span>
-            <span className="rounded-md bg-[#2563EB] px-1.5 py-0.5 text-[10px] font-black uppercase text-[#0B1D3A]">.store</span>
+            <span className="rounded-md bg-[#0F766E] px-1.5 py-0.5 text-[10px] font-black uppercase text-white">.store</span>
           </Link>
           <p className="mt-5 max-w-xs text-sm leading-6 text-[#B9C4E0]">
             {PHYSICAL_GOODS_ENABLED
@@ -97,7 +97,7 @@ export function StoreFooter() {
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#2563EB]">Shop</h3>
+          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#0F766E]">Shop</h3>
           <div className="mt-5 grid gap-3 text-sm text-[#B9C4E0]">
             <Link href="/store">All Products</Link>
             {PHYSICAL_GOODS_ENABLED && <Link href="/store?search=books">Books</Link>}
@@ -110,7 +110,7 @@ export function StoreFooter() {
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#2563EB]">Customer Service</h3>
+          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#0F766E]">Customer Service</h3>
           <div className="mt-5 grid gap-3 text-sm text-[#B9C4E0]">
             <a href={`mailto:${siteConfig.supportEmail}`}>Contact Us</a>
             <Link href="/orders">Track Order</Link>
@@ -122,9 +122,9 @@ export function StoreFooter() {
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#2563EB]">Account</h3>
+          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#0F766E]">Account</h3>
           <AccountLinks />
-          <h3 className="mt-7 text-xs font-black uppercase tracking-[.2em] text-[#2563EB]">Newsletter</h3>
+          <h3 className="mt-7 text-xs font-black uppercase tracking-[.2em] text-[#0F766E]">Newsletter</h3>
           <p className="mt-2 text-xs leading-5 text-[#B9C4E0]">Subscribe to get updates on new products and offers.</p>
           <NewsletterForm />
         </div>
@@ -135,18 +135,18 @@ export function StoreFooter() {
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span>© {new Date().getFullYear()} IlmAI Store. All Rights Reserved.</span>
             <span className="hidden text-white/20 sm:inline">·</span>
-            <Link href="/privacy" className="hover:text-[#2563EB]">Privacy</Link>
+            <Link href="/privacy" className="hover:text-[#0F766E]">Privacy</Link>
             <span className="text-white/20">·</span>
-            <Link href="/terms" className="hover:text-[#2563EB]">Terms</Link>
+            <Link href="/terms" className="hover:text-[#0F766E]">Terms</Link>
             <span className="text-white/20">·</span>
-            <Link href="/refund-policy" className="hover:text-[#2563EB]">Refunds</Link>
+            <Link href="/refund-policy" className="hover:text-[#0F766E]">Refunds</Link>
           </span>
           <div className="flex items-center gap-3">
             {["VISA", "Mastercard", "JazzCash", "Easypaisa"].map((p) => (
               <span key={p} className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-[#B9C4E0]">{p}</span>
             ))}
           </div>
-          <Link href={siteConfig.ilmaiStudyUrl} className="inline-flex items-center gap-1.5 font-bold text-[#2563EB]">
+          <Link href={siteConfig.ilmaiStudyUrl} className="inline-flex items-center gap-1.5 font-bold text-[#0F766E]">
             Visit IlmAI Study <ArrowUpRight size={13} />
           </Link>
           <span className="inline-flex items-center gap-1.5"><Mail size={12} /> {siteConfig.supportEmail}</span>

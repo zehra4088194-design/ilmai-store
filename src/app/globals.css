@@ -7,8 +7,12 @@
    "Everything a Smart Student Needs." — modern, calm, premium, AI-powered.
    ══════════════════════════════════════════════════════════════════════ */
 :root {
-  --navy: #0B1D3A;       /* Deep Navy — logo, headings, premium elements */
-  --blue: #2563EB;       /* Royal Blue — primary buttons, links, active states */
+  --navy: #0B1D3A;       /* Deep Navy — logo, headings, premium elements, dark surfaces */
+  --teal: #0F766E;       /* Teal — primary links, focus rings, active nav/tab states, brand accent */
+  --teal-dark: #115E59;  /* Teal hover/pressed state */
+  --gold: #D4AF37;       /* Gold — primary commerce CTA (Add to bag, Buy Now), premium highlights */
+  --gold-dark: #B8952E;  /* Gold hover/pressed state */
+  --blue: #2563EB;       /* Royal Blue — one of five rotating category-tag colors (not a primary action color) */
   --sky: #38BDF8;        /* Sky Blue — secondary highlights, education accents */
   --mint: #22C55E;       /* Mint Green — success, verified, learning highlights */
   --soft-mint: #DCFCE7;  /* Soft Mint — backgrounds */
@@ -26,8 +30,6 @@
   --background: var(--gray);
   --foreground: var(--navy);
   --line: var(--border);
-  --teal: var(--blue);
-  --gold: var(--blue);
   --cream: var(--soft-mint);
 
   --font-heading: var(--font-poppins), "Poppins", ui-sans-serif, system-ui, sans-serif;
@@ -44,7 +46,7 @@ body {
   color: var(--text);
   font-family: var(--font-body);
   background-image:
-    radial-gradient(circle at 10% 0%, rgba(37,99,235,.07), transparent 25rem),
+    radial-gradient(circle at 10% 0%, rgba(15,118,110,.07), transparent 25rem),
     radial-gradient(circle at 95% 14%, rgba(167,139,250,.08), transparent 26rem);
 }
 h1, h2, h3, h4, .display-font { font-family: var(--font-heading); }
@@ -54,7 +56,7 @@ h1, h2, h3, h4, .display-font { font-family: var(--font-heading); }
 img, svg { max-width: 100%; }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; }
-::selection { background: var(--blue); color: #fff; }
+::selection { background: var(--teal); color: #fff; }
 
 .store-container {
   width: min(1240px, calc(100% - 32px));
@@ -91,7 +93,7 @@ button, input, select, textarea { font: inherit; }
   box-shadow: 0 24px 80px rgba(11,29,58,.08);
 }
 .hero-accent {
-  color: var(--blue);
+  color: var(--teal);
   position: relative;
   white-space: nowrap;
 }
@@ -109,14 +111,14 @@ button, input, select, textarea { font: inherit; }
 }
 .hero-art { overflow: hidden; background: linear-gradient(135deg,var(--gray),var(--soft-mint)); }
 .hero-orb { position:absolute; border-radius:999px; filter: blur(.2px); pointer-events:none; }
-.orb-a { width: 340px; height: 340px; right: -100px; top: 70px; background: rgba(37,99,235,.14); }
+.orb-a { width: 340px; height: 340px; right: -100px; top: 70px; background: rgba(15,118,110,.14); }
 .orb-b { width: 270px; height: 270px; left: -100px; bottom: -70px; background: rgba(167,139,250,.16); }
 
 .eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--blue);
+  color: var(--teal);
   font-size: 10px;
   line-height: 1;
   font-weight: 800;
@@ -137,8 +139,8 @@ button, input, select, textarea { font: inherit; }
   font-family: var(--font-heading);
   transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
-.primary-cta { background: var(--blue); color: #fff; box-shadow: 0 14px 25px rgba(37,99,235,.22); }
-.primary-cta:hover { transform: translateY(-2px); background: #1d4fd1; box-shadow: 0 18px 30px rgba(37,99,235,.28); }
+.primary-cta { background: var(--teal); color: #fff; box-shadow: 0 14px 25px rgba(15,118,110,.25); }
+.primary-cta:hover { transform: translateY(-2px); background: var(--teal-dark); box-shadow: 0 18px 30px rgba(15,118,110,.3); }
 .secondary-cta { border: 1px solid var(--border); background: #fff; color: var(--navy); }
 .secondary-cta:hover { transform: translateY(-2px); background: var(--gray); }
 
@@ -156,7 +158,7 @@ button, input, select, textarea { font: inherit; }
   font-weight: 700;
   letter-spacing: -.02em;
 }
-.section-link { display:inline-flex; align-items:center; gap:2px; color:var(--blue); font-size:13px; font-weight:700; }
+.section-link { display:inline-flex; align-items:center; gap:2px; color:var(--teal); font-size:13px; font-weight:700; }
 .category-tile {
   min-height: 160px;
   border: 1px solid var(--border);
@@ -167,7 +169,7 @@ button, input, select, textarea { font: inherit; }
   transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 .category-tile:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(15,23,42,.08); }
-.category-tile-active { border-color: var(--blue); box-shadow: 0 10px 26px rgba(37,99,235,.12); background: #F5F8FF; }
+.category-tile-active { border-color: var(--teal); box-shadow: 0 10px 26px rgba(15,118,110,.14); background: #EFFAF8; }
 
 .curated-strip {
   position: relative;
@@ -240,7 +242,7 @@ button, input, select, textarea { font: inherit; }
   outline: none;
   transition: border-color .2s ease, box-shadow .2s ease;
 }
-.store-input:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(37,99,235,.1); }
+.store-input:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(15,118,110,.12); }
 
 .gold-btn {
   display: inline-flex;
@@ -248,15 +250,15 @@ button, input, select, textarea { font: inherit; }
   justify-content: center;
   gap: 8px;
   border-radius: 10px;
-  background: var(--blue);
-  color: #fff;
+  background: var(--gold);
+  color: var(--navy);
   font-weight: 700;
   font-family: var(--font-heading);
   font-size: 13px;
-  box-shadow: 0 6px 16px rgba(37,99,235,.22);
+  box-shadow: 0 6px 16px rgba(212,175,55,.35);
   transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
 }
-.gold-btn:hover { background: #1d4fd1; transform: translateY(-1px); box-shadow: 0 10px 20px rgba(37,99,235,.28); }
+.gold-btn:hover { background: var(--gold-dark); transform: translateY(-1px); box-shadow: 0 10px 20px rgba(212,175,55,.4); }
 .gold-btn:disabled { opacity: .5; transform: none; cursor: not-allowed; box-shadow: none; }
 
 .rating-row { display: inline-flex; align-items: center; gap: 3px; }
@@ -320,7 +322,7 @@ button, input, select, textarea { font: inherit; }
   cursor: pointer;
 }
 .filter-check-row:hover { color: var(--navy); }
-.filter-check-row.active { color: var(--blue); font-weight: 700; }
+.filter-check-row.active { color: var(--teal); font-weight: 700; }
 
 .icon-circle {
   display: grid;
@@ -329,7 +331,7 @@ button, input, select, textarea { font: inherit; }
   height: 46px;
   border-radius: 999px;
   background: var(--gray);
-  color: var(--blue);
+  color: var(--teal);
 }
 
 .promo-card {
@@ -376,7 +378,7 @@ button, input, select, textarea { font: inherit; }
   border-bottom: 2px solid transparent;
   transition: color .15s ease, border-color .15s ease;
 }
-.tab-btn.active { color: var(--navy); border-color: var(--blue); }
+.tab-btn.active { color: var(--navy); border-color: var(--teal); }
 
 /* ── Category color-coding (spec §8) ─────────────────────────────────── */
 .chip-blue     { background: #EFF6FF; color: #1D4ED8; }
@@ -440,8 +442,8 @@ button, input, select, textarea { font: inherit; }
   }
 
   @keyframes gold-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,.35); }
-    50% { box-shadow: 0 0 0 8px rgba(37,99,235,0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,55,.45); }
+    50% { box-shadow: 0 0 0 8px rgba(212,175,55,0); }
   }
   .animate-gold-pulse { animation: gold-pulse 2.2s ease-out infinite; }
 
@@ -469,7 +471,7 @@ button, input, select, textarea { font: inherit; }
   color: #C7D2E8;
   transition: background .15s ease, color .15s ease;
 }
-.footer-social:hover { background: var(--blue); color: #fff; }
+.footer-social:hover { background: var(--teal); color: #fff; }
 
 .detail-trust {
   display: flex;
@@ -484,7 +486,7 @@ button, input, select, textarea { font: inherit; }
   color: var(--muted);
   background: var(--gray);
 }
-.detail-trust svg { color: var(--blue); }
+.detail-trust svg { color: var(--teal); }
 
 /* ── Static legal/policy pages ────────────────────────────────────────── */
 
@@ -501,6 +503,6 @@ button, input, select, textarea { font: inherit; }
 .prose-policy p { margin: 0 0 1em; }
 .prose-policy ul { margin: 0 0 1em; padding-left: 1.25em; display: grid; gap: .5em; }
 .prose-policy li { list-style: disc; }
-.prose-policy a { color: var(--blue); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.prose-policy a { color: var(--teal); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 .prose-policy code { background: var(--gray); border-radius: 6px; padding: .15em .45em; font-size: .9em; }
 .prose-policy strong { color: var(--navy); }

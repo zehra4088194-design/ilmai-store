@@ -33,7 +33,7 @@ export function CartLineItems({ cart: initialCart }: { cart: Cart }) {
   if (cart.items.length === 0) {
     return (
       <div className="empty-state mt-9">
-        <div className="grid h-16 w-16 place-items-center rounded-[22px] bg-[#F1F5F9] text-[#2563EB]"><ShoppingBag size={26} /></div>
+        <div className="grid h-16 w-16 place-items-center rounded-[22px] bg-[#F1F5F9] text-[#0F766E]"><ShoppingBag size={26} /></div>
         <h1 className="mt-5 text-2xl font-black text-[#0B1D3A]">Your cart is empty.</h1>
         <p className="mt-2 max-w-sm text-sm leading-6 text-[#64748B]">Add a note, book or course and come back here when you are ready to check out.</p>
         <Link href="/store" className="gold-btn mt-6 min-h-12 px-6">Browse the shelf <ArrowRight size={15} /></Link>

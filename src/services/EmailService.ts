@@ -1,5 +1,4 @@
 import "server-only";
-import { Resend } from "resend";
 import { logger } from "@/lib/logger";
 import {
   orderConfirmationTemplate,
@@ -7,31 +6,58 @@ import {
   digitalDeliveryTemplate,
   adminNewOrderTemplate,
   refundNotificationTemplate,
+  referralRewardTemplate,
+  shipmentUpdateTemplate,
+  backInStockTemplate,
+  abandonedCartTemplate,
   type OrderConfirmationData,
   type PaymentConfirmationData,
   type DigitalDeliveryData,
   type AdminNewOrderData,
   type RefundNotificationData,
+  type ReferralRewardData,
+  type ShipmentUpdateData,
+  type BackInStockData,
+  type AbandonedCartData,
 } from "./email/templates";
 
+const BREVO_SEND_URL = "https://api.brevo.com/v3/smtp/email";
+
 /**
- * Single call site for all transactional email. Never import Resend's SDK
- * or reference RESEND_API_KEY outside this file. Only other services
+ * Single call site for all transactional email. Never call Brevo's API
+ * or reference BREVO_API_KEY outside this file. Only other services
  * (OrderService, PaymentService, PromotionService) should import this —
  * never a page or component directly.
  */
 class EmailServiceImpl {
-  private client: Resend | null = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-  private from = process.env.RESEND_FROM_EMAIL ?? "store@ilmai.study";
+  private apiKey = process.env.BREVO_API_KEY ?? null;
+  private fromEmail = process.env.BREVO_FROM_EMAIL ?? "store@ilmai.store";
+  private fromName = process.env.BREVO_FROM_NAME ?? "IlmAI Store";
 
   private async send(to: string, subject: string, html: string) {
     const recipientDomain = to.includes("@") ? to.split("@").pop() : "unknown";
-    if (!this.client) {
+    if (!this.apiKey) {
       logger.warn("email.send_skipped_no_api_key", { recipientDomain, subject });
       return;
     }
     try {
-      await this.client.emails.send({ from: this.from, to, subject, html });
+      const res = await fetch(BREVO_SEND_URL, {
+        method: "POST",
+        headers: {
+          "api-key": this.apiKey,
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify({
+          sender: { email: this.fromEmail, name: this.fromName },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error(`Brevo API error ${res.status}: ${await res.text()}`);
+      }
       logger.event("email.sent", { recipientDomain, subject });
     } catch (err) {
       // Email failures should not crash the calling flow (e.g. an order
@@ -68,6 +94,26 @@ class EmailServiceImpl {
 
   async sendRefundNotification(to: string, data: RefundNotificationData) {
     const { subject, html } = refundNotificationTemplate(data);
+    await this.send(to, subject, html);
+  }
+
+  async sendReferralReward(to: string, data: ReferralRewardData) {
+    const { subject, html } = referralRewardTemplate(data);
+    await this.send(to, subject, html);
+  }
+
+  async sendShipmentUpdate(to: string, data: ShipmentUpdateData) {
+    const { subject, html } = shipmentUpdateTemplate(data);
+    await this.send(to, subject, html);
+  }
+
+  async sendBackInStock(to: string, data: BackInStockData) {
+    const { subject, html } = backInStockTemplate(data);
+    await this.send(to, subject, html);
+  }
+
+  async sendAbandonedCart(to: string, data: AbandonedCartData) {
+    const { subject, html } = abandonedCartTemplate(data);
     await this.send(to, subject, html);
   }
 }

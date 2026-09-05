@@ -4,6 +4,12 @@ import { ChevronRight, Package } from "lucide-react";
 import { requireUser } from "@/lib/auth/admin";
 import { AuthenticationError } from "@/lib/errors";
 import { OrderService } from "@/services/OrderService";
+import { WishlistService } from "@/services/WishlistService";
+import { CustomerService } from "@/services/CustomerService";
+import { ReferralService } from "@/services/ReferralService";
+import { WishlistSection } from "@/components/account/WishlistSection";
+import { AddressBook } from "@/components/account/AddressBook";
+import { ReferralCard } from "@/components/account/ReferralCard";
 import type { Order } from "@/types/domain";
 import { formatMoney } from "@/lib/pricing";
 
@@ -30,17 +36,23 @@ export default async function AccountPage() {
     throw err;
   }
 
-  const orders = await OrderService.listForUser(userId);
+  const [orders, wishlistProducts, addresses, referralCode, referralConversions] = await Promise.all([
+    OrderService.listForUser(userId),
+    WishlistService.list(userId),
+    CustomerService.listAddresses(userId),
+    ReferralService.getOrCreateCode(userId),
+    ReferralService.countConversions(userId),
+  ]);
 
   return (
     <main className="min-h-screen bg-[#F1F5F9] px-5 py-14 text-[#0B1D3A]">
       <div className="mx-auto max-w-4xl">
-        <Link href="/store" className="text-sm font-bold text-[#2563EB]">
+        <Link href="/store" className="text-sm font-bold text-[#0F766E]">
           ← Back to store
         </Link>
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">My account</p>
+            <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">My account</p>
             <h1 className="display-font mt-2 text-5xl leading-tight">Your orders.</h1>
             {email && <p className="mt-2 text-sm text-[#64748B]">Signed in as {email}</p>}
           </div>
@@ -63,7 +75,7 @@ export default async function AccountPage() {
                 className="flex flex-wrap items-center justify-between gap-4 rounded-[1.75rem] border bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-xl"
               >
                 <div className="flex items-center gap-4">
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#2563EB]/25 text-[#0B1D3A]">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#0F766E]/25 text-[#0B1D3A]">
                     <Package size={20} strokeWidth={1.5} />
                   </span>
                   <div>
@@ -76,16 +88,22 @@ export default async function AccountPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-6">
-                  <span className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#2563EB]">
+                  <span className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#0F766E]">
                     {STATUS_LABEL[order.status] ?? order.status}
                   </span>
-                  <span className="font-bold text-[#2563EB]">{money(order.total)}</span>
+                  <span className="font-bold text-[#0F766E]">{money(order.total)}</span>
                   <ChevronRight size={18} className="text-[#64748B]" />
                 </div>
               </Link>
             ))}
           </div>
         )}
+
+        <div className="mt-10 grid gap-6">
+          <WishlistSection initialProducts={wishlistProducts} />
+          <AddressBook initialAddresses={addresses} />
+          <ReferralCard code={referralCode} conversionCount={referralConversions} />
+        </div>
       </div>
     </main>
   );

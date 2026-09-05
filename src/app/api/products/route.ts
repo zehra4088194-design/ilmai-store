@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ProductService } from "@/services/ProductService";
 import { productListQuerySchema } from "@/validators/product";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 /**
@@ -11,7 +11,8 @@ import { logger } from "@/lib/logger";
  */
 export async function GET(request: NextRequest) {
   try {
-    const query = productListQuerySchema.parse(
+    const query = parseOrThrow(
+      productListQuerySchema,
       Object.fromEntries(request.nextUrl.searchParams),
     );
     const result = await ProductService.list(query);

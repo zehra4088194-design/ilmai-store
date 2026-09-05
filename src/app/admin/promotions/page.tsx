@@ -16,7 +16,7 @@ export default async function AdminPromotionsPage() {
 
   return (
     <main className="mx-auto max-w-6xl p-6 lg:p-10">
-      <p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">Campaign control</p>
+      <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Campaign control</p>
       <h1 className="display-font mt-2 text-5xl">Promotions & banners</h1>
 
       <section className="mt-10">
@@ -30,7 +30,7 @@ export default async function AdminPromotionsPage() {
                 <p className="text-sm text-[#64748B]">{promotion.discountType} · {promotion.discountValue}</p>
               </div>
               <div className="flex items-center gap-3">
-                <span className={`rounded-full px-3 py-1 text-xs font-bold ${promotion.isActive ? "bg-[#DCFCE7] text-[#2563EB]" : "bg-[#F1F5F9] text-[#64748B]"}`}>{promotion.isActive ? "active" : "inactive"}</span>
+                <span className={`rounded-full px-3 py-1 text-xs font-bold ${promotion.isActive ? "bg-[#DCFCE7] text-[#0F766E]" : "bg-[#F1F5F9] text-[#64748B]"}`}>{promotion.isActive ? "active" : "inactive"}</span>
                 <PromotionRowActions kind="promotions" id={promotion.id} isActive={promotion.isActive} />
               </div>
             </div>
@@ -51,7 +51,7 @@ export default async function AdminPromotionsPage() {
               <span className="font-bold">{coupon.code}</span>
               <span>{coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `${(coupon.discountValue / 100).toFixed(2)} ${coupon.minOrder.currency}`}</span>
               <span>{(coupon.minOrder.amountMinor / 100).toFixed(2)} {coupon.minOrder.currency}</span>
-              <span className={coupon.isActive ? "font-bold text-[#2563EB]" : "text-[#64748B]"}>{coupon.isActive ? "active" : "inactive"}</span>
+              <span className={coupon.isActive ? "font-bold text-[#0F766E]" : "text-[#64748B]"}>{coupon.isActive ? "active" : "inactive"}</span>
               <PromotionRowActions kind="coupons" id={coupon.code} isActive={coupon.isActive} />
             </div>
           ))}
@@ -70,7 +70,7 @@ export default async function AdminPromotionsPage() {
                 <p className="text-sm text-[#64748B]">{banner.placement} · priority {banner.priority}{banner.subtitle ? ` · ${banner.subtitle}` : ""}</p>
               </div>
               <div className="flex items-center gap-3">
-                {banner.linkUrl && <a href={banner.linkUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#2563EB]">Link ↗</a>}
+                {banner.linkUrl && <a href={banner.linkUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#0F766E]">Link ↗</a>}
                 <BannerDeleteButton bannerId={banner.id} />
               </div>
             </div>

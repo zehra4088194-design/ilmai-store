@@ -22,7 +22,7 @@ function emailShell(bodyHtml: string): string {
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <td style="font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#ffffff;letter-spacing:0.2px;">
-                      Ilm<span style="color:#2563EB;">AI</span> Store
+                      Ilm<span style="color:#0F766E;">AI</span> Store
                     </td>
                   </tr>
                 </table>
@@ -38,8 +38,8 @@ function emailShell(bodyHtml: string): string {
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e3ebe4;padding-top:20px;">
                   <tr>
                     <td style="font-size:12px;line-height:1.7;color:#64748B;font-family:Arial,Helvetica,sans-serif;">
-                      Questions? Write to <a href="mailto:${siteConfig.supportEmail}" style="color:#2563EB;text-decoration:none;">${siteConfig.supportEmail}</a><br />
-                      <a href="https://ilmai.study" style="color:#2563EB;text-decoration:none;">ilmai.study</a> &middot; Learn deeply. Build boldly.
+                      Questions? Write to <a href="mailto:${siteConfig.supportEmail}" style="color:#0F766E;text-decoration:none;">${siteConfig.supportEmail}</a><br />
+                      <a href="https://ilmai.study" style="color:#0F766E;text-decoration:none;">ilmai.study</a> &middot; Learn deeply. Build boldly.
                     </td>
                   </tr>
                 </table>
@@ -62,7 +62,7 @@ function paragraph(html: string): string {
 }
 
 function amountChip(label: string, amountDisplay: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 20px 0;"><tr><td style="background:#2563EB;border-radius:999px;padding:10px 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#0B1D3A;">${escapeHtml(label)}: ${escapeHtml(amountDisplay)}</td></tr></table>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 20px 0;"><tr><td style="background:#D4AF37;border-radius:999px;padding:10px 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#0B1D3A;">${escapeHtml(label)}: ${escapeHtml(amountDisplay)}</td></tr></table>`;
 }
 
 function button(label: string, url: string): string {
@@ -118,6 +118,54 @@ export function adminNewOrderTemplate(data: AdminNewOrderData) {
       paragraph(`Open the Store Admin orders queue to review payment and fulfillment.`)
   );
   return { subject: `New order ${data.orderNumber}`, html };
+}
+
+export interface ReferralRewardData { couponCode: string; }
+export function referralRewardTemplate(data: ReferralRewardData) {
+  const code = escapeHtml(data.couponCode);
+  const html = emailShell(
+    heading("Someone you referred just bought!") +
+      paragraph(`A friend you referred to IlmAI Store just completed their first order — thank you! Here's a 10% off coupon as a thank-you, for your next order.`) +
+      amountChip("Your coupon", code) +
+      paragraph(`Enter this code at checkout. It's valid for one use.`)
+  );
+  return { subject: `Your referral reward: ${data.couponCode}`, html };
+}
+
+export interface ShipmentUpdateData { orderNumber: string; carrier?: string; trackingNumber?: string; delivered: boolean; }
+export function shipmentUpdateTemplate(data: ShipmentUpdateData) {
+  const order = escapeHtml(data.orderNumber);
+  const trackingLine = data.trackingNumber
+    ? paragraph(`Tracking: <strong style="color:#0B1D3A;">${escapeHtml(data.trackingNumber)}</strong>${data.carrier ? ` via ${escapeHtml(data.carrier)}` : ""}`)
+    : "";
+  const html = emailShell(
+    (data.delivered
+      ? heading("Delivered") + paragraph(`Order <strong style="color:#0B1D3A;">${order}</strong> has been delivered. We hope you love it!`)
+      : heading("Your order has shipped") + paragraph(`Order <strong style="color:#0B1D3A;">${order}</strong> is on its way.`)) +
+      trackingLine
+  );
+  return { subject: data.delivered ? `Order ${data.orderNumber} delivered` : `Order ${data.orderNumber} has shipped`, html };
+}
+
+export interface BackInStockData { productTitle: string; productUrl: string; }
+export function backInStockTemplate(data: BackInStockData) {
+  const title = escapeHtml(data.productTitle);
+  const html = emailShell(
+    heading("Back in stock") +
+      paragraph(`<strong style="color:#0B1D3A;">${title}</strong> is back in stock — grab it before it sells out again.`) +
+      button(`Shop ${data.productTitle}`, data.productUrl)
+  );
+  return { subject: `Back in stock: ${data.productTitle}`, html };
+}
+
+export interface AbandonedCartData { itemCount: number; cartUrl: string; }
+export function abandonedCartTemplate(data: AbandonedCartData) {
+  const html = emailShell(
+    heading("You left something in your cart") +
+      paragraph(`You have ${data.itemCount} item${data.itemCount === 1 ? "" : "s"} waiting in your cart. Complete your order before it sells out.`) +
+      button("Complete your order", data.cartUrl)
+  );
+  return { subject: "You left something in your cart", html };
 }
 
 export interface RefundNotificationData { orderNumber: string; amountDisplay: string; }

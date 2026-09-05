@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireSeller } from "@/lib/auth/admin";
 import { ProductService } from "@/services/ProductService";
 import { adminUpdateProductSchema } from "@/validators/product";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 /** PATCH /api/seller/products/[id] — update, ownership-enforced. DELETE — remove, ownership-enforced. */
@@ -10,7 +10,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     const { sellerId } = await requireSeller();
     const { id } = await params;
-    const body = adminUpdateProductSchema.parse({ ...(await request.json()), id });
+    const body = parseOrThrow(adminUpdateProductSchema, { ...(await request.json()), id });
     const product = await ProductService.sellerUpdate(sellerId, body);
     return NextResponse.json(product);
   } catch (err) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CheckoutService } from "@/services/CheckoutService";
 import { checkoutSchema } from "@/validators/commerce";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { getClientAddress, rateLimiter } from "@/lib/rate-limit";
 import { orderAccessCookieName } from "@/services/OrderAccessService";
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   try {
     const rate = await rateLimiter.check(`checkout:${getClientAddress(request)}`, 10, 60);
     if (!rate.allowed) return NextResponse.json({ error: "Too many checkout attempts. Please try again shortly." }, { status: 429, headers: { "Retry-After": String(Math.max(1, Math.ceil((rate.resetAt.getTime() - Date.now()) / 1000))) } });
-    const body = checkoutSchema.parse(await request.json());
+    const body = parseOrThrow(checkoutSchema, await request.json());
     if (!await verifyRecaptcha(body.recaptchaToken, "checkout")) throw new ValidationError("Verification failed — please try again.");
     const result = await CheckoutService.startCheckout(body, request.headers.get("idempotency-key")?.trim() || undefined);
     const response = NextResponse.json(result);

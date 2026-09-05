@@ -5,7 +5,7 @@ import { PromotionService } from "@/services/PromotionService";
 import { getPlatformSettings } from "@/lib/platform-settings/server";
 import { manualPaymentTotalPkr } from "@/lib/pricing";
 import { checkoutSchema } from "@/validators/commerce";
-import { ValidationError, isAppError } from "@/lib/errors";
+import { ValidationError, isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { getClientAddress, rateLimiter } from "@/lib/rate-limit";
 import { orderAccessCookieName } from "@/services/OrderAccessService";
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   try {
     const rate = await rateLimiter.check(`jazzcash-checkout:${getClientAddress(request)}`, 10, 60);
     if (!rate.allowed) return NextResponse.json({ error: "Too many checkout attempts. Please try again shortly." }, { status: 429, headers: { "Retry-After": String(Math.max(1, Math.ceil((rate.resetAt.getTime() - Date.now()) / 1000))) } });
-    const body = checkoutSchema.parse(await request.json());
+    const body = parseOrThrow(checkoutSchema, await request.json());
     if (!await verifyRecaptcha(body.recaptchaToken, "checkout")) throw new ValidationError("Verification failed — please try again.");
 
     const [cart, settings] = await Promise.all([CartService.getCurrentCart(), getPlatformSettings()]);

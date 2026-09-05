@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { SellerService } from "@/services/SellerService";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 
@@ -12,7 +12,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     await requireAdmin();
     const { id } = await params;
-    const body = statusSchema.parse(await request.json());
+    const body = parseOrThrow(statusSchema, await request.json());
     return NextResponse.json(await SellerService.adminSetSellerStatus(id, body.status));
   } catch (err) {
     if (isAppError(err)) return NextResponse.json({ error: err.publicMessage }, { status: err.statusCode });

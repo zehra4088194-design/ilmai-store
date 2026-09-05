@@ -3,8 +3,10 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/admin";
 import { AuthenticationError, NotFoundError } from "@/lib/errors";
 import { OrderService } from "@/services/OrderService";
+import { ReturnRequestService } from "@/services/ReturnRequestService";
 import type { OrderItem } from "@/types/domain";
 import { DownloadButton } from "./download-button";
+import { OrderActions } from "./order-actions";
 import { formatMoney } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +18,7 @@ function AddressBlock({ label, address }: { label: string; address?: { fullName:
   if (!address) return null;
   return (
     <div className="rounded-2xl border bg-white p-5">
-      <p className="text-xs font-bold uppercase tracking-widest text-[#2563EB]">{label}</p>
+      <p className="text-xs font-bold uppercase tracking-widest text-[#0F766E]">{label}</p>
       <p className="mt-2 text-sm font-bold text-[#0B1D3A]">{address.fullName}</p>
       <p className="mt-1 text-sm leading-6 text-[#64748B]">
         {address.line1}
@@ -56,30 +58,33 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   const entitlements = order.paymentStatus === "paid" ? await OrderService.getEntitlementsForOrder(order.id, userId) : [];
   const entitlementByItem = new Map(entitlements.map((e) => [e.orderItemId, e.entitlementId]));
+  const returnRequest = order.paymentStatus === "paid" ? await ReturnRequestService.getForOrder(order.id) : null;
+  const canCancel = order.paymentStatus === "pending" && ["pending", "processing"].includes(order.status);
+  const canRequestReturn = order.paymentStatus === "paid" && !returnRequest;
 
   return (
     <main className="min-h-screen bg-[#F1F5F9] px-5 py-14 text-[#0B1D3A]">
       <div className="mx-auto max-w-4xl">
-        <Link href="/account" className="text-sm font-bold text-[#2563EB]">
+        <Link href="/account" className="text-sm font-bold text-[#0F766E]">
           ← Back to your orders
         </Link>
 
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">Order {order.orderNumber}</p>
+            <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Order {order.orderNumber}</p>
             <h1 className="display-font mt-2 text-4xl leading-tight sm:text-5xl">Order details.</h1>
             <p className="mt-2 text-sm text-[#64748B]">
               Placed {new Date(order.createdAt).toLocaleDateString("en-PK", { year: "numeric", month: "short", day: "numeric" })}
             </p>
           </div>
-          <span className="rounded-full bg-[#F1F5F9] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#2563EB]">
+          <span className="rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#0F766E]">
             {order.status}
           </span>
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <div className="rounded-[2rem] border bg-white p-6 sm:p-8">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#2563EB]">Items</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#0F766E]">Items</p>
             <div className="mt-4 grid gap-4">
               {order.items.map((item: OrderItem) => {
                 const entitlementId = entitlementByItem.get(item.id);
@@ -93,7 +98,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm font-bold text-[#2563EB]">{money(item.lineTotal)}</span>
+                      <span className="text-sm font-bold text-[#0F766E]">{money(item.lineTotal)}</span>
                       {canDownload && <DownloadButton orderId={order.id} entitlementId={entitlementId!} />}
                     </div>
                   </div>
@@ -111,7 +116,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
           <div className="grid gap-4">
             <div className="rounded-2xl border bg-white p-5">
-              <p className="text-xs font-bold uppercase tracking-widest text-[#2563EB]">Status</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#0F766E]">Status</p>
               <div className="mt-3 grid gap-2 text-sm">
                 <div className="flex justify-between"><span className="text-[#64748B]">Payment</span><span className="font-semibold text-[#0B1D3A]">{order.paymentStatus}</span></div>
                 <div className="flex justify-between"><span className="text-[#64748B]">Fulfillment</span><span className="font-semibold text-[#0B1D3A]">{order.fulfillmentStatus}</span></div>
@@ -120,6 +125,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             </div>
             <AddressBlock label="Shipping address" address={order.shippingAddress} />
             <AddressBlock label="Billing address" address={order.billingAddress} />
+            <OrderActions orderId={order.id} canCancel={canCancel} canRequestReturn={canRequestReturn} returnRequestStatus={returnRequest?.status} />
           </div>
         </div>
       </div>

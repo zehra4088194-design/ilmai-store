@@ -42,7 +42,7 @@ export function PromotionRowActions({ kind, id, isActive }: { kind: Kind; id: st
         onClick={toggle}
         disabled={busy !== null}
         title={isActive ? "Deactivate" : "Activate"}
-        className={isActive ? "text-[#2563EB] hover:text-[#0B1D3A]" : "text-[#64748B] hover:text-[#2563EB]"}
+        className={isActive ? "text-[#0F766E] hover:text-[#0B1D3A]" : "text-[#64748B] hover:text-[#0F766E]"}
       >
         {busy === "toggle" ? <Loader2 size={16} className="animate-spin" /> : <Power size={16} />}
       </button>

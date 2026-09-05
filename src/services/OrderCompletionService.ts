@@ -7,6 +7,7 @@ import { EmailService } from "./EmailService";
 import { InventoryService } from "./InventoryService";
 import { OrderService } from "./OrderService";
 import { PromotionService } from "./PromotionService";
+import { ReferralService } from "./ReferralService";
 import type { ProviderTransaction } from "./payment/PaymentProvider";
 import type { Order } from "@/types/domain";
 
@@ -81,6 +82,7 @@ export const OrderCompletionService = {
     await InventoryService.commitForOrder(order.id);
     await PromotionService.commitCouponForOrder(order.id);
     await createDigitalEntitlements(order);
+    if (order.userId) await ReferralService.rewardReferrerIfEligible(order.id, order.userId);
 
     if (!await hasEvent(order.id, "payment_confirmation_email")) {
       await EmailService.sendPaymentConfirmation(order.customerEmail, { orderNumber: order.orderNumber, totalDisplay: formatMoney(order.total) });
@@ -106,12 +108,17 @@ export const OrderCompletionService = {
 
   async markRefunded(orderId: string, transaction?: ProviderTransaction) {
     const db = createSupabaseAdminClient();
+    const order = await OrderService.getByIdAdmin(orderId);
     const { error } = await db.from("orders").update({ payment_status: "refunded", status: "refunded" }).eq("id", orderId);
     if (error) throw new Error(error.message);
     await InventoryService.refundForOrder(orderId);
     if (transaction) {
       const { error: paymentError } = await db.from("payments").upsert({ order_id: orderId, provider: "safepay", provider_transaction_id: transaction.providerTransactionId, status: "refunded", amount_minor: transaction.amountMinor, currency: transaction.currency }, { onConflict: "provider,provider_transaction_id" });
       if (paymentError) throw new Error(paymentError.message);
+    }
+    if (!await hasEvent(orderId, "refund_notification_email")) {
+      await EmailService.sendRefundNotification(order.customerEmail, { orderNumber: order.orderNumber, amountDisplay: formatMoney(transaction ? { amountMinor: transaction.amountMinor, currency: transaction.currency } : order.total) });
+      await saveEvent(orderId, "refund_notification_email");
     }
   },
 };

@@ -32,7 +32,7 @@ export default function RefundPolicyPage() {
             <>
               <h2>Physical products (books, stationery)</h2>
               <ul>
-                <li><strong>Shipping:</strong> we currently ship within Pakistan. Orders over PKR 2,000 ship free; smaller orders may include a delivery charge shown at checkout. Delivery typically takes a few business days depending on your city.</li>
+                <li><strong>Shipping:</strong> we currently ship within Pakistan. Some listings ship free; others carry a flat delivery charge, always shown before you pay at checkout. Delivery typically takes a few business days depending on your city.</li>
                 <li><strong>Damaged or wrong item:</strong> if what arrives is damaged, defective, or not what you ordered, contact us within 3 days of delivery with a photo — we&apos;ll replace it or refund it at no extra cost to you.</li>
                 <li><strong>Change of mind:</strong> unused, unopened items in their original condition can be returned within 7 days of delivery. You&apos;re responsible for return shipping in this case, unless the return is due to our error.</li>
                 <li>Once we receive and check a returned item, we process the refund to your original payment method within 5–7 business days.</li>
@@ -56,9 +56,9 @@ export default function RefundPolicyPage() {
 
           <h2>Need help?</h2>
           <p>
-            Email <a href={`mailto:${siteConfig.supportEmail}`} className="font-bold text-[#2563EB]">{siteConfig.supportEmail}</a>{" "}
+            Email <a href={`mailto:${siteConfig.supportEmail}`} className="font-bold text-[#0F766E]">{siteConfig.supportEmail}</a>{" "}
             or message us on{" "}
-            <a href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="font-bold text-[#2563EB]">WhatsApp</a>{" "}
+            <a href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="font-bold text-[#0F766E]">WhatsApp</a>{" "}
             with your order number and we&apos;ll help sort it out.
           </p>
         </div>

@@ -1,7 +1,7 @@
 import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
-import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
+import { AppError, ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { StorageService } from "./StorageService";
 import { PHYSICAL_GOODS_ENABLED, PHYSICAL_PRODUCT_TYPES } from "@/constants/product";
 import type { Product } from "@/types/domain";
@@ -61,7 +61,22 @@ function productDeleteError(error: { message: string; code?: string }) {
   if (error.code === "23503") {
     return new ConflictError('This product has past orders and can’t be deleted. Set its status to "archived" instead — it disappears from the store but keeps order history intact.');
   }
-  return new Error(error.message);
+  return new AppError(error.message, 500);
+}
+
+// products.slug and product_variants.sku are both globally unique (across
+// every seller, not just per-product) — reusing either from an earlier
+// listing raises a 23505 unique-violation on insert/update. Surface *which*
+// field collided in plain language instead of the raw Postgres constraint
+// name, since silently reusing a slug/SKU is the single most common way a
+// second product create/edit fails right after a first one worked fine.
+function productWriteError(error: { message: string; code?: string }) {
+  if (error.code === "23505") {
+    if (error.message.includes("products_slug_key")) return new ConflictError("That slug (page link) is already used by another product — pick a different one.");
+    if (error.message.includes("product_variants_sku_key")) return new ConflictError("That SKU is already used by another product's variant — SKUs must be unique across your whole catalog, not just this product. Pick a different one.");
+    return new ConflictError("That value is already used by another product.");
+  }
+  return new ValidationError(error.message);
 }
 
 function stockRowsFor(inserted: Raw[] | null, source: { requiresShipping: boolean; stockQuantity?: number; lowStockThreshold?: number }[]): Raw[] {
@@ -124,14 +139,15 @@ export const ProductService = {
   async adminCreate(input: z.infer<typeof adminCreateProductSchema>): Promise<Product> {
     const db = createSupabaseAdminClient();
     const { data, error } = await db.from("products").insert({ slug: input.slug, title: input.title, description: input.description, product_type: input.productType, status: input.status, base_price_minor: input.basePriceMinor, currency: input.currency, compare_at_price_minor: input.compareAtPriceMinor ?? null, delivery_fee_minor: input.deliveryFeeMinor ?? 0, is_featured: input.isFeatured }).select("id").single();
-    if (error || !data) throw new ValidationError(error?.message ?? "Product could not be created.");
+    if (error) throw productWriteError(error);
+    if (!data) throw new ValidationError("Product could not be created.");
     const { data: variants, error: variantsError } = await db.from("product_variants").insert(input.variants.map((v) => ({ product_id: data.id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams, metadata: v.providerPriceId ? { provider_price_id: v.providerPriceId } : {} }))).select("id,requires_shipping");
-    if (variantsError) throw new ValidationError(variantsError.message);
+    if (variantsError) throw productWriteError(variantsError);
     const stockRows = stockRowsFor(variants, input.variants);
     if (stockRows.length) { const { error: stockError } = await db.from("inventory_items").insert(stockRows); if (stockError) throw new ValidationError(stockError.message); }
     if (input.categoryIds.length) await db.from("product_categories").insert(input.categoryIds.map((categoryId) => ({ product_id: data.id, category_id: categoryId })));
     const { data: full, error: readError } = await db.from("products").select(select).eq("id", data.id).single();
-    if (readError || !full) throw new Error(readError?.message ?? "Product could not be loaded.");
+    if (readError || !full) throw new AppError(readError?.message ?? "Product could not be loaded.", 500);
     return mapProduct(full);
   },
 
@@ -141,8 +157,8 @@ export const ProductService = {
     const update: Raw = {};
     for (const [key, value] of Object.entries(fields)) if (value !== undefined) update[key.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`)] = value;
     const { error } = await db.from("products").update(update).eq("id", id);
-    if (error) throw new ValidationError(error.message);
-    if (variants) { await db.from("product_variants").delete().eq("product_id", id); const { data: inserted, error: variantError } = await db.from("product_variants").insert(variants.map((v) => ({ product_id: id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams, metadata: v.providerPriceId ? { provider_price_id: v.providerPriceId } : {} }))).select("id,requires_shipping"); if (variantError) throw new ValidationError(variantError.message); const stockRows = stockRowsFor(inserted, variants); if (stockRows.length) { const { error: stockError } = await db.from("inventory_items").insert(stockRows); if (stockError) throw new ValidationError(stockError.message); } }
+    if (error) throw productWriteError(error);
+    if (variants) { await db.from("product_variants").delete().eq("product_id", id); const { data: inserted, error: variantError } = await db.from("product_variants").insert(variants.map((v) => ({ product_id: id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams, metadata: v.providerPriceId ? { provider_price_id: v.providerPriceId } : {} }))).select("id,requires_shipping"); if (variantError) throw productWriteError(variantError); const stockRows = stockRowsFor(inserted, variants); if (stockRows.length) { const { error: stockError } = await db.from("inventory_items").insert(stockRows); if (stockError) throw new ValidationError(stockError.message); } }
     if (categoryIds) { await db.from("product_categories").delete().eq("product_id", id); if (categoryIds.length) await db.from("product_categories").insert(categoryIds.map((categoryId) => ({ product_id: id, category_id: categoryId }))); }
     const { data, error: readError } = await db.from("products").select(select).eq("id", id).single();
     if (readError || !data) throw new NotFoundError("Product not found.");
@@ -179,14 +195,15 @@ export const ProductService = {
     // form sent — an admin (or the seller, once reviewed) publishes it
     // deliberately rather than a seller being able to go live unmoderated.
     const { data, error } = await db.from("products").insert({ slug: input.slug, title: input.title, description: input.description, product_type: input.productType, status: "draft", base_price_minor: input.basePriceMinor, currency: input.currency, compare_at_price_minor: input.compareAtPriceMinor ?? null, delivery_fee_minor: input.deliveryFeeMinor ?? 0, is_featured: false, seller_id: sellerId }).select("id").single();
-    if (error || !data) throw new ValidationError(error?.message ?? "Product could not be created.");
+    if (error) throw productWriteError(error);
+    if (!data) throw new ValidationError("Product could not be created.");
     const { data: variants, error: variantsError } = await db.from("product_variants").insert(input.variants.map((v) => ({ product_id: data.id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams }))).select("id,requires_shipping");
-    if (variantsError) throw new ValidationError(variantsError.message);
+    if (variantsError) throw productWriteError(variantsError);
     const stockRows = stockRowsFor(variants, input.variants);
     if (stockRows.length) { const { error: stockError } = await db.from("inventory_items").insert(stockRows); if (stockError) throw new ValidationError(stockError.message); }
     if (input.categoryIds.length) await db.from("product_categories").insert(input.categoryIds.map((categoryId) => ({ product_id: data.id, category_id: categoryId })));
     const { data: full, error: readError } = await db.from("products").select(select).eq("id", data.id).single();
-    if (readError || !full) throw new Error(readError?.message ?? "Product could not be loaded.");
+    if (readError || !full) throw new AppError(readError?.message ?? "Product could not be loaded.", 500);
     return mapProduct(full);
   },
 
@@ -197,9 +214,9 @@ export const ProductService = {
     const update: Raw = {};
     for (const [key, value] of Object.entries(fields)) if (value !== undefined) update[key.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`)] = value;
     const { data: updated, error } = await db.from("products").update(update).eq("id", id).eq("seller_id", sellerId).select("id");
-    if (error) throw new ValidationError(error.message);
+    if (error) throw productWriteError(error);
     if (!updated?.length) throw new NotFoundError("Product not found.");
-    if (variants) { await db.from("product_variants").delete().eq("product_id", id); const { data: inserted, error: variantError } = await db.from("product_variants").insert(variants.map((v) => ({ product_id: id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams }))).select("id,requires_shipping"); if (variantError) throw new ValidationError(variantError.message); const stockRows = stockRowsFor(inserted, variants); if (stockRows.length) { const { error: stockError } = await db.from("inventory_items").insert(stockRows); if (stockError) throw new ValidationError(stockError.message); } }
+    if (variants) { await db.from("product_variants").delete().eq("product_id", id); const { data: inserted, error: variantError } = await db.from("product_variants").insert(variants.map((v) => ({ product_id: id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams }))).select("id,requires_shipping"); if (variantError) throw productWriteError(variantError); const stockRows = stockRowsFor(inserted, variants); if (stockRows.length) { const { error: stockError } = await db.from("inventory_items").insert(stockRows); if (stockError) throw new ValidationError(stockError.message); } }
     if (categoryIds) { await db.from("product_categories").delete().eq("product_id", id); if (categoryIds.length) await db.from("product_categories").insert(categoryIds.map((categoryId) => ({ product_id: id, category_id: categoryId }))); }
     const { data, error: readError } = await db.from("products").select(select).eq("id", id).single();
     if (readError || !data) throw new NotFoundError("Product not found.");

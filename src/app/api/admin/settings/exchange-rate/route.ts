@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { getPlatformSettings, savePlatformSettings } from "@/lib/platform-settings/server";
 import { exchangeRateSettingsSchema } from "@/validators/settings";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 function rateResponse(settings: Awaited<ReturnType<typeof getPlatformSettings>>) {
@@ -34,7 +34,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const admin = await requireAdmin();
-    const input = exchangeRateSettingsSchema.parse(await request.json());
+    const input = parseOrThrow(exchangeRateSettingsSchema, await request.json());
     const current = await getPlatformSettings();
     const saved = await savePlatformSettings(
       {

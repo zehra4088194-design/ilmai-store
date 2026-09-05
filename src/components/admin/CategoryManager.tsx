@@ -118,7 +118,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
         onSubmit={handleCreate}
         className="rounded-3xl border bg-white p-6 shadow-sm lg:p-8"
       >
-        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#2563EB]">New category</p>
+        <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">New category</p>
         <div className="mt-4 grid gap-4 lg:grid-cols-5">
           <input
             required
@@ -220,7 +220,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
                       onClick={() => handleSave(c.id)}
                       disabled={savingId === c.id}
                       title="Save"
-                      className="text-[#2563EB] hover:text-[#0B1D3A]"
+                      className="text-[#0F766E] hover:text-[#0B1D3A]"
                     >
                       <Check size={16} />
                     </button>
@@ -236,7 +236,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
                   <span className="truncate text-[#64748B]">{c.description ?? "—"}</span>
                   <span className="text-[#64748B]">{parent?.name ?? "—"}</span>
                   <div className="flex items-center gap-3">
-                    <button onClick={() => startEdit(c)} title="Edit" className="text-[#64748B] hover:text-[#2563EB]">
+                    <button onClick={() => startEdit(c)} title="Edit" className="text-[#64748B] hover:text-[#0F766E]">
                       <Pencil size={16} />
                     </button>
                     <button

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { manualPaymentProofSchema } from "@/validators/commerce";
 import { ManualPaymentService } from "@/services/ManualPaymentService";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const body = manualPaymentProofSchema.parse(await request.json());
+    const body = parseOrThrow(manualPaymentProofSchema, await request.json());
     await ManualPaymentService.submitProof(id, body);
     return NextResponse.json({ submitted: true });
   } catch (err) {

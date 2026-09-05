@@ -1,6 +1,7 @@
 import "server-only";
 import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
 import { ValidationError } from "@/lib/errors";
+import { StockNotificationService } from "./StockNotificationService";
 
 type InventoryRow = { id: string; variant_id: string; quantity_available: number; low_stock_threshold: number; variant?: { name?: string; product?: { title?: string } } };
 
@@ -20,6 +21,7 @@ export const InventoryService = {
   async adminUpdate(variantId: string, quantityAvailable: number, lowStockThreshold: number): Promise<void> {
     const { error } = await createSupabaseAdminClient().from("inventory_items").upsert({ variant_id: variantId, quantity_available: quantityAvailable, low_stock_threshold: lowStockThreshold }, { onConflict: "variant_id" });
     if (error) throw new ValidationError(error.message);
+    await StockNotificationService.notifyIfRestocked(variantId, quantityAvailable);
   },
   async reserveForOrder(orderId: string): Promise<void> {
     const { error } = await createSupabaseAdminClient().rpc("reserve_order_inventory", { p_order_id: orderId });

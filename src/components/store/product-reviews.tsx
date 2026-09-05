@@ -15,7 +15,7 @@ function Stars({ rating, onChange }: { rating: number; onChange?: (n: number) =>
         className={onChange ? "cursor-pointer" : "cursor-default"}
         aria-label={`${n} star`}
       >
-        <Star size={onChange ? 22 : 15} className={n <= rating ? "fill-[#2563EB] text-[#2563EB]" : "text-[#E2E8F0]"} />
+        <Star size={onChange ? 22 : 15} className={n <= rating ? "fill-[#0F766E] text-[#0F766E]" : "text-[#E2E8F0]"} />
       </button>
     ))}
   </div>;
@@ -63,7 +63,7 @@ export function ProductReviews({ productId, reviews }: { productId: string; revi
       {reviews.map((r) => <div key={r.id} className="rounded-2xl border border-[var(--line)] bg-white p-5">
         <div className="flex items-center justify-between gap-3">
           <Stars rating={r.rating} />
-          {r.isVerifiedPurchase && <span className="inline-flex items-center gap-1 rounded-full bg-[#DCFCE7] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#2563EB]"><ShieldCheck size={12} /> Verified purchase</span>}
+          {r.isVerifiedPurchase && <span className="inline-flex items-center gap-1 rounded-full bg-[#DCFCE7] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#0F766E]"><ShieldCheck size={12} /> Verified purchase</span>}
         </div>
         {r.title && <p className="mt-3 font-bold text-[#0B1D3A]">{r.title}</p>}
         {r.body && <p className="mt-1 text-sm leading-6 text-[#64748B]">{r.body}</p>}
@@ -78,7 +78,7 @@ export function ProductReviews({ productId, reviews }: { productId: string; revi
       <button type="submit" disabled={status === "loading"} className="gold-btn mt-4 h-11 px-6">
         {status === "loading" && <Loader2 size={15} className="animate-spin" />} Submit review
       </button>
-      {status === "done" && <p className="mt-3 text-sm font-semibold text-[#2563EB]">Thanks — your review is awaiting moderation.</p>}
+      {status === "done" && <p className="mt-3 text-sm font-semibold text-[#0F766E]">Thanks — your review is awaiting moderation.</p>}
       {status === "error" && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
     </form>
   </div>;

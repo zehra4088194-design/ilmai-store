@@ -3,7 +3,7 @@
 ## Secrets
 
 `SUPABASE_SERVICE_ROLE_ID_KEY`, Safepay private/webhook keys, B2 secret keys, and
-`RESEND_API_KEY` are server-only. They must never be prefixed `NEXT_PUBLIC_`,
+`BREVO_API_KEY` are server-only. They must never be prefixed `NEXT_PUBLIC_`,
 imported by client components, returned in an API response, or logged.
 
 ## Row-level security

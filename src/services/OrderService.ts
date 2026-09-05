@@ -8,6 +8,7 @@ import { CartService } from "./CartService";
 import { PromotionService } from "./PromotionService";
 import { InventoryService } from "./InventoryService";
 import { OrderAccessService } from "./OrderAccessService";
+import { EmailService } from "./EmailService";
 import type { Order } from "@/types/domain";
 import type { z } from "zod";
 import type { checkoutSchema, fulfillmentUpdateSchema } from "@/validators/commerce";
@@ -28,6 +29,52 @@ function mapOrder(row: Raw): Order {
 async function currentUserId() { const { data: { user } } = await (await createSupabaseServerClient()).auth.getUser(); return user?.id; }
 
 export const OrderService = {
+  /**
+   * Lightweight admin dashboard stats — revenue per currency, order counts
+   * by status, and the top-selling products by units, all computed in JS
+   * over the most recent orders rather than a SQL aggregate (this store's
+   * order volume is small enough that this is simpler and fast enough; a
+   * proper GROUP BY becomes worth it once order counts are in the
+   * thousands).
+   */
+  async adminStats(): Promise<{
+    revenueByCurrency: Array<{ currency: string; amountMinor: number }>;
+    ordersByStatus: Array<{ status: string; count: number }>;
+    paidOrderCount: number;
+    bestSellers: Array<{ productName: string; quantity: number }>;
+  }> {
+    const { data, error } = await createSupabaseAdminClient()
+      .from("orders")
+      .select("status, payment_status, total_minor, currency, order_items(product_name_snapshot, quantity)")
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    if (error) throw new Error(error.message);
+    const rows = data ?? [];
+
+    const revenueByCurrencyMap = new Map<string, number>();
+    const statusCounts = new Map<string, number>();
+    const sellerCounts = new Map<string, number>();
+    let paidOrderCount = 0;
+
+    for (const row of rows as Raw[]) {
+      statusCounts.set(row.status, (statusCounts.get(row.status) ?? 0) + 1);
+      if (row.payment_status === "paid") {
+        paidOrderCount += 1;
+        revenueByCurrencyMap.set(row.currency, (revenueByCurrencyMap.get(row.currency) ?? 0) + row.total_minor);
+        for (const item of (row.order_items ?? []) as Raw[]) {
+          sellerCounts.set(item.product_name_snapshot, (sellerCounts.get(item.product_name_snapshot) ?? 0) + item.quantity);
+        }
+      }
+    }
+
+    return {
+      revenueByCurrency: Array.from(revenueByCurrencyMap, ([currency, amountMinor]) => ({ currency, amountMinor })),
+      ordersByStatus: Array.from(statusCounts, ([status, count]) => ({ status, count })),
+      paidOrderCount,
+      bestSellers: Array.from(sellerCounts, ([productName, quantity]) => ({ productName, quantity })).sort((a, b) => b.quantity - a.quantity).slice(0, 5),
+    };
+  },
+
   async adminList(): Promise<Order[]> {
     const { data, error } = await createSupabaseAdminClient().from("orders").select(select).order("created_at", { ascending: false }).limit(100);
     if (error) throw new Error(error.message);
@@ -144,12 +191,20 @@ export const OrderService = {
   },
   async updateFulfillment(orderId: string, input: z.infer<typeof fulfillmentUpdateSchema>): Promise<Order> {
     const db = createSupabaseAdminClient();
-    const { data: current, error: readError } = await db.from("orders").select("payment_status").eq("id", orderId).single();
+    const { data: current, error: readError } = await db.from("orders").select("payment_status, shipped_at, delivered_at, customer_email, order_number").eq("id", orderId).single();
     if (readError || !current) throw new NotFoundError("Order not found.");
     if (current.payment_status !== "paid") throw new ValidationError("Only paid orders can be fulfilled.");
     const now = new Date().toISOString();
     const { data, error } = await db.from("orders").update({ fulfillment_status: input.fulfillmentStatus, status: input.fulfillmentStatus === "fulfilled" ? "fulfilled" : "processing", shipping_carrier: input.shippingCarrier ?? null, tracking_number: input.trackingNumber ?? null, shipped_at: input.fulfillmentStatus !== "unfulfilled" ? now : null, delivered_at: input.delivered ? now : null }).eq("id", orderId).select(select).single();
     if (error || !data) throw new Error(error?.message ?? "Fulfillment could not be updated.");
+    // Fire the customer email only on the actual shipped/delivered
+    // transition, not on every fulfillment PATCH (e.g. editing the
+    // tracking number after it's already shipped shouldn't re-notify).
+    const justDelivered = input.delivered && !current.delivered_at;
+    const justShipped = !justDelivered && input.fulfillmentStatus !== "unfulfilled" && !current.shipped_at;
+    if (justDelivered || justShipped) {
+      await EmailService.sendShipmentUpdate(current.customer_email, { orderNumber: current.order_number, carrier: input.shippingCarrier, trackingNumber: input.trackingNumber, delivered: Boolean(justDelivered) });
+    }
     return mapOrder(data);
   },
   async cancel(orderId: string, _reason?: string): Promise<Order> {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { CategoryService } from "@/services/CategoryService";
 import { categorySchema } from "@/validators/product";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 /**
@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
-    const body = categorySchema.parse(await request.json());
+    const body = parseOrThrow(categorySchema, await request.json());
     const category = await CategoryService.adminCreate(body);
     return NextResponse.json(category, { status: 201 });
   } catch (err) {

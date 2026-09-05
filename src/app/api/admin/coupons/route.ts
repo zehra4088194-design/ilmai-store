@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { PromotionService } from "@/services/PromotionService";
 import { couponSchema } from "@/validators/commerce";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 /**
@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
-    const body = couponSchema.parse(await request.json());
+    const body = parseOrThrow(couponSchema, await request.json());
     const coupon = await PromotionService.adminCreateCoupon(body);
     return NextResponse.json(coupon, { status: 201 });
   } catch (err) {

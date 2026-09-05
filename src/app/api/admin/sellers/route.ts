@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { SellerService } from "@/services/SellerService";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 
@@ -25,7 +25,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
-    const body = addSellerSchema.parse(await request.json());
+    const body = parseOrThrow(addSellerSchema, await request.json());
     const seller = await SellerService.adminAddSellerByEmail(body.email, body.businessName);
     return NextResponse.json(seller, { status: 201 });
   } catch (err) {

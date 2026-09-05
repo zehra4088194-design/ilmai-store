@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { PromotionService } from "@/services/PromotionService";
 import { promotionUpdateSchema } from "@/validators/commerce";
-import { isAppError } from "@/lib/errors";
+import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
 /** PATCH /api/admin/promotions/[id] — update (e.g. toggle isActive). DELETE — remove. Admin only. */
@@ -10,7 +10,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     await requireAdmin();
     const { id } = await params;
-    const body = promotionUpdateSchema.parse(await request.json());
+    const body = parseOrThrow(promotionUpdateSchema, await request.json());
     return NextResponse.json(await PromotionService.adminUpdatePromotion(id, body));
   } catch (err) {
     if (isAppError(err)) return NextResponse.json({ error: err.publicMessage }, { status: err.statusCode });
