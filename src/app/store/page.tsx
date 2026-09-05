@@ -9,14 +9,17 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ search?: string }>;
+type SearchParams = Promise<{ search?: string; category?: string; page?: string }>;
 
 export default async function StorePage({ searchParams }: { searchParams: SearchParams }) {
-  const { search } = await searchParams;
-  const query = productListQuerySchema.parse({ page: 1, pageSize: 24, sort: "newest", search: search || undefined });
+  const { search, category, page } = await searchParams;
+  // Previously always requested page 1 / 24 and never read a page/category
+  // param at all — anything past the first 24 published products, or a
+  // real category filter, was unreachable via the URL.
+  const query = productListQuerySchema.parse({ page: page || 1, pageSize: 24, sort: "newest", search: search || undefined, categorySlug: category || undefined });
   const { data: { user } } = await (await createSupabaseServerClient()).auth.getUser();
 
-  const [{ items: products }, banners, featured, categories, settings, wishlistProductIds] = await Promise.all([
+  const [{ items: products, total }, banners, featured, categories, settings, wishlistProductIds] = await Promise.all([
     ProductService.list(query),
     PromotionService.getActiveBanners("store_home"),
     PromotionService.getFeaturedProducts("store_home"),
@@ -36,6 +39,7 @@ export default async function StorePage({ searchParams }: { searchParams: Search
       usdToPkr={settings.exchangeRate.usdToPkr}
       wishlistProductIds={Array.from(wishlistProductIds)}
       isLoggedIn={Boolean(user)}
+      pagination={{ page: query.page, pageSize: query.pageSize, total, categorySlug: category, search }}
     />
   );
 }

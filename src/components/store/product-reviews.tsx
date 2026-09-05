@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Loader2, ShieldCheck, Star } from "lucide-react";
 import type { Review } from "@/types/domain";
 
@@ -21,7 +22,7 @@ function Stars({ rating, onChange }: { rating: number; onChange?: (n: number) =>
   </div>;
 }
 
-export function ProductReviews({ productId, reviews }: { productId: string; reviews: Review[] }) {
+export function ProductReviews({ productId, productSlug, reviews, isLoggedIn, hasPurchased }: { productId: string; productSlug: string; reviews: Review[]; isLoggedIn: boolean; hasPurchased: boolean }) {
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -70,16 +71,26 @@ export function ProductReviews({ productId, reviews }: { productId: string; revi
       </div>)}
     </div>
 
-    <form onSubmit={submit} className="mt-8 max-w-xl rounded-2xl border border-[var(--line)] bg-white p-6">
-      <p className="text-sm font-bold text-[#0B1D3A]">Leave a review</p>
-      <div className="mt-3"><Stars rating={rating} onChange={setRating} /></div>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title (optional)" className="store-input mt-4 w-full" />
-      <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Share what you think (optional)" rows={3} className="store-input mt-3 h-auto w-full py-2.5" />
-      <button type="submit" disabled={status === "loading"} className="gold-btn mt-4 h-11 px-6">
-        {status === "loading" && <Loader2 size={15} className="animate-spin" />} Submit review
-      </button>
-      {status === "done" && <p className="mt-3 text-sm font-semibold text-[#0F766E]">Thanks — your review is awaiting moderation.</p>}
-      {status === "error" && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
-    </form>
+    {!isLoggedIn ? (
+      <div className="mt-8 max-w-xl rounded-2xl border border-[var(--line)] bg-[#F1F5F9] p-6 text-sm text-[#0B1D3A]">
+        <Link href={`/login?redirect=${encodeURIComponent(`/store/${productSlug}`)}`} className="font-bold text-[#0F766E] underline">Sign in</Link> to leave a review for this product.
+      </div>
+    ) : !hasPurchased ? (
+      <div className="mt-8 max-w-xl rounded-2xl border border-[var(--line)] bg-[#F1F5F9] p-6 text-sm text-[#0B1D3A]">
+        You&apos;ll be able to leave a review once you&apos;ve purchased this product. <Link href={`/store/${productSlug}`} className="font-bold text-[#0F766E] underline">Buy it now</Link>
+      </div>
+    ) : (
+      <form onSubmit={submit} className="mt-8 max-w-xl rounded-2xl border border-[var(--line)] bg-white p-6">
+        <p className="text-sm font-bold text-[#0B1D3A]">Leave a review</p>
+        <div className="mt-3"><Stars rating={rating} onChange={setRating} /></div>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title (optional)" className="store-input mt-4 w-full" />
+        <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Share what you think (optional)" rows={3} className="store-input mt-3 h-auto w-full py-2.5" />
+        <button type="submit" disabled={status === "loading"} className="gold-btn mt-4 h-11 px-6">
+          {status === "loading" && <Loader2 size={15} className="animate-spin" />} Submit review
+        </button>
+        {status === "done" && <p className="mt-3 text-sm font-semibold text-[#0F766E]">Thanks — your review is awaiting moderation.</p>}
+        {status === "error" && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
+      </form>
+    )}
   </div>;
 }

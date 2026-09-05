@@ -1,13 +1,21 @@
 import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import type { Category } from "@/types/domain";
 import type { z } from "zod";
 import type { categorySchema, categoryUpdateSchema } from "@/validators/product";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Raw = Record<string, any>;
+
+// Same pattern as ProductService's productWriteError for the identical
+// products.slug case — surface which field collided in plain language
+// instead of wrapping the raw Postgres unique-violation text verbatim.
+function categoryWriteError(error: { message: string; code?: string }) {
+  if (error.code === "23505") return new ConflictError("That slug is already used by another category — pick a different one.");
+  return new ValidationError(error.message);
+}
 
 function mapCategory(row: Raw): Category {
   return {
@@ -16,6 +24,7 @@ function mapCategory(row: Raw): Category {
     name: row.name,
     description: row.description ?? undefined,
     parentId: row.parent_id ?? undefined,
+    sortOrder: row.sort_order ?? 0,
   };
 }
 
@@ -55,7 +64,8 @@ export const CategoryService = {
       })
       .select("*")
       .single();
-    if (error || !data) throw new ValidationError(error?.message ?? "Category could not be created.");
+    if (error) throw categoryWriteError(error);
+    if (!data) throw new ValidationError("Category could not be created.");
     return mapCategory(data);
   },
 
@@ -69,7 +79,7 @@ export const CategoryService = {
     if (fields.parentId !== undefined) update.parent_id = fields.parentId;
     if (fields.sortOrder !== undefined) update.sort_order = fields.sortOrder;
     const { data, error } = await db.from("categories").update(update).eq("id", id).select("*").maybeSingle();
-    if (error) throw new ValidationError(error.message);
+    if (error) throw categoryWriteError(error);
     if (!data) throw new NotFoundError("Category not found.");
     return mapCategory(data);
   },

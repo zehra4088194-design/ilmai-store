@@ -17,21 +17,31 @@ export function ProductMediaManager({ productId, media, role = "admin" }: { prod
   async function uploadFiles(files: FileList | File[]) {
     setError(null);
     setUploading(true);
+    let failure: string | null = null;
     try {
-      for (const file of Array.from(files)) {
+      const list = Array.from(files);
+      for (const [i, file] of list.entries()) {
         const form = new FormData();
         form.set("file", file);
         form.set("mediaType", "image");
-        form.set("isPrimary", String(media.length === 0));
-        const response = await fetch(`${apiBase}/${productId}/media`, { method: "POST", body: form });
-        if (!response.ok) {
-          const body = (await response.json().catch(() => ({}))) as { error?: string };
-          throw new Error(body.error ?? "Image could not be uploaded.");
+        form.set("isPrimary", String(media.length === 0 && i === 0));
+        try {
+          const response = await fetch(`${apiBase}/${productId}/media`, { method: "POST", body: form });
+          if (!response.ok) {
+            const body = (await response.json().catch(() => ({}))) as { error?: string };
+            throw new Error(body.error ?? "Image could not be uploaded.");
+          }
+          // Refresh after each successful upload, not just once at the end
+          // of the whole batch — otherwise a later file failing hid every
+          // earlier success (they existed server-side but never showed up
+          // here until a manual reload).
+          router.refresh();
+        } catch (err) {
+          failure = err instanceof Error ? err.message : "Image could not be uploaded.";
+          // Keep going — one bad file in a batch shouldn't abandon the rest.
         }
       }
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Image could not be uploaded.");
+      if (failure) setError(failure);
     } finally {
       setUploading(false);
     }
@@ -76,7 +86,10 @@ export function ProductMediaManager({ productId, media, role = "admin" }: { prod
                 type="button"
                 onClick={() => deleteMedia(item.id)}
                 disabled={deletingId === item.id}
-                className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-red-700 opacity-0 transition group-hover:opacity-100 disabled:opacity-100"
+                // Was opacity-0 group-hover:opacity-100 only — hover never
+                // fires on a touchscreen, so there was no way to remove a
+                // photo on a phone/tablet at all. Always visible now.
+                className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-red-700 shadow-sm transition hover:bg-white disabled:opacity-100"
                 aria-label="Remove image"
               >
                 {deletingId === item.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}

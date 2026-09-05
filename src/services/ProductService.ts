@@ -13,6 +13,20 @@ import type { productListQuerySchema, adminCreateProductSchema, adminUpdateProdu
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Raw = Record<string, any>;
 const select = "*, product_variants(*, inventory_items(quantity_available, low_stock_threshold)), product_media(*), product_categories(category:categories(*))";
+// Same shape, but with the category join forced to INNER so a `.eq()` on
+// the joined category slug actually restricts which product rows come
+// back (and `count: "exact"` reflects the true in-category total) instead
+// of loading every product and filtering the join in JS afterward.
+const selectFilteredByCategory = "*, product_variants(*, inventory_items(quantity_available, low_stock_threshold)), product_media(*), product_categories!inner(category:categories!inner(*))";
+
+// PostgREST's `.or()` filter string uses `,` to separate conditions and
+// `()` to group them, so a raw user search term containing any of those
+// characters (e.g. "chemistry, physics") breaks the filter's own syntax
+// and PostgREST returns a parse error rather than a match. Backslash-escape
+// the reserved characters so the term is always treated as a literal value.
+function escapeOrFilterValue(value: string): string {
+  return value.replace(/[\\,()]/g, (c) => `\\${c}`);
+}
 
 // Exported so PromotionService.getFeaturedProducts can map raw product rows
 // the same way instead of skipping the media-URL step entirely.
@@ -86,6 +100,47 @@ function stockRowsFor(inserted: Raw[] | null, source: { requiresShipping: boolea
     .map((v) => ({ variant_id: v.id, quantity_available: v.stockQuantity ?? 0, ...(v.lowStockThreshold !== undefined ? { low_stock_threshold: v.lowStockThreshold } : {}) }));
 }
 
+type VariantWrite = { sku: string; name: string; priceMinor: number; currency: string; isDefault: boolean; requiresShipping: boolean; stockQuantity?: number; lowStockThreshold?: number; weightGrams?: number; providerPriceId?: string };
+
+// `sellerUpdate`/`adminUpdate` used to delete every variant row and
+// re-insert the whole set on any save — but `cart_items.variant_id` is
+// `NOT NULL REFERENCES product_variants(id) ON DELETE CASCADE`, so that
+// wiped a customer's cart line for this product on an unrelated field
+// edit. SKU is globally unique and is the only stable identifier the
+// product form actually sends per variant, so use it to diff: a variant
+// whose SKU still appears gets updated in place (same row id, cart lines
+// intact); only a variant whose SKU was actually removed gets deleted.
+async function syncVariants(db: ReturnType<typeof createSupabaseAdminClient>, productId: string, variants: VariantWrite[]): Promise<void> {
+  const { data: existing, error: existingError } = await db.from("product_variants").select("id, sku").eq("product_id", productId);
+  if (existingError) throw productWriteError(existingError);
+  const existingBySku = new Map((existing ?? []).map((v: Raw) => [v.sku as string, v.id as string]));
+  const incomingSkus = new Set(variants.map((v) => v.sku));
+
+  const toDeleteIds = (existing ?? []).filter((v: Raw) => !incomingSkus.has(v.sku)).map((v: Raw) => v.id);
+  if (toDeleteIds.length) { const { error } = await db.from("product_variants").delete().in("id", toDeleteIds); if (error) throw productWriteError(error); }
+
+  for (const v of variants) {
+    const existingId = existingBySku.get(v.sku);
+    if (!existingId) continue;
+    const { error } = await db.from("product_variants").update({ name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams ?? null, ...(v.providerPriceId ? { metadata: { provider_price_id: v.providerPriceId } } : {}) }).eq("id", existingId);
+    if (error) throw productWriteError(error);
+    if (v.requiresShipping) {
+      const stockUpdate: Raw = { variant_id: existingId, quantity_available: v.stockQuantity ?? 0 };
+      if (v.lowStockThreshold !== undefined) stockUpdate.low_stock_threshold = v.lowStockThreshold;
+      const { error: stockError } = await db.from("inventory_items").upsert(stockUpdate, { onConflict: "variant_id" });
+      if (stockError) throw new ValidationError(stockError.message);
+    }
+  }
+
+  const toInsert = variants.filter((v) => !existingBySku.has(v.sku));
+  if (toInsert.length) {
+    const { data: inserted, error: insertError } = await db.from("product_variants").insert(toInsert.map((v) => ({ product_id: productId, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams, metadata: v.providerPriceId ? { provider_price_id: v.providerPriceId } : {} }))).select("id,requires_shipping");
+    if (insertError) throw productWriteError(insertError);
+    const stockRows = stockRowsFor(inserted, toInsert);
+    if (stockRows.length) { const { error: stockError } = await db.from("inventory_items").insert(stockRows); if (stockError) throw new ValidationError(stockError.message); }
+  }
+}
+
 export const ProductService = {
   async adminList(): Promise<Product[]> {
     const { data, error } = await createSupabaseAdminClient().from("products").select(select).order("created_at", { ascending: false });
@@ -94,18 +149,24 @@ export const ProductService = {
   },
   async list(query: z.infer<typeof productListQuerySchema>): Promise<{ items: Product[]; total: number }> {
     const db = await createSupabaseServerClient();
-    let request = db.from("products").select(select, { count: "exact" }).eq("status", "published");
+    let request = db.from("products").select(query.categorySlug ? selectFilteredByCategory : select, { count: "exact" }).eq("status", "published");
     if (!PHYSICAL_GOODS_ENABLED) request = request.not("product_type", "in", `(${PHYSICAL_PRODUCT_TYPES.join(",")})`);
-    if (query.search) request = request.or(`title.ilike.%${query.search}%,description.ilike.%${query.search}%`);
+    if (query.search) request = request.or(`title.ilike.%${escapeOrFilterValue(query.search)}%,description.ilike.%${escapeOrFilterValue(query.search)}%`);
+    if (query.categorySlug) request = request.eq("product_categories.category.slug", query.categorySlug);
     if (query.productType) request = request.eq("product_type", query.productType);
     if (query.minPriceMinor !== undefined) request = request.gte("base_price_minor", query.minPriceMinor);
     if (query.maxPriceMinor !== undefined) request = request.lte("base_price_minor", query.maxPriceMinor);
     request = query.sort === "price_asc" ? request.order("base_price_minor") : query.sort === "price_desc" ? request.order("base_price_minor", { ascending: false }) : request.order("created_at", { ascending: false });
     const from = (query.page - 1) * query.pageSize;
     const { data, error, count } = await request.range(from, from + query.pageSize - 1);
-    if (error) throw new Error(error.message);
-    let items = await Promise.all((data ?? []).map(mapProduct));
-    if (query.categorySlug) items = items.filter((p) => p.categories.some((c) => c.slug === query.categorySlug));
+    if (error) {
+      // A malformed filter (or any other query-shape error tied to
+      // user-controlled input like search) should degrade to "no results"
+      // rather than take down the whole /store page.
+      if (query.search || query.categorySlug) return { items: [], total: 0 };
+      throw new Error(error.message);
+    }
+    const items = await Promise.all((data ?? []).map(mapProduct));
     return { items, total: count ?? items.length };
   },
 
@@ -158,7 +219,7 @@ export const ProductService = {
     for (const [key, value] of Object.entries(fields)) if (value !== undefined) update[key.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`)] = value;
     const { error } = await db.from("products").update(update).eq("id", id);
     if (error) throw productWriteError(error);
-    if (variants) { await db.from("product_variants").delete().eq("product_id", id); const { data: inserted, error: variantError } = await db.from("product_variants").insert(variants.map((v) => ({ product_id: id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams, metadata: v.providerPriceId ? { provider_price_id: v.providerPriceId } : {} }))).select("id,requires_shipping"); if (variantError) throw productWriteError(variantError); const stockRows = stockRowsFor(inserted, variants); if (stockRows.length) { const { error: stockError } = await db.from("inventory_items").insert(stockRows); if (stockError) throw new ValidationError(stockError.message); } }
+    if (variants) await syncVariants(db, id, variants);
     if (categoryIds) { await db.from("product_categories").delete().eq("product_id", id); if (categoryIds.length) await db.from("product_categories").insert(categoryIds.map((categoryId) => ({ product_id: id, category_id: categoryId }))); }
     const { data, error: readError } = await db.from("products").select(select).eq("id", id).single();
     if (readError || !data) throw new NotFoundError("Product not found.");
@@ -216,7 +277,7 @@ export const ProductService = {
     const { data: updated, error } = await db.from("products").update(update).eq("id", id).eq("seller_id", sellerId).select("id");
     if (error) throw productWriteError(error);
     if (!updated?.length) throw new NotFoundError("Product not found.");
-    if (variants) { await db.from("product_variants").delete().eq("product_id", id); const { data: inserted, error: variantError } = await db.from("product_variants").insert(variants.map((v) => ({ product_id: id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams }))).select("id,requires_shipping"); if (variantError) throw productWriteError(variantError); const stockRows = stockRowsFor(inserted, variants); if (stockRows.length) { const { error: stockError } = await db.from("inventory_items").insert(stockRows); if (stockError) throw new ValidationError(stockError.message); } }
+    if (variants) await syncVariants(db, id, variants);
     if (categoryIds) { await db.from("product_categories").delete().eq("product_id", id); if (categoryIds.length) await db.from("product_categories").insert(categoryIds.map((categoryId) => ({ product_id: id, category_id: categoryId }))); }
     const { data, error: readError } = await db.from("products").select(select).eq("id", id).single();
     if (readError || !data) throw new NotFoundError("Product not found.");

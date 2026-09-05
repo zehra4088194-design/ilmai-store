@@ -23,6 +23,7 @@ export function LoginForm() {
       const supabase = createSupabaseBrowserClient();
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) throw new Error(signInError.message);
+      await fetch("/api/cart/merge", { method: "POST" }).catch(() => {});
       router.push(redirectTo);
       router.refresh();
     } catch (err) {
@@ -56,6 +57,7 @@ export function LoginForm() {
           className="rounded-xl border bg-white px-4 py-3 text-sm font-normal text-[#0B1D3A] outline-none placeholder:text-[#64748B] focus:border-[#0F766E]"
         />
       </label>
+      <Link href="/forgot-password" className="-mt-1 text-right text-xs font-bold text-[#0F766E]">Forgot password?</Link>
       <button
         type="submit"
         disabled={loading}

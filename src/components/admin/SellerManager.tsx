@@ -85,12 +85,12 @@ export function SellerManager({ sellers }: { sellers: SellerAccount[] }) {
             <span className="text-[#64748B]">{seller.businessName ?? "—"}</span>
             <span>{seller.productCount}</span>
             <span className={seller.status === "active" ? "font-bold text-[#0F766E]" : "text-[#64748B]"}>{seller.status}</span>
-            <div className="flex items-center gap-3">
-              <button onClick={() => toggleStatus(seller)} disabled={busyId === seller.id} title={seller.status === "active" ? "Suspend" : "Reactivate"} className={seller.status === "active" ? "text-[#0F766E] hover:text-[#0B1D3A]" : "text-[#64748B] hover:text-[#0F766E]"}>
-                {busyId === seller.id ? <Loader2 size={16} className="animate-spin" /> : <Power size={16} />}
+            <div className="flex items-center gap-1">
+              <button onClick={() => toggleStatus(seller)} disabled={busyId === seller.id} title={seller.status === "active" ? "Suspend" : "Reactivate"} className={`grid h-10 w-10 place-items-center rounded-lg hover:bg-[#F1F5F9] ${seller.status === "active" ? "text-[#0F766E] hover:text-[#0B1D3A]" : "text-[#64748B] hover:text-[#0F766E]"}`}>
+                {busyId === seller.id ? <Loader2 size={18} className="animate-spin" /> : <Power size={18} />}
               </button>
-              <button onClick={() => remove(seller)} disabled={busyId === seller.id} title="Remove" className="text-[#64748B] hover:text-red-600">
-                <Trash2 size={16} />
+              <button onClick={() => remove(seller)} disabled={busyId === seller.id} title="Remove" className="ml-2 grid h-10 w-10 place-items-center rounded-lg text-[#64748B] hover:bg-red-50 hover:text-red-600">
+                <Trash2 size={18} />
               </button>
             </div>
           </div>

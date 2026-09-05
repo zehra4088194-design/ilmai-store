@@ -2,7 +2,6 @@ import { PromotionService } from "@/services/PromotionService";
 import { PromotionForm } from "@/components/admin/PromotionForm";
 import { CouponForm } from "@/components/admin/CouponForm";
 import { BannerForm } from "@/components/admin/BannerForm";
-import { BannerDeleteButton } from "@/components/admin/BannerDeleteButton";
 import { PromotionRowActions } from "@/components/admin/PromotionRowActions";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +20,7 @@ export default async function AdminPromotionsPage() {
 
       <section className="mt-10">
         <h2 className="display-font text-2xl text-[#0B1D3A]">Promotions</h2>
+        <p className="mt-1 text-sm text-[#64748B]">Marketing labels only — they don&apos;t change checkout pricing. Use Coupons below for an actual discount.</p>
         <PromotionForm />
         <div className="mt-4 grid gap-3">
           {promotions.map((promotion) => (
@@ -67,11 +67,12 @@ export default async function AdminPromotionsPage() {
             <div key={banner.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-white px-5 py-4">
               <div>
                 <p className="font-bold">{banner.title}</p>
-                <p className="text-sm text-[#64748B]">{banner.placement} · priority {banner.priority}{banner.subtitle ? ` · ${banner.subtitle}` : ""}</p>
+                <p className="text-sm text-[#64748B]">{banner.placement} · priority {banner.priority}{banner.subtitle ? ` · ${banner.subtitle}` : ""}{banner.endsAt ? ` · ends ${new Date(banner.endsAt).toLocaleDateString()}` : ""}</p>
               </div>
               <div className="flex items-center gap-3">
                 {banner.linkUrl && <a href={banner.linkUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#0F766E]">Link ↗</a>}
-                <BannerDeleteButton bannerId={banner.id} />
+                <span className={`rounded-full px-3 py-1 text-xs font-bold ${banner.isActive ? "bg-[#DCFCE7] text-[#0F766E]" : "bg-[#F1F5F9] text-[#64748B]"}`}>{banner.isActive ? "active" : "paused"}</span>
+                <PromotionRowActions kind="banners" id={banner.id} isActive={banner.isActive} />
               </div>
             </div>
           ))}

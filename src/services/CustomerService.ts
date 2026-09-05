@@ -9,6 +9,15 @@ const mapAddress = (a: any): Address => ({ id: a.id, label: a.label ?? undefined
 export const CustomerService = {
   async getProfile(userId: string): Promise<Customer> { const db = createSupabaseAdminClient(); const [{ data: profile }, { data: authUser }] = await Promise.all([db.from("profiles").select("full_name,phone").eq("id", userId).maybeSingle(), db.auth.admin.getUserById(userId)]); if (!authUser) throw new Error("Customer not found."); return { id: userId, fullName: profile?.full_name ?? undefined, phone: profile?.phone ?? undefined, email: authUser.user?.email ?? "" }; },
   async listAddresses(userId: string): Promise<Address[]> { const { data, error } = await createSupabaseAdminClient().from("addresses").select("*").eq("user_id", userId).order("is_default", { ascending: false }); if (error) throw new Error(error.message); return (data ?? []).map(mapAddress); },
-  async upsertAddress(userId: string, input: z.infer<typeof addressSchema>): Promise<Address> { const { data, error } = await createSupabaseAdminClient().from("addresses").insert({ user_id: userId, label: input.label, full_name: input.fullName, phone: input.phone, line1: input.line1, line2: input.line2, city: input.city, state: input.state, postal_code: input.postalCode, country: input.country, is_default: input.isDefault }).select().single(); if (error || !data) throw new Error(error?.message ?? "Address could not be saved."); return mapAddress(data); },
+  async upsertAddress(userId: string, input: z.infer<typeof addressSchema>): Promise<Address> {
+    const db = createSupabaseAdminClient();
+    // No DB constraint enforces "at most one default" — without clearing
+    // the others first, saving a new address as default just left two (or
+    // more) rows with is_default = true for the same user.
+    if (input.isDefault) { const { error: clearError } = await db.from("addresses").update({ is_default: false }).eq("user_id", userId).eq("is_default", true); if (clearError) throw new Error(clearError.message); }
+    const { data, error } = await db.from("addresses").insert({ user_id: userId, label: input.label, full_name: input.fullName, phone: input.phone, line1: input.line1, line2: input.line2, city: input.city, state: input.state, postal_code: input.postalCode, country: input.country, is_default: input.isDefault }).select().single();
+    if (error || !data) throw new Error(error?.message ?? "Address could not be saved.");
+    return mapAddress(data);
+  },
   async deleteAddress(userId: string, addressId: string): Promise<void> { const { error } = await createSupabaseAdminClient().from("addresses").delete().eq("id", addressId).eq("user_id", userId); if (error) throw new Error(error.message); },
 };

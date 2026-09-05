@@ -51,6 +51,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       if (mode === "login") {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
+        await fetch("/api/cart/merge", { method: "POST" }).catch(() => {});
         router.push(redirectTo);
         router.refresh();
       } else {
@@ -62,6 +63,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           setLoading(false);
           return;
         }
+        await fetch("/api/cart/merge", { method: "POST" }).catch(() => {});
         router.push(redirectTo);
         router.refresh();
       }
@@ -115,6 +117,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 placeholder="••••••••"
               />
             </div>
+
+            {mode === "login" && (
+              <Link href="/forgot-password" className="-mt-2 block text-right text-xs font-bold text-[#0F766E]">Forgot password?</Link>
+            )}
 
             {error && (
               <p className="rounded-xl bg-[#fbeaea] px-4 py-3 text-sm font-medium text-[#a13d3d]">{error}</p>

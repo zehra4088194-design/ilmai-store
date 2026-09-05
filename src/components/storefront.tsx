@@ -26,6 +26,9 @@ import { StoreHeader } from "@/components/store/store-header";
 import { Reveal } from "@/components/store/reveal";
 import { formatMoney } from "@/lib/pricing";
 import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
+import { DEFAULT_EXCHANGE_RATE_SETTINGS } from "@/lib/platform-settings/types";
+
+type PaginationInfo = { page: number; pageSize: number; total: number; categorySlug?: string; search?: string };
 
 type Props = {
   products: Product[];
@@ -37,7 +40,18 @@ type Props = {
   usdToPkr?: number;
   wishlistProductIds?: string[];
   isLoggedIn?: boolean;
+  pagination?: PaginationInfo;
 };
+
+/** Builds a /store?... link for a given page, preserving the current search/category. */
+function pageHref(pagination: PaginationInfo, page: number): string {
+  const params = new URLSearchParams();
+  if (pagination.search) params.set("search", pagination.search);
+  if (pagination.categorySlug) params.set("category", pagination.categorySlug);
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return qs ? `/store?${qs}` : "/store";
+}
 
 const money = formatMoney;
 
@@ -220,14 +234,25 @@ export function Storefront({
   categories = [],
   initialSearch = "",
   catalogMode = false,
+  usdToPkr = DEFAULT_EXCHANGE_RATE_SETTINGS.usdToPkr,
   wishlistProductIds = [],
   isLoggedIn = false,
+  pagination,
 }: Props) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const hero = banners?.[0];
   const wishlistSet = useMemo(() => new Set(wishlistProductIds), [wishlistProductIds]);
 
-  const maxPrice = useMemo(() => Math.max(1000, ...products.map((p) => Math.round(p.basePrice.amountMinor / 100))), [products]);
+  // The slider filters across every product regardless of currency, so it
+  // needs one common unit to compare in — convert every price to a PKR
+  // rupee figure (using the live USD/PKR rate) instead of treating a USD
+  // product's raw amountMinor as if it were already PKR.
+  const pkrPrice = useMemo(() => (p: Product) => {
+    const rupees = p.basePrice.amountMinor / 100;
+    return Math.round(p.basePrice.currency === "USD" ? rupees * usdToPkr : rupees);
+  }, [usdToPkr]);
+
+  const maxPrice = useMemo(() => Math.max(1000, ...products.map(pkrPrice)), [products, pkrPrice]);
   const [price, setPrice] = useState(maxPrice);
 
   const visibleProducts = useMemo(() => {
@@ -236,8 +261,8 @@ export function Storefront({
       const category = categories.find((item) => item.id === activeCategory);
       if (category) list = list.filter((product) => product.categories.some((item) => item.id === category.id));
     }
-    return list.filter((p) => Math.round(p.basePrice.amountMinor / 100) <= price);
-  }, [activeCategory, categories, products, price]);
+    return list.filter((p) => pkrPrice(p) <= price);
+  }, [activeCategory, categories, products, price, pkrPrice]);
 
   const featuredProducts = featured.length ? featured : products.slice(0, 4);
 
@@ -288,6 +313,26 @@ export function Storefront({
               <h3 className="text-xl font-bold text-[var(--navy)]">Nothing on the shelf yet.</h3>
               <p className="mt-2 text-sm text-[var(--muted)]">Try another search or browse all products.</p>
               <Link href="/store" className="gold-btn mt-6 min-h-12 px-6">Browse all products <ArrowRight size={15} /></Link>
+            </div>
+          )}
+
+          {/* Real pagination — the catalog used to always fetch just the
+              first 24 products with no way to reach anything beyond that. */}
+          {pagination && pagination.total > pagination.pageSize && !activeCategory && (
+            <div className="mt-8 flex items-center justify-center gap-3">
+              {pagination.page > 1 ? (
+                <Link href={pageHref(pagination, pagination.page - 1)} className="secondary-cta">Previous</Link>
+              ) : (
+                <span className="secondary-cta pointer-events-none opacity-40">Previous</span>
+              )}
+              <span className="text-xs font-bold text-[var(--muted)]">
+                Page {pagination.page} of {Math.max(1, Math.ceil(pagination.total / pagination.pageSize))}
+              </span>
+              {pagination.page * pagination.pageSize < pagination.total ? (
+                <Link href={pageHref(pagination, pagination.page + 1)} className="secondary-cta">Next</Link>
+              ) : (
+                <span className="secondary-cta pointer-events-none opacity-40">Next</span>
+              )}
             </div>
           )}
         </div>
@@ -379,7 +424,7 @@ export function Storefront({
                 <span className="badge badge-sale">Special offer</span>
                 <h3 className="mt-4 text-xl font-bold leading-tight sm:text-2xl">Up to 30% off<br />on selected books</h3>
                 <p className="mt-2 text-xs text-[#9A5B26]">On selected books &amp; study materials</p>
-                <Link href="/store?search=books" className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--navy)]">Shop now <ArrowRight size={13} /></Link>
+                <Link href="/store?category=books" className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--navy)]">Shop now <ArrowRight size={13} /></Link>
                 <Package size={90} className="pointer-events-none absolute -bottom-4 -right-4 text-[var(--navy)]/8" />
               </div>
             ) : (
@@ -387,7 +432,7 @@ export function Storefront({
                 <span className="badge badge-sale">Special offer</span>
                 <h3 className="mt-4 text-xl font-bold leading-tight sm:text-2xl">Up to 30% off<br />on selected notes</h3>
                 <p className="mt-2 text-xs text-[#9A5B26]">On selected notes &amp; study materials</p>
-                <Link href="/store?search=notes" className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--navy)]">Shop now <ArrowRight size={13} /></Link>
+                <Link href="/store?category=notes" className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--navy)]">Shop now <ArrowRight size={13} /></Link>
                 <Package size={90} className="pointer-events-none absolute -bottom-4 -right-4 text-[var(--navy)]/8" />
               </div>
             )}
@@ -406,7 +451,7 @@ export function Storefront({
                   const Icon = CATEGORY_ICONS[c.id] ?? BookOpen;
                   const chip = categoryChipClass(c.slug ?? c.id, i);
                   return (
-                    <Link key={c.id} href={`/store?search=${encodeURIComponent(c.name)}`} className="flex flex-col items-center gap-2 rounded-xl p-2 text-center hover:bg-[var(--gray)]">
+                    <Link key={c.id} href={`/store?category=${encodeURIComponent(c.slug ?? c.id)}`} className="flex flex-col items-center gap-2 rounded-xl p-2 text-center hover:bg-[var(--gray)]">
                       <span className={`chip ${chip} grid h-11 w-11 place-items-center rounded-full`}><Icon size={20} /></span>
                       <span className="text-[10px] font-bold text-[var(--navy)]">{c.name}</span>
                     </Link>
@@ -420,7 +465,7 @@ export function Storefront({
               <h3 className="mt-4 text-xl font-bold leading-tight sm:text-2xl">Digital Products</h3>
               <p className="mt-1 text-sm font-bold text-[var(--muted)]">Instant Download</p>
               <p className="mt-2 text-xs text-[var(--muted)]">PDF notes, past papers, eBooks &amp; more</p>
-              <Link href="/store?search=digital" className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--navy)]">Explore now <ArrowRight size={13} /></Link>
+              <Link href="/store?category=digital" className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--navy)]">Explore now <ArrowRight size={13} /></Link>
               <Cloud size={90} className="pointer-events-none absolute -bottom-6 -right-4 text-[var(--navy)]/8" />
             </div>
           </section>

@@ -209,7 +209,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
           <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
             <span className="font-bold text-[#0B1D3A]">Categories:</span>
             {product.categories.map((c) => (
-              <Link key={c.id} href={`/store?search=${encodeURIComponent(c.name)}`} className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs font-bold text-[#0F766E] hover:bg-[#DCFCE7]">{c.name}</Link>
+              <Link key={c.id} href={`/store?category=${encodeURIComponent(c.slug)}`} className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs font-bold text-[#0F766E] hover:bg-[#DCFCE7]">{c.name}</Link>
             ))}
           </div>
         )}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireSeller } from "@/lib/auth/admin";
+import { DashboardMobileNav } from "@/components/dashboard/DashboardMobileNav";
 
 export const dynamic = "force-dynamic";
 const navigation = [["Overview", "/seller"], ["Products", "/seller/products"]] as const;
@@ -21,8 +22,11 @@ export default async function SellerLayout({ children }: { children: React.React
       </aside>
       <div className="lg:pl-64">
         <header className="border-b bg-white px-5 py-5 lg:px-10">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold">Seller dashboard</span>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <DashboardMobileNav brandLabel="Seller Hub" brandBadge="s" navigation={navigation} />
+              <span className="font-semibold">Seller dashboard</span>
+            </div>
             <Link href="/store" className="text-sm font-semibold text-[#0F766E]">View store ↗</Link>
           </div>
         </header>

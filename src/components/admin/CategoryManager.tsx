@@ -66,7 +66,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
       name: c.name,
       description: c.description ?? "",
       parentId: c.parentId ?? "",
-      sortOrder: "0",
+      sortOrder: String(c.sortOrder ?? 0),
     });
   }
 
@@ -215,17 +215,17 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
                       </option>
                     ))}
                   </select>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleSave(c.id)}
                       disabled={savingId === c.id}
                       title="Save"
-                      className="text-[#0F766E] hover:text-[#0B1D3A]"
+                      className="grid h-10 w-10 place-items-center rounded-lg text-[#0F766E] hover:bg-[#DCFCE7] hover:text-[#0B1D3A]"
                     >
-                      <Check size={16} />
+                      <Check size={18} />
                     </button>
-                    <button onClick={cancelEdit} title="Cancel" className="text-[#64748B] hover:text-[#0B1D3A]">
-                      <X size={16} />
+                    <button onClick={cancelEdit} title="Cancel" className="grid h-10 w-10 place-items-center rounded-lg text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0B1D3A]">
+                      <X size={18} />
                     </button>
                   </div>
                 </>
@@ -235,17 +235,19 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
                   <span className="text-[#64748B]">{c.slug}</span>
                   <span className="truncate text-[#64748B]">{c.description ?? "—"}</span>
                   <span className="text-[#64748B]">{parent?.name ?? "—"}</span>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => startEdit(c)} title="Edit" className="text-[#64748B] hover:text-[#0F766E]">
-                      <Pencil size={16} />
+                  {/* Bigger (~40px) tap targets, and a visible gap before the
+                      destructive delete so it isn't a mis-tap away from Edit. */}
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => startEdit(c)} title="Edit" className="grid h-10 w-10 place-items-center rounded-lg text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F766E]">
+                      <Pencil size={18} />
                     </button>
                     <button
                       onClick={() => handleDelete(c.id)}
                       disabled={deletingId === c.id}
                       title="Delete"
-                      className="text-[#64748B] hover:text-red-600"
+                      className="ml-2 grid h-10 w-10 place-items-center rounded-lg text-[#64748B] hover:bg-red-50 hover:text-red-600"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={18} />
                     </button>
                   </div>
                 </>

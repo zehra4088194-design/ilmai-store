@@ -209,6 +209,16 @@ export const OrderService = {
   },
   async cancel(orderId: string, _reason?: string): Promise<Order> {
     void _reason;
+    // A bare status flip here would strand a paid order: no refund is
+    // issued, and (before this guard) nothing stopped it. The
+    // customer-facing cancel route already carried this check; the admin
+    // one didn't — enforce it here so every caller of cancel() gets it.
+    // A paid order that genuinely needs cancelling goes through
+    // ReturnRequestService -> OrderCompletionService.markRefunded instead,
+    // which releases inventory/coupon correctly and records the refund.
+    const { data: current } = await createSupabaseAdminClient().from("orders").select("payment_status").eq("id", orderId).maybeSingle();
+    if (!current) throw new NotFoundError("Order not found.");
+    if (current.payment_status === "paid") throw new ValidationError("This order is already paid — cancel it via a refund (return request) instead of a bare status change.");
     await InventoryService.releaseForOrder(orderId);
     await PromotionService.releaseCouponForOrder(orderId);
     const { data, error } = await createSupabaseAdminClient().from("orders").update({ status: "cancelled" }).eq("id", orderId).in("status", ["pending", "processing"]).select(select).single();

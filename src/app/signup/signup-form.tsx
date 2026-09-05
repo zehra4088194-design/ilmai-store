@@ -43,6 +43,7 @@ export function SignupForm() {
         setLoading(false);
         return;
       }
+      await fetch("/api/cart/merge", { method: "POST" }).catch(() => {});
       router.push(redirectTo);
       router.refresh();
     } catch (err) {
@@ -59,6 +60,7 @@ export function SignupForm() {
       const supabase = createSupabaseBrowserClient();
       const { error: verifyError } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: "signup" });
       if (verifyError) throw new Error(verifyError.message);
+      await fetch("/api/cart/merge", { method: "POST" }).catch(() => {});
       router.push(redirectTo);
       router.refresh();
     } catch (err) {

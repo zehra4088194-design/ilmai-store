@@ -9,7 +9,7 @@ import { cookies } from "next/headers";
 import { AD_REFERRAL_COOKIE, normalizeAdReferral } from "@/constants/ad-referral";
 import { OrderAccessService } from "./OrderAccessService";
 import { StorageService } from "./StorageService";
-import { ValidationError } from "@/lib/errors";
+import { AuthorizationError, ConflictError, ValidationError } from "@/lib/errors";
 
 /**
  * JazzCash is not a PaymentProvider in the PaymentProvider.ts sense — there is
@@ -81,19 +81,30 @@ export const ManualPaymentService = {
     return order;
   },
 
-  async submitProof(orderId: string, input: { transactionReference: string; customerNote?: string }): Promise<void> {
-    const token = await OrderAccessService.getTokenFromCookie(orderId);
-    if (!await OrderAccessService.verify(orderId, token)) throw new Error("Order access expired. Request a new order link.");
+  async submitProof(orderId: string, input: { transactionReference: string; customerNote?: string }, viewerUserId?: string): Promise<void> {
+    if (!await this.canAccessOrder(orderId, viewerUserId)) throw new AuthorizationError("Order access expired. Request a new order link.");
     const { error } = await createSupabaseAdminClient().from("manual_payment_claims").update({ status: "submitted", transaction_reference: input.transactionReference, customer_note: input.customerNote ?? null }).eq("order_id", orderId).in("status", ["awaiting_proof", "submitted"]);
     if (error) throw new Error(error.message);
   },
 
-  async uploadProof(orderId: string, file: { name: string; type: string; bytes: Buffer }, transactionReference: string): Promise<void> {
-    const token = await OrderAccessService.getTokenFromCookie(orderId);
-    if (!await OrderAccessService.verify(orderId, token)) throw new Error("Order access expired. Request a new order link.");
+  async uploadProof(orderId: string, file: { name: string; type: string; bytes: Buffer }, transactionReference: string, viewerUserId?: string): Promise<void> {
+    if (!await this.canAccessOrder(orderId, viewerUserId)) throw new AuthorizationError("Order access expired. Request a new order link.");
     const uploaded = await StorageService.uploadPaymentProof(orderId, file.name, file.bytes, file.type);
     const { error } = await createSupabaseAdminClient().from("manual_payment_claims").update({ status: "submitted", transaction_reference: transactionReference, proof_storage_key: uploaded.key }).eq("order_id", orderId).in("status", ["awaiting_proof", "submitted"]);
     if (error) throw new Error(error.message);
+  },
+
+  // OrderAccessService's guest cookie is only ever issued when the order
+  // was placed without a session (OrderService.createFromCart), so a
+  // signed-in customer's own order never has one — proof submission failed
+  // unconditionally for them. Fall back to session ownership (same pattern
+  // as OrderService.getForCurrentViewer) when there's no guest token to check.
+  async canAccessOrder(orderId: string, viewerUserId?: string): Promise<boolean> {
+    const token = await OrderAccessService.getTokenFromCookie(orderId);
+    if (await OrderAccessService.verify(orderId, token)) return true;
+    if (!viewerUserId) return false;
+    const { data } = await createSupabaseAdminClient().from("orders").select("user_id").eq("id", orderId).maybeSingle();
+    return data?.user_id === viewerUserId;
   },
 
   async rejectProof(orderId: string, reviewerId: string, reviewerNote?: string): Promise<void> {
@@ -102,7 +113,7 @@ export const ManualPaymentService = {
     if (order.paymentStatus === "paid") throw new ValidationError("A paid order cannot be rejected.");
     const { data: claim, error: readError } = await db.from("manual_payment_claims").select("status").eq("order_id", orderId).maybeSingle();
     if (readError) throw new Error(readError.message);
-    if (!claim || ["approved", "rejected"].includes(claim.status)) throw new Error("This payment claim is already closed.");
+    if (!claim || ["approved", "rejected"].includes(claim.status)) throw new ConflictError("This payment claim is already closed.");
     const { error } = await db.from("manual_payment_claims").update({ status: "rejected", reviewed_by: reviewerId, reviewed_at: new Date().toISOString(), reviewer_note: reviewerNote ?? null }).eq("order_id", orderId);
     if (error) throw new Error(error.message);
     await OrderService.markPaymentFailed(orderId);

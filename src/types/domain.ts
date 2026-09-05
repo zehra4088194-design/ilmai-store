@@ -52,6 +52,7 @@ export interface Category {
   name: string;
   description?: string;
   parentId?: string;
+  sortOrder: number;
 }
 
 export interface Product {
@@ -213,6 +214,8 @@ export interface Banner {
   linkUrl?: string;
   placement: PromotionPlacement;
   priority: number;
+  isActive: boolean;
+  endsAt?: string;
 }
 
 export interface Review {

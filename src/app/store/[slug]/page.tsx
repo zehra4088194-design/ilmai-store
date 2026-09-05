@@ -28,12 +28,13 @@ export default async function ProductPage({ params }: { params: Params }) {
 
   const { data: { user } } = await (await createSupabaseServerClient()).auth.getUser();
   const categorySlug = product.categories[0]?.slug;
-  const [reviews, wishlistProductIds, related] = await Promise.all([
+  const [reviews, wishlistProductIds, related, hasPurchased] = await Promise.all([
     ReviewService.listForProduct(product.id),
     user ? WishlistService.listProductIds(user.id) : Promise.resolve(new Set<string>()),
     categorySlug
       ? ProductService.list(productListQuerySchema.parse({ categorySlug, pageSize: 5 })).then((r) => r.items.filter((p) => p.id !== product.id).slice(0, 4))
       : Promise.resolve([]),
+    user ? ReviewService.hasPurchased(user.id, product.id) : Promise.resolve(false),
   ]);
 
   // Fire-and-forget: runs after the response is sent, never delays the page.
@@ -54,7 +55,7 @@ export default async function ProductPage({ params }: { params: Params }) {
         </div>
         {related.length > 0 && <RelatedProducts products={related} />}
         <div className="mt-8 rounded-[32px] border border-[var(--line)] bg-white p-6 sm:p-8">
-          <ProductReviews productId={product.id} reviews={reviews} />
+          <ProductReviews productId={product.id} productSlug={product.slug} reviews={reviews} isLoggedIn={Boolean(user)} hasPurchased={hasPurchased} />
         </div>
       </div>
       <StoreFooter />

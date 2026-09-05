@@ -65,13 +65,26 @@ export const CartService = {
 
   async addItem(cartId: string, input: z.infer<typeof addToCartSchema>): Promise<Cart> {
     const { db } = await context();
-    const { data: variant, error: variantError } = await db.from("product_variants").select("id, price_minor, product_id, metadata, products!inner(status)").eq("id", input.variantId).eq("products.status", "published").single();
+    const { data: variant, error: variantError } = await db.from("product_variants").select("id, price_minor, currency, product_id, metadata, products!inner(status)").eq("id", input.variantId).eq("products.status", "published").single();
     if (variantError || !variant) throw new ValidationError("This product is unavailable.");
-    const { data: existing } = await db.from("cart_items").select("quantity").eq("cart_id", cartId).eq("variant_id", input.variantId).maybeSingle();
-    const quantity = (existing?.quantity ?? 0) + input.quantity;
-    if (quantity > 99) throw new ValidationError("Maximum quantity is 99.");
-    const { error } = await db.from("cart_items").upsert({ cart_id: cartId, variant_id: input.variantId, quantity, unit_price_snapshot_minor: variant.price_minor }, { onConflict: "cart_id,variant_id" });
-    if (error) throw new Error(error.message);
+
+    // A cart's subtotal is a single currency-labeled sum (see mapCart) —
+    // letting two different currencies land in the same cart would make
+    // that sum meaningless. Block the add instead of summing across units.
+    const { data: existingCurrencyRow } = await db.from("cart_items").select("product_variants(currency)").eq("cart_id", cartId).limit(1).maybeSingle();
+    const existingCurrency = (existingCurrencyRow as { product_variants?: { currency?: string } } | null)?.product_variants?.currency;
+    if (existingCurrency && existingCurrency !== variant.currency) {
+      throw new ValidationError(`Your cart already has ${existingCurrency}-priced items. This product is priced in ${variant.currency} — please check out or clear your cart before adding items in a different currency.`);
+    }
+
+    // Atomic increment via a single DB round trip (see migration
+    // cart_add_item_atomic) instead of read-then-write, which could lose an
+    // increment to a concurrent add-to-cart for the same variant.
+    const { error } = await db.rpc("cart_add_item", { p_cart_id: cartId, p_variant_id: input.variantId, p_quantity: input.quantity, p_unit_price_minor: variant.price_minor, p_max_quantity: 99 });
+    if (error) {
+      if (error.code === "23514") throw new ValidationError("Maximum quantity is 99.");
+      throw new Error(error.message);
+    }
     return load(cartId, db);
   },
 
@@ -86,5 +99,56 @@ export const CartService = {
     const { db } = await context();
     const { error } = await db.from("cart_items").delete().eq("cart_id", cartId);
     if (error) throw new Error(error.message);
+  },
+
+  /**
+   * Call right after a client establishes a signed-in session (login,
+   * signup, OTP verify). Previously a guest's cart (keyed by the
+   * `ilmai_cart_session` cookie) was simply abandoned on login — the user's
+   * cart lookup switches to `user_id` with no merge step anywhere. If the
+   * user has no cart yet, promote the guest cart in place (cheapest: just
+   * repoint it); otherwise merge each guest line into the existing user
+   * cart via the same atomic increment used by addItem, then discard the
+   * now-empty guest cart. Best-effort — a merge failure should never break
+   * login itself, so callers are expected to swallow errors from this.
+   */
+  async mergeGuestCartOnLogin(): Promise<void> {
+    const db = await createSupabaseServerClient();
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) return;
+    const jar = await cookies();
+    const sessionToken = jar.get(CART_COOKIE)?.value;
+    if (!sessionToken) return;
+
+    const adminDb = createSupabaseAdminClient();
+    const { data: guestCart } = await adminDb.from("carts").select("id").eq("status", "active").eq("session_token", sessionToken).maybeSingle();
+    if (!guestCart) { jar.delete(CART_COOKIE); return; }
+
+    const { data: guestItems } = await adminDb.from("cart_items").select("variant_id, quantity, unit_price_snapshot_minor, product_variants(currency)").eq("cart_id", guestCart.id);
+    if (!guestItems?.length) { await adminDb.from("carts").delete().eq("id", guestCart.id); jar.delete(CART_COOKIE); return; }
+
+    const { data: userCart } = await adminDb.from("carts").select("id").eq("status", "active").eq("user_id", user.id).maybeSingle();
+    if (!userCart) {
+      // No cart of their own yet — cheapest merge is just to hand this one over.
+      await adminDb.from("carts").update({ user_id: user.id, session_token: null }).eq("id", guestCart.id);
+      jar.delete(CART_COOKIE);
+      return;
+    }
+
+    const { data: userCurrencyRow } = await adminDb.from("cart_items").select("product_variants(currency)").eq("cart_id", userCart.id).limit(1).maybeSingle();
+    let userCartCurrency = (userCurrencyRow as { product_variants?: { currency?: string } } | null)?.product_variants?.currency;
+    for (const item of guestItems as unknown as { variant_id: string; quantity: number; unit_price_snapshot_minor: number; product_variants?: { currency?: string } }[]) {
+      const itemCurrency = item.product_variants?.currency;
+      // Currency mixing is blocked the same way a manual addItem would be:
+      // a mismatched line is simply skipped rather than corrupting the
+      // user's existing cart subtotal — it stays in the (not yet deleted)
+      // guest cart until the discard below, and is lost from the merge,
+      // but that's the safer failure mode versus a mixed-currency total.
+      if (userCartCurrency && itemCurrency && userCartCurrency !== itemCurrency) continue;
+      const { error } = await adminDb.rpc("cart_add_item", { p_cart_id: userCart.id, p_variant_id: item.variant_id, p_quantity: item.quantity, p_unit_price_minor: item.unit_price_snapshot_minor, p_max_quantity: 99 });
+      if (!error && !userCartCurrency) userCartCurrency = itemCurrency;
+    }
+    await adminDb.from("carts").delete().eq("id", guestCart.id);
+    jar.delete(CART_COOKIE);
   },
 };

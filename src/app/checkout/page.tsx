@@ -11,7 +11,17 @@ export const dynamic = "force-dynamic";
 export default async function CheckoutPage() {
   const [cart, settings] = await Promise.all([CartService.getCurrentCart(), getPlatformSettings()]);
   const exchangeRate = settings.exchangeRate.usdToPkr;
-  const totalPkr = cart ? manualPaymentTotalPkr(cart.subtotal.amountMinor, cart.subtotal.currency, exchangeRate) : 0;
+  // Must mirror POST /api/checkout/jazzcash's own netAmountMinor computation
+  // (subtotal + shipping — coupon discount isn't known until the request is
+  // submitted) so the amount shown/encoded in the QR here matches what the
+  // order actually gets charged for once shipping is added.
+  const shippingMinor = cart
+    ? (() => {
+        const shippable = cart.items.filter((item) => ["physical", "book"].includes(item.productType));
+        return shippable.length ? Math.max(...shippable.map((item) => item.deliveryFeeMinor)) : 0;
+      })()
+    : 0;
+  const totalPkr = cart ? manualPaymentTotalPkr(cart.subtotal.amountMinor + shippingMinor, cart.subtotal.currency, exchangeRate) : 0;
 
   return (
     <main className="store-shell">

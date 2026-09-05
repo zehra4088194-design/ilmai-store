@@ -6,6 +6,7 @@ import { Check, Clipboard, CreditCard, Loader2, Smartphone, WalletCards } from "
 import { MANUAL_PAYMENT_OPTIONS, SUPPORT_WHATSAPP_NUMBER, TRANSACTION_FEE_USD } from "@/constants/manual-payment";
 import { siteConfig } from "@/config/site";
 import { getRecaptchaToken } from "@/lib/recaptcha-client";
+import { manualPaymentTotalPkr } from "@/lib/pricing";
 import type { Cart } from "@/types/domain";
 
 type Props = {
@@ -70,7 +71,50 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
   const [walletOrderId, setWalletOrderId] = useState<string | null>(null);
   const [walletOrderLoading, setWalletOrderLoading] = useState(false);
   const [walletOrderError, setWalletOrderError] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscountMinor, setCouponDiscountMinor] = useState<number | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
   const wallet = MANUAL_PAYMENT_OPTIONS[0];
+
+  async function applyCoupon() {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode.trim() }),
+      });
+      const data = await response.json() as { discountMinor?: number; error?: string };
+      if (!response.ok || data.discountMinor === undefined) throw new Error(data.error || "Coupon could not be applied.");
+      setCouponDiscountMinor(data.discountMinor);
+    } catch (error) {
+      setCouponDiscountMinor(null);
+      setCouponError(error instanceof Error ? error.message : "Coupon could not be applied.");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function removeCoupon() {
+    setCouponCode("");
+    setCouponDiscountMinor(null);
+    setCouponError(null);
+  }
+
+  // Re-derives the wallet total client-side once a coupon is applied — the
+  // server-computed `totalPkr` prop only knows about subtotal + shipping
+  // (the coupon can't be known until the shopper types it in here), so this
+  // mirrors POST /api/checkout/jazzcash's own netAmountMinor math with the
+  // discount subtracted in too. The actual order still independently
+  // re-validates and applies the coupon server-side — this is display only.
+  const effectiveTotalPkr = useMemo(() => {
+    if (!couponDiscountMinor) return totalPkr;
+    const netMinor = Math.max(0, cart.subtotal.amountMinor - couponDiscountMinor + deliveryMinor);
+    return manualPaymentTotalPkr(netMinor, cart.subtotal.currency, exchangeRate);
+  }, [couponDiscountMinor, totalPkr, cart.subtotal.amountMinor, cart.subtotal.currency, deliveryMinor, exchangeRate]);
 
   useEffect(() => {
     if (country !== "PK" || method !== "jazzcash") {
@@ -86,7 +130,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
     setWalletOrderNumber(null);
     setWalletOrderId(null);
     setWalletOrderError(null);
-    fetch(`/api/payments/jazzcash-qr?amount=${totalPkr}`, { signal: controller.signal })
+    fetch(`/api/payments/jazzcash-qr?amount=${effectiveTotalPkr}`, { signal: controller.signal })
       .then(async (response) => {
         const data = await response.json() as { qrDataUrl?: string; error?: string };
         if (!response.ok || !data.qrDataUrl) throw new Error(data.error || "QR code could not be generated.");
@@ -97,9 +141,9 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
       });
 
     return () => controller.abort();
-  }, [country, method, totalPkr]);
+  }, [country, method, effectiveTotalPkr]);
 
-  const amountLabel = useMemo(() => `PKR ${new Intl.NumberFormat("en-PK").format(totalPkr)}`, [totalPkr]);
+  const amountLabel = useMemo(() => `PKR ${new Intl.NumberFormat("en-PK").format(effectiveTotalPkr)}`, [effectiveTotalPkr]);
   const whatsappHref = `https://wa.me/${SUPPORT_WHATSAPP_NUMBER.replace(/\D/g, "")}?text=${encodeURIComponent(
     walletOrderNumber
       ? `JazzCash payment sent for order ${walletOrderNumber}, ${amountLabel}. My registered email is ${email}. Here is the transaction screenshot:`
@@ -127,7 +171,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
       const response = await fetch("/api/checkout/jazzcash", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() },
-        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, recaptchaToken: recaptchaToken ?? undefined, ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city, postalCode, country: "PK" } } : {}) }),
+        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, recaptchaToken: recaptchaToken ?? undefined, ...(couponDiscountMinor ? { couponCode: couponCode.trim() } : {}), ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city, postalCode, country: "PK" } } : {}) }),
       });
       const data = await response.json() as { orderId?: string; orderNumber?: string; error?: string };
       if (!response.ok || !data.orderNumber) throw new Error(data.error || "Order could not be recorded.");
@@ -150,7 +194,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() },
-        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, recaptchaToken: recaptchaToken ?? undefined, ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city, postalCode, country: country.length === 2 ? country : "PK" } } : {}) }),
+        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, recaptchaToken: recaptchaToken ?? undefined, ...(couponDiscountMinor ? { couponCode: couponCode.trim() } : {}), ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city, postalCode, country: country.length === 2 ? country : "PK" } } : {}) }),
       });
       const data = await response.json() as { session?: { checkoutUrl?: string }; error?: string };
       if (!response.ok) throw new Error(data.error || "Card checkout could not be started.");
@@ -174,6 +218,21 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
         <label className="block text-sm font-bold text-[#0B1D3A]">Phone number<input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="03xx xxxxxxx" className="mt-2 w-full rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#0F766E]"/><span className="mt-1 block text-xs font-normal text-[#64748B]">So we can reach you about this order.</span></label>
       </div>
       {requiresShipping && <div className="mt-6 rounded-2xl border bg-[#F1F5F9] p-4"><p className="text-sm font-bold text-[#0B1D3A]">Shipping address</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" className="rounded-xl border bg-white px-4 py-3"/><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" className="rounded-xl border bg-white px-4 py-3"/><input value={line1} onChange={(e) => setLine1(e.target.value)} placeholder="Address" className="rounded-xl border bg-white px-4 py-3 sm:col-span-2"/><input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="rounded-xl border bg-white px-4 py-3"/><input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="City code / postal code" className="rounded-xl border bg-white px-4 py-3"/></div></div>}
+      <div className="mt-6 rounded-2xl border bg-[#F1F5F9] p-4">
+        <p className="text-sm font-bold text-[#0B1D3A]">Coupon code</p>
+        {couponDiscountMinor ? (
+          <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-[#0F766E]/30 bg-white px-4 py-3">
+            <span className="text-sm font-bold text-[#0F766E]"><Check size={14} className="mr-1.5 inline" />{couponCode.trim().toUpperCase()} applied</span>
+            <button type="button" onClick={removeCoupon} className="text-xs font-bold text-[#64748B] underline">Remove</button>
+          </div>
+        ) : (
+          <div className="mt-2 flex gap-2">
+            <input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Enter code" className="min-w-0 flex-1 rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#0F766E]"/>
+            <button type="button" disabled={couponLoading || !couponCode.trim()} onClick={applyCoupon} className="shrink-0 rounded-xl bg-[#0B1D3A] px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{couponLoading ? <Loader2 size={16} className="animate-spin"/> : "Apply"}</button>
+          </div>
+        )}
+        {couponError && <p className="mt-2 text-sm text-red-700">{couponError}</p>}
+      </div>
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         {country === "PK" && <button type="button" onClick={() => setMethod("jazzcash")} className={`rounded-2xl border p-4 text-left ${method === "jazzcash" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><Smartphone size={19} className="text-[#0F766E]"/><span className="font-bold">Local wallet</span></div><p className="mt-2 text-sm text-[#64748B]">JazzCash QR · manual review</p></button>}
         <button type="button" onClick={() => setMethod("safepay")} className={`rounded-2xl border p-4 text-left ${method === "safepay" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><CreditCard size={19} className="text-[#0F766E]"/><span className="font-bold">Card checkout</span></div><p className="mt-2 text-sm text-[#64748B]">Secure Safepay checkout</p></button>
@@ -188,6 +247,6 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
       <p className="mt-6 text-xs leading-5 text-[#64748B]">Need help? Email <a className="font-bold text-[#0F766E]" href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>.</p>
     </section>
     {walletOrderId && <ManualPaymentProofForm orderId={walletOrderId} />}
-    <aside className="h-fit rounded-[2rem] border bg-[#0B1D3A] p-6 text-white sm:p-8"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Your order</p><div className="mt-6 grid gap-4">{cart.items.map((item) => <div key={item.id} className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">{item.productTitle} × {item.quantity}</span><span className="font-bold">{item.unitPrice.currency} {(item.unitPrice.amountMinor * item.quantity / 100).toFixed(2)}</span></div>)}{requiresShipping && <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Delivery</span><span className="font-bold">{deliveryMinor ? `${cart.subtotal.currency} ${(deliveryMinor / 100).toFixed(2)}` : "Free"}</span></div>}</div><div className="mt-6 border-t border-white/20 pt-5"><div className="flex justify-between text-sm text-[#B9C4E0]"><span>Wallet total</span><span>PKR</span></div><div className="mt-2 text-3xl font-black">{new Intl.NumberFormat("en-PK").format(totalPkr)}</div><p className="mt-3 text-xs leading-5 text-[#B9C4E0]">USD 1 = PKR {exchangeRate.toFixed(2)}. The wallet total includes the flat processing fee.</p></div></aside>
+    <aside className="h-fit rounded-[2rem] border bg-[#0B1D3A] p-6 text-white sm:p-8"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Your order</p><div className="mt-6 grid gap-4">{cart.items.map((item) => <div key={item.id} className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">{item.productTitle} × {item.quantity}</span><span className="font-bold">{item.unitPrice.currency} {(item.unitPrice.amountMinor * item.quantity / 100).toFixed(2)}</span></div>)}{requiresShipping && <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Delivery</span><span className="font-bold">{deliveryMinor ? `${cart.subtotal.currency} ${(deliveryMinor / 100).toFixed(2)}` : "Free"}</span></div>}{couponDiscountMinor ? <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Coupon ({couponCode.trim().toUpperCase()})</span><span className="font-bold text-[#4ADE80]">&minus;{cart.subtotal.currency} {(couponDiscountMinor / 100).toFixed(2)}</span></div> : null}</div><div className="mt-6 border-t border-white/20 pt-5"><div className="flex justify-between text-sm text-[#B9C4E0]"><span>Wallet total</span><span>PKR</span></div><div className="mt-2 text-3xl font-black">{new Intl.NumberFormat("en-PK").format(effectiveTotalPkr)}</div><p className="mt-3 text-xs leading-5 text-[#B9C4E0]">USD 1 = PKR {exchangeRate.toFixed(2)}. The wallet total includes the flat processing fee.</p></div></aside>
   </div>;
 }

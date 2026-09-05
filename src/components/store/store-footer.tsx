@@ -100,12 +100,12 @@ export function StoreFooter() {
           <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#0F766E]">Shop</h3>
           <div className="mt-5 grid gap-3 text-sm text-[#B9C4E0]">
             <Link href="/store">All Products</Link>
-            {PHYSICAL_GOODS_ENABLED && <Link href="/store?search=books">Books</Link>}
-            <Link href="/store?search=notes">Notes</Link>
-            <Link href="/store?search=courses">Courses</Link>
-            <Link href="/store?search=test+series">Test Series</Link>
-            <Link href="/store?search=bundle">Bundles</Link>
-            <Link href="/store?search=digital">Digital Products</Link>
+            {PHYSICAL_GOODS_ENABLED && <Link href="/store?category=books">Books</Link>}
+            <Link href="/store?category=notes">Notes</Link>
+            <Link href="/store?category=courses">Courses</Link>
+            <Link href="/store?category=test-series">Test Series</Link>
+            <Link href="/store?category=bundles">Bundles</Link>
+            <Link href="/store?category=digital">Digital Products</Link>
           </div>
         </div>
 

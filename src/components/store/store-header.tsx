@@ -12,13 +12,26 @@ import type { Category } from "@/types/domain";
 
 type Props = { initialSearch?: string; categories?: Category[] };
 
+// These link by the real category slug (see FilterSidebar/CategoryManager —
+// "digital"/"books"/"courses"/"bundles" are seeded category slugs), not a
+// `search=` text match — a `search=` link only ever matched product
+// title/description, never actual category membership.
 const NAV_LINKS: Array<[string, string]> = [
   ["Home", "/store"],
   ["Shop", "/store"],
-  ["Digital Products", "/store?search=digital"],
-  ...(PHYSICAL_GOODS_ENABLED ? [["Books", "/store?search=books"] as [string, string]] : []),
-  ["Courses", "/store?search=courses"],
-  ["Bundles", "/store?search=bundle"],
+  ["Digital Products", "/store?category=digital"],
+  ...(PHYSICAL_GOODS_ENABLED ? [["Books", "/store?category=books"] as [string, string]] : []),
+  ["Courses", "/store?category=courses"],
+  ["Bundles", "/store?category=bundles"],
+];
+
+const FALLBACK_CATEGORY_LINKS: Array<[string, string]> = [
+  ["Notes", "notes"],
+  ...(PHYSICAL_GOODS_ENABLED ? [["Books", "books"] as [string, string]] : []),
+  ["Courses", "courses"],
+  ["Test Series", "test-series"],
+  ["Bundles", "bundles"],
+  ["Digital Products", "digital"],
 ];
 
 export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
@@ -133,12 +146,12 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
             {catOpen && (
               <div className="absolute left-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-[var(--line)] bg-white py-2 shadow-2xl">
                 {(categories.length ? categories : []).map((c) => (
-                  <Link key={c.id} href={`/store?search=${encodeURIComponent(c.name)}`} onClick={() => setCatOpen(false)} className="block px-4 py-2.5 text-sm font-semibold text-[#0B1D3A] hover:bg-[#F1F5F9]">
+                  <Link key={c.id} href={`/store?category=${encodeURIComponent(c.slug)}`} onClick={() => setCatOpen(false)} className="block px-4 py-2.5 text-sm font-semibold text-[#0B1D3A] hover:bg-[#F1F5F9]">
                     {c.name}
                   </Link>
                 ))}
-                {!categories.length && (PHYSICAL_GOODS_ENABLED ? ["Notes", "Books", "Courses", "Test Series", "Bundles", "Digital Products"] : ["Notes", "Courses", "Test Series", "Bundles", "Digital Products"]).map((label) => (
-                  <Link key={label} href={`/store?search=${encodeURIComponent(label)}`} onClick={() => setCatOpen(false)} className="block px-4 py-2.5 text-sm font-semibold text-[#0B1D3A] hover:bg-[#F1F5F9]">
+                {!categories.length && FALLBACK_CATEGORY_LINKS.map(([label, slug]) => (
+                  <Link key={label} href={`/store?category=${encodeURIComponent(slug)}`} onClick={() => setCatOpen(false)} className="block px-4 py-2.5 text-sm font-semibold text-[#0B1D3A] hover:bg-[#F1F5F9]">
                     {label}
                   </Link>
                 ))}
