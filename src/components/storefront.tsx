@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   BookOpen,
@@ -123,7 +124,7 @@ function ProductCard({ product, index, saved, isLoggedIn }: { product: Product; 
     <article className="product-card-grid group relative overflow-hidden animate-pop-in" style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}>
       <Link href={`/store/${product.slug}`} className="relative block aspect-square overflow-hidden bg-[var(--gray)]">
         {image ? (
-          <img src={image.url} alt={image.altText ?? product.title} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.05]" />
+          <Image src={image.url} alt={image.altText ?? product.title} fill sizes="(min-width: 1280px) 22vw, (min-width: 640px) 30vw, 45vw" className="object-cover transition duration-500 group-hover:scale-[1.05]" />
         ) : (
           <div className={`absolute inset-0 grid place-items-center bg-gradient-to-br ${placeholderGradient(chip)}`}>
             <BookOpen size={48} strokeWidth={1} className="text-white/35" />

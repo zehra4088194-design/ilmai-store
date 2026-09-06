@@ -7,6 +7,7 @@ import { ReturnRequestService } from "@/services/ReturnRequestService";
 import type { OrderItem } from "@/types/domain";
 import { DownloadButton } from "./download-button";
 import { OrderActions } from "./order-actions";
+import { OrderTimeline } from "@/components/account/OrderTimeline";
 import { formatMoney } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
@@ -115,6 +116,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           </div>
 
           <div className="grid gap-4">
+            <OrderTimeline order={order} />
             <div className="rounded-2xl border bg-white p-5">
               <p className="text-xs font-bold uppercase tracking-widest text-[#0F766E]">Status</p>
               <div className="mt-3 grid gap-2 text-sm">

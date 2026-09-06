@@ -10,6 +10,7 @@ import { ReferralService } from "@/services/ReferralService";
 import { WishlistSection } from "@/components/account/WishlistSection";
 import { AddressBook } from "@/components/account/AddressBook";
 import { ReferralCard } from "@/components/account/ReferralCard";
+import { AccountPrivacyActions } from "@/components/account/AccountPrivacyActions";
 import type { Order } from "@/types/domain";
 import { formatMoney } from "@/lib/pricing";
 
@@ -103,6 +104,7 @@ export default async function AccountPage() {
           <WishlistSection initialProducts={wishlistProducts} />
           <AddressBook initialAddresses={addresses} />
           <ReferralCard code={referralCode} conversionCount={referralConversions} />
+          <AccountPrivacyActions />
         </div>
       </div>
     </main>

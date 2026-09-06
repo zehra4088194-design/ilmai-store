@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PROMOTION_PLACEMENTS } from "@/constants/promotion";
+import { SUPPORTED_CURRENCIES } from "@/constants/order";
 
 export const addressSchema = z.object({
   label: z.string().max(60).optional(),
@@ -68,6 +69,10 @@ export const couponSchema = z.object({
     .regex(/^[A-Z0-9_-]+$/, "code must be uppercase alphanumeric"),
   discountType: z.enum(["percentage", "fixed_amount"]),
   discountValue: z.number().int().positive(),
+  // The currency this coupon is scoped to — a "fixed_amount" discountValue
+  // is in this currency's minor units, and the coupon can only be applied
+  // to a cart in the same currency (see PromotionService.validateCoupon).
+  currency: z.enum(SUPPORTED_CURRENCIES).default("PKR"),
   maxRedemptions: z.number().int().positive().optional(),
   minOrderMinor: z.number().int().min(0).default(0),
   startsAt: z.string().datetime().optional(),

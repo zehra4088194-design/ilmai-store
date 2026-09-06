@@ -4,6 +4,7 @@ import { ValidationError, isAppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { OrderCompletionService } from "@/services/OrderCompletionService";
 import { ManualPaymentService } from "@/services/ManualPaymentService";
+import { AuditLogService } from "@/services/AuditLogService";
 
 /**
  * POST /api/admin/orders/[id]/mark-paid — the manual counterpart to
@@ -40,6 +41,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       },
     });
     await ManualPaymentService.approveClaim(orderId, admin.userId);
+    await AuditLogService.record({ actorId: admin.userId, actorRole: admin.role, action: "order.mark_paid", entityType: "order", entityId: orderId, metadata: { provider: "jazzcash", amountMinor: payment.amountMinor, currency: payment.currency } });
 
     return NextResponse.json({ order: completed });
   } catch (err) {

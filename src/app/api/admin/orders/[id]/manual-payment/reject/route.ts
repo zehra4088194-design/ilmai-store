@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { ManualPaymentService } from "@/services/ManualPaymentService";
+import { AuditLogService } from "@/services/AuditLogService";
 import { manualPaymentReviewSchema } from "@/validators/commerce";
 import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
@@ -11,6 +12,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { id } = await params;
     const body = parseOrThrow(manualPaymentReviewSchema, await request.json().catch(() => ({})));
     await ManualPaymentService.rejectProof(id, admin.userId, body.reviewerNote);
+    await AuditLogService.record({ actorId: admin.userId, actorRole: admin.role, action: "order.manual_payment_reject", entityType: "order", entityId: id, metadata: { reviewerNote: body.reviewerNote } });
     return NextResponse.json({ rejected: true });
   } catch (err) {
     if (isAppError(err)) return NextResponse.json({ error: err.publicMessage }, { status: err.statusCode });

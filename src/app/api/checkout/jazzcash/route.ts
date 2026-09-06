@@ -3,7 +3,7 @@ import { CartService } from "@/services/CartService";
 import { ManualPaymentService } from "@/services/ManualPaymentService";
 import { PromotionService } from "@/services/PromotionService";
 import { getPlatformSettings } from "@/lib/platform-settings/server";
-import { manualPaymentTotalPkr } from "@/lib/pricing";
+import { computeShippingMinor, manualPaymentTotalPkr } from "@/lib/pricing";
 import { checkoutSchema } from "@/validators/commerce";
 import { ValidationError, isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
@@ -38,10 +38,9 @@ export async function POST(request: NextRequest) {
     // would change the order's own total_minor but leave the QR/
     // payments.amount_minor demanding a different amount.
     const discountMinor = body.couponCode
-      ? (await PromotionService.validateCoupon(body.couponCode, cart.subtotal.amountMinor)).discountMinor
+      ? (await PromotionService.validateCoupon(body.couponCode, cart.subtotal.amountMinor, cart.subtotal.currency)).discountMinor
       : 0;
-    const shippableItems = cart.items.filter((item) => ["physical", "book"].includes(item.productType));
-    const shippingMinor = shippableItems.length ? Math.max(...shippableItems.map((item) => item.deliveryFeeMinor)) : 0;
+    const shippingMinor = computeShippingMinor(cart.items);
     const netAmountMinor = Math.max(0, cart.subtotal.amountMinor - discountMinor + shippingMinor);
 
     const walletTotalPkr = manualPaymentTotalPkr(

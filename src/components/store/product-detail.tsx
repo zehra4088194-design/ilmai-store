@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BadgeCheck, BookOpen, Download, Facebook, Minus, Plus, Share2, ShieldCheck, Star, Truck, Twitter } from "lucide-react";
 import type { Product, ProductVariant } from "@/types/domain";
@@ -82,7 +83,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
           onTouchEnd={onImageTouchEnd}
         >
           {images.length ? (
-            <img src={images[activeImage]?.url} alt={images[activeImage]?.altText ?? product.title} className="h-full w-full select-none object-cover" draggable={false} />
+            <Image src={images[activeImage]?.url ?? ""} alt={images[activeImage]?.altText ?? product.title} fill priority sizes="(min-width: 1024px) 45vw, 100vw" className="select-none object-cover" draggable={false} />
           ) : (
             <div className="grid h-full place-items-center">
               <BookOpen size={110} strokeWidth={1} className="text-white/25" />
@@ -110,9 +111,9 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
             <button
               key={media?.id ?? index}
               onClick={() => setActiveImage(index)}
-              className={`grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border-2 bg-[#F1F5F9] ${index === activeImage ? "border-[#0F766E]" : "border-[var(--line)]"}`}
+              className={`relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border-2 bg-[#F1F5F9] ${index === activeImage ? "border-[#0F766E]" : "border-[var(--line)]"}`}
             >
-              {media ? <img src={media.url} alt={media.altText ?? product.title} className="h-full w-full object-cover" /> : <BookOpen size={20} className="text-[#0B1D3A]/25" />}
+              {media ? <Image src={media.url} alt={media.altText ?? product.title} fill sizes="64px" className="object-cover" /> : <BookOpen size={20} className="text-[#0B1D3A]/25" />}
             </button>
           ))}
         </div>

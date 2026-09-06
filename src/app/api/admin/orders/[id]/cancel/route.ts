@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { OrderService } from "@/services/OrderService";
+import { AuditLogService } from "@/services/AuditLogService";
 import { isAppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
@@ -12,10 +13,12 @@ import { logger } from "@/lib/logger";
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
-    const order = await OrderService.cancel(id, typeof body?.reason === "string" ? body.reason : undefined);
+    const reason = typeof body?.reason === "string" ? body.reason : undefined;
+    const order = await OrderService.cancel(id, reason);
+    await AuditLogService.record({ actorId: admin.userId, actorRole: admin.role, action: "order.cancel", entityType: "order", entityId: id, metadata: { reason, orderNumber: order.orderNumber } });
     return NextResponse.json({ order });
   } catch (err) {
     if (isAppError(err)) return NextResponse.json({ error: err.publicMessage }, { status: err.statusCode });

@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { DashboardMobileNav } from "@/components/dashboard/DashboardMobileNav";
 
 export const dynamic = "force-dynamic";
-const navigation = [["Overview", "/admin"], ["Products", "/admin/products"], ["Inventory", "/admin/inventory"], ["Orders", "/admin/orders"], ["Returns", "/admin/returns"], ["Categories", "/admin/categories"], ["Promotions & banners", "/admin/promotions"], ["Reviews", "/admin/reviews"], ["Sellers", "/admin/sellers"], ["Settings", "/admin/settings"]] as const;
+const navigation = [["Overview", "/admin"], ["Products", "/admin/products"], ["Inventory", "/admin/inventory"], ["Orders", "/admin/orders"], ["Returns", "/admin/returns"], ["Categories", "/admin/categories"], ["Promotions & banners", "/admin/promotions"], ["Reviews", "/admin/reviews"], ["Sellers", "/admin/sellers"], ["Audit log", "/admin/audit-log"], ["Settings", "/admin/settings"]] as const;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();

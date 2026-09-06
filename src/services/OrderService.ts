@@ -93,7 +93,7 @@ export const OrderService = {
     const cart = await CartService.getOrCreateCart();
     if (!cart.items.length) throw new ValidationError("Your cart is empty.");
     const userId = await currentUserId();
-    const discount = input.couponCode ? (await PromotionService.validateCoupon(input.couponCode, cart.subtotal.amountMinor)).discountMinor : 0;
+    const discount = input.couponCode ? (await PromotionService.validateCoupon(input.couponCode, cart.subtotal.amountMinor, cart.subtotal.currency)).discountMinor : 0;
     const shippableItems = cart.items.filter((item) => ["physical", "book"].includes(item.productType));
     const hasShipping = shippableItems.length > 0;
     if (hasShipping && !input.shippingAddress) throw new ValidationError("A shipping address is required for physical products.");

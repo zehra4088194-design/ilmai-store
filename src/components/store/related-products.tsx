@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { BookOpen } from "lucide-react";
 import type { Product } from "@/types/domain";
 import { formatMoney } from "@/lib/pricing";
@@ -23,7 +24,7 @@ export function RelatedProducts({ products }: { products: Product[] }) {
             <Link key={product.id} href={`/store/${product.slug}`} className="group block">
               <div className="relative aspect-square overflow-hidden rounded-2xl bg-[var(--gray)]">
                 {image ? (
-                  <img src={image.url} alt={image.altText ?? product.title} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.05]" />
+                  <Image src={image.url} alt={image.altText ?? product.title} fill sizes="(min-width: 640px) 22vw, 45vw" className="object-cover transition duration-500 group-hover:scale-[1.05]" />
                 ) : (
                   <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[var(--navy)] to-[#142a52]">
                     <BookOpen size={32} strokeWidth={1} className="text-white/30" />

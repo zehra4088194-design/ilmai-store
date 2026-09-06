@@ -10,6 +10,7 @@ export interface SellerAccount {
   status: "active" | "suspended";
   createdAt: string;
   productCount: number;
+  commissionRateBps: number;
 }
 
 function mapSeller(row: any): SellerAccount {
@@ -20,6 +21,7 @@ function mapSeller(row: any): SellerAccount {
     status: row.status,
     createdAt: row.created_at,
     productCount: Array.isArray(row.products) ? row.products.length : (row.product_count ?? 0),
+    commissionRateBps: row.commission_rate_bps ?? 2000,
   };
 }
 

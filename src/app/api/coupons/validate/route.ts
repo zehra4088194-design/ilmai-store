@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     if (!code) return NextResponse.json({ error: "Enter a coupon code." }, { status: 400 });
     const cart = await CartService.getCurrentCart();
     if (!cart || !cart.items.length) return NextResponse.json({ error: "Your cart is empty." }, { status: 400 });
-    const { discountMinor } = await PromotionService.validateCoupon(code, cart.subtotal.amountMinor);
+    const { discountMinor } = await PromotionService.validateCoupon(code, cart.subtotal.amountMinor, cart.subtotal.currency);
     return NextResponse.json({ discountMinor, currency: cart.subtotal.currency });
   } catch (err) {
     if (isAppError(err)) return NextResponse.json({ error: err.publicMessage }, { status: err.statusCode });

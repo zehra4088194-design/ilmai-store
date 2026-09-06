@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/admin";
 import { getPlatformSettings, savePlatformSettings } from "@/lib/platform-settings/server";
+import { AuditLogService } from "@/services/AuditLogService";
 import { exchangeRateSettingsSchema } from "@/validators/settings";
 import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
@@ -48,6 +49,9 @@ export async function PATCH(request: Request) {
       },
       admin.userId,
     );
+    // The settings row only ever keeps the *last* editor — log this here
+    // too so a full history of manual rate overrides survives.
+    await AuditLogService.record({ actorId: admin.userId, actorRole: admin.role, action: "settings.exchange_rate_update", entityType: "platform_settings", metadata: { mode: input.mode, usdToPkr: input.mode === "manual" ? input.usdToPkr : undefined } });
     return NextResponse.json(rateResponse(saved));
   } catch (error) {
     if (isAppError(error)) return NextResponse.json({ error: error.publicMessage }, { status: error.statusCode });

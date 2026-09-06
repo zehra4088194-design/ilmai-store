@@ -19,15 +19,6 @@ const select = "*, product_variants(*, inventory_items(quantity_available, low_s
 // of loading every product and filtering the join in JS afterward.
 const selectFilteredByCategory = "*, product_variants(*, inventory_items(quantity_available, low_stock_threshold)), product_media(*), product_categories!inner(category:categories!inner(*))";
 
-// PostgREST's `.or()` filter string uses `,` to separate conditions and
-// `()` to group them, so a raw user search term containing any of those
-// characters (e.g. "chemistry, physics") breaks the filter's own syntax
-// and PostgREST returns a parse error rather than a match. Backslash-escape
-// the reserved characters so the term is always treated as a literal value.
-function escapeOrFilterValue(value: string): string {
-  return value.replace(/[\\,()]/g, (c) => `\\${c}`);
-}
-
 // Exported so PromotionService.getFeaturedProducts can map raw product rows
 // the same way instead of skipping the media-URL step entirely.
 export async function mapProduct(row: Raw): Promise<Product> {
@@ -151,7 +142,21 @@ export const ProductService = {
     const db = await createSupabaseServerClient();
     let request = db.from("products").select(query.categorySlug ? selectFilteredByCategory : select, { count: "exact" }).eq("status", "published");
     if (!PHYSICAL_GOODS_ENABLED) request = request.not("product_type", "in", `(${PHYSICAL_PRODUCT_TYPES.join(",")})`);
-    if (query.search) request = request.or(`title.ilike.%${escapeOrFilterValue(query.search)}%,description.ilike.%${escapeOrFilterValue(query.search)}%`);
+    if (query.search) {
+      // search_product_ids (see migration fuzzy_product_search) does a
+      // substring match OR a pg_trgm similarity match, so a typo like
+      // "chemestry" still surfaces "Chemistry" results instead of nothing.
+      // The RPC call itself can't suffer the old PostgREST .or()-string
+      // injection problem (the term is a bound function argument, not
+      // interpolated filter syntax) — but a malformed/oversized term could
+      // still error, so this still degrades to "no results" rather than a
+      // crash either way.
+      const { data: matches, error: searchError } = await db.rpc("search_product_ids", { search_term: query.search });
+      if (searchError) return { items: [], total: 0 };
+      const ids = (matches ?? []).map((row: { id: string }) => row.id);
+      if (!ids.length) return { items: [], total: 0 };
+      request = request.in("id", ids);
+    }
     if (query.categorySlug) request = request.eq("product_categories.category.slug", query.categorySlug);
     if (query.productType) request = request.eq("product_type", query.productType);
     if (query.minPriceMinor !== undefined) request = request.gte("base_price_minor", query.minPriceMinor);

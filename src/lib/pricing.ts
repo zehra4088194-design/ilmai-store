@@ -27,3 +27,17 @@ export function manualPaymentTotalPkr(
     : Math.round(amountMinor / 100);
   return basePkr + Math.round(TRANSACTION_FEE_USD * exchangeRate);
 }
+
+/**
+ * One order = one parcel, priced at the single highest delivery fee among
+ * shippable items in the cart (never summed — see OrderService.createFromCart,
+ * POST /api/checkout/jazzcash, and CheckoutOptions.tsx, which all need this
+ * exact figure to agree so the amount a customer is shown/charged always
+ * matches what the order actually needs). Extracted here — and covered by
+ * pricing.test.ts — after a past bug where the checkout page computed the
+ * JazzCash total from the subtotal alone and silently dropped this.
+ */
+export function computeShippingMinor(items: { productType: string; deliveryFeeMinor: number }[]): number {
+  const shippable = items.filter((item) => ["physical", "book"].includes(item.productType));
+  return shippable.length ? Math.max(...shippable.map((item) => item.deliveryFeeMinor)) : 0;
+}

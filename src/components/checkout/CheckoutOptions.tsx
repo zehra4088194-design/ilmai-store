@@ -6,7 +6,7 @@ import { Check, Clipboard, CreditCard, Loader2, Smartphone, WalletCards } from "
 import { MANUAL_PAYMENT_OPTIONS, SUPPORT_WHATSAPP_NUMBER, TRANSACTION_FEE_USD } from "@/constants/manual-payment";
 import { siteConfig } from "@/config/site";
 import { getRecaptchaToken } from "@/lib/recaptcha-client";
-import { manualPaymentTotalPkr } from "@/lib/pricing";
+import { computeShippingMinor, manualPaymentTotalPkr } from "@/lib/pricing";
 import type { Cart } from "@/types/domain";
 
 type Props = {
@@ -49,10 +49,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
   const requiresShipping = useMemo(() => cart.items.some((item) => ["physical", "book"].includes(item.productType)), [cart.items]);
   // Mirrors OrderService.createFromCart: one order = one parcel, priced at
   // the single highest delivery fee among shippable items in the cart.
-  const deliveryMinor = useMemo(() => {
-    const shippable = cart.items.filter((item) => ["physical", "book"].includes(item.productType));
-    return shippable.length ? Math.max(...shippable.map((item) => item.deliveryFeeMinor)) : 0;
-  }, [cart.items]);
+  const deliveryMinor = useMemo(() => computeShippingMinor(cart.items), [cart.items]);
   const [country, setCountry] = useState("PK");
   const [customerPhone, setCustomerPhone] = useState("");
   const [fullName, setFullName] = useState("");

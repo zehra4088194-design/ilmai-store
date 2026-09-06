@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ImagePlus, Loader2, Star, Trash2, Upload } from "lucide-react";
 import type { ProductMedia } from "@/types/domain";
 
@@ -76,7 +77,7 @@ export function ProductMediaManager({ productId, media, role = "admin" }: { prod
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {media.map((item) => (
             <div key={item.id} className="group relative aspect-square overflow-hidden rounded-2xl border bg-[#F1F5F9]">
-              <img src={item.url} alt={item.altText ?? "Product photo"} className="h-full w-full object-cover" />
+              <Image src={item.url} alt={item.altText ?? "Product photo"} fill sizes="(min-width: 640px) 22vw, 45vw" className="object-cover" />
               {item.isPrimary && (
                 <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#0F766E] px-2 py-1 text-[10px] font-black text-white">
                   <Star size={10} fill="currentColor" /> Cover

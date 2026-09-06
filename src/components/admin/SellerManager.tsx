@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Power, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Loader2, Power, Trash2, Wallet } from "lucide-react";
 import type { SellerAccount } from "@/services/SellerService";
 
 export function SellerManager({ sellers }: { sellers: SellerAccount[] }) {
@@ -76,16 +77,19 @@ export function SellerManager({ sellers }: { sellers: SellerAccount[] }) {
       </form>
 
       <div className="overflow-hidden rounded-3xl border bg-white">
-        <div className="grid grid-cols-[1.4fr_1fr_.7fr_.7fr_100px] gap-4 border-b px-5 py-4 text-xs font-bold uppercase tracking-widest text-[#64748B]">
+        <div className="grid grid-cols-[1.4fr_1fr_.7fr_.7fr_140px] gap-4 border-b px-5 py-4 text-xs font-bold uppercase tracking-widest text-[#64748B]">
           <span>Email</span><span>Business</span><span>Products</span><span>Status</span><span />
         </div>
         {sellers.map((seller) => (
-          <div key={seller.id} className="grid grid-cols-[1.4fr_1fr_.7fr_.7fr_100px] items-center gap-4 border-b px-5 py-4 text-sm hover:bg-[#F1F5F9]">
+          <div key={seller.id} className="grid grid-cols-[1.4fr_1fr_.7fr_.7fr_140px] items-center gap-4 border-b px-5 py-4 text-sm hover:bg-[#F1F5F9]">
             <span className="font-bold">{seller.email ?? "—"}</span>
             <span className="text-[#64748B]">{seller.businessName ?? "—"}</span>
             <span>{seller.productCount}</span>
             <span className={seller.status === "active" ? "font-bold text-[#0F766E]" : "text-[#64748B]"}>{seller.status}</span>
             <div className="flex items-center gap-1">
+              <Link href={`/admin/sellers/${seller.id}/payouts`} title="Payouts & commission" className="grid h-10 w-10 place-items-center rounded-lg text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F766E]">
+                <Wallet size={18} />
+              </Link>
               <button onClick={() => toggleStatus(seller)} disabled={busyId === seller.id} title={seller.status === "active" ? "Suspend" : "Reactivate"} className={`grid h-10 w-10 place-items-center rounded-lg hover:bg-[#F1F5F9] ${seller.status === "active" ? "text-[#0F766E] hover:text-[#0B1D3A]" : "text-[#64748B] hover:text-[#0F766E]"}`}>
                 {busyId === seller.id ? <Loader2 size={18} className="animate-spin" /> : <Power size={18} />}
               </button>

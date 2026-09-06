@@ -203,6 +203,11 @@ export interface Coupon {
   discountType: "percentage" | "fixed_amount";
   discountValue: number;
   minOrder: Money;
+  // The currency this coupon is denominated/scoped to — a "fixed_amount"
+  // coupon's discountValue is in this currency's minor units, and it can
+  // only ever be applied to a cart in the same currency (see
+  // PromotionService.validateCoupon).
+  currency: string;
   isActive: boolean;
 }
 

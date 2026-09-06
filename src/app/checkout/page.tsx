@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CartService } from "@/services/CartService";
 import { getPlatformSettings } from "@/lib/platform-settings/server";
-import { manualPaymentTotalPkr } from "@/lib/pricing";
+import { computeShippingMinor, manualPaymentTotalPkr } from "@/lib/pricing";
 import { CheckoutOptions } from "@/components/checkout/CheckoutOptions";
 import { StoreHeader } from "@/components/store/store-header";
 import { StoreFooter } from "@/components/store/store-footer";
@@ -15,12 +15,7 @@ export default async function CheckoutPage() {
   // (subtotal + shipping — coupon discount isn't known until the request is
   // submitted) so the amount shown/encoded in the QR here matches what the
   // order actually gets charged for once shipping is added.
-  const shippingMinor = cart
-    ? (() => {
-        const shippable = cart.items.filter((item) => ["physical", "book"].includes(item.productType));
-        return shippable.length ? Math.max(...shippable.map((item) => item.deliveryFeeMinor)) : 0;
-      })()
-    : 0;
+  const shippingMinor = cart ? computeShippingMinor(cart.items) : 0;
   const totalPkr = cart ? manualPaymentTotalPkr(cart.subtotal.amountMinor + shippingMinor, cart.subtotal.currency, exchangeRate) : 0;
 
   return (
