@@ -41,10 +41,15 @@ export async function mapProduct(row: Raw): Promise<Product> {
     deliveryFee: { amountMinor: row.delivery_fee_minor ?? 0, currency: row.currency },
     isFeatured: row.is_featured,
     variants: (row.product_variants ?? []).map((v: Raw) => {
-      // inventory_items is a to-one join expressed as an array by
-      // Supabase; a digital variant has no row there at all.
-      const stockQuantity = v.requires_shipping ? (v.inventory_items?.[0]?.quantity_available ?? 0) : undefined;
-      const lowStockThreshold = v.requires_shipping ? (v.inventory_items?.[0]?.low_stock_threshold ?? 5) : undefined;
+      // inventory_items.variant_id is UNIQUE, so PostgREST embeds it as a single object, not an
+      // array (an array embed only happens for a to-many relation) — reading v.inventory_items[0]
+      // here always came back undefined and silently forced every physical product's stock to 0,
+      // showing "Out of Stock" no matter what was actually in the database. A digital variant has
+      // no row there at all, hence the `Array.isArray` guard so a defensive `[0]` read (in case a
+      // future migration ever changes this to a to-many relation) doesn't crash on a plain object.
+      const inventory = Array.isArray(v.inventory_items) ? v.inventory_items[0] : v.inventory_items;
+      const stockQuantity = v.requires_shipping ? (inventory?.quantity_available ?? 0) : undefined;
+      const lowStockThreshold = v.requires_shipping ? (inventory?.low_stock_threshold ?? 5) : undefined;
       return { id: v.id, productId: v.product_id, sku: v.sku, name: v.name, price: { amountMinor: v.price_minor, currency: v.currency }, isDefault: v.is_default, requiresShipping: v.requires_shipping, weightGrams: v.weight_grams ?? undefined, stockQuantity, lowStockThreshold, inStock: v.requires_shipping ? stockQuantity! > 0 : undefined, providerPriceId: typeof v.metadata?.provider_price_id === "string" ? v.metadata.provider_price_id : undefined };
     }),
     categories: (row.product_categories ?? []).map((x: Raw) => x.category).filter(Boolean).map((c: Raw) => ({ id: c.id, slug: c.slug, name: c.name, description: c.description ?? undefined, parentId: c.parent_id ?? undefined })),
