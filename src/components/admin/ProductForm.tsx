@@ -71,6 +71,11 @@ export function ProductForm(props: Props) {
   function toggleCategory(id: string) {
     setSelectedCategoryIds((current) => (current.includes(id) ? current.filter((c) => c !== id) : [...current, id]));
   }
+  const [adAudience, setAdAudience] = useState<"" | "student" | "parent" | "teacher" | "principal">(
+    initial?.adTargeting?.audience ?? "",
+  );
+  const [adCategory, setAdCategory] = useState(initial?.adTargeting?.category ?? "");
+  const [adGradeLevel, setAdGradeLevel] = useState(initial?.adTargeting?.gradeLevel ?? "");
   const [compareAtRupees, setCompareAtRupees] = useState(
     initial?.compareAtPrice ? (initial.compareAtPrice.amountMinor / 100).toString() : "",
   );
@@ -118,6 +123,9 @@ export function ProductForm(props: Props) {
         compareAtPriceMinor: compareAtRupees ? Math.round(Number(compareAtRupees) * 100) : null,
         deliveryFeeMinor: isPhysical && !freeDelivery && deliveryFeeRupees ? Math.round(Number(deliveryFeeRupees) * 100) : 0,
         isFeatured,
+        adAudience: adAudience || undefined,
+        adCategory: adCategory.trim() || undefined,
+        adGradeLevel: adGradeLevel.trim() || undefined,
         categoryIds: selectedCategoryIds,
         variants: variants.map((v) => ({
           sku: v.sku,
@@ -231,6 +239,47 @@ export function ProductForm(props: Props) {
               <p className="mt-2 text-xs font-normal text-[#64748B]">
                 Koi category nahi mili — pehle Admin → Categories se bana lein.
               </p>
+            )}
+          </div>
+          <div className="text-sm font-bold sm:col-span-2">
+            Show as an ad on ilmai.study to{" "}
+            <Hint>
+              Ye product ilmai.study par ad ki tarah kis ko dikhna chahiye — khali chhod dein to sabko dikhega.
+              &quot;Student&quot; chunne par neeche subject/class bhi bharein taake sirf usi subject/class ke students
+              ko dikhe, sab students ko nahi.
+            </Hint>
+            <select
+              value={adAudience}
+              onChange={(e) => setAdAudience(e.target.value as typeof adAudience)}
+              className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#0F766E]"
+            >
+              <option value="">Everyone</option>
+              <option value="student">Students only</option>
+              <option value="parent">Parents only</option>
+              <option value="teacher">Teachers only</option>
+              <option value="principal">Principals only</option>
+            </select>
+            {adAudience === "student" && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <label className="text-xs font-bold normal-case tracking-normal">
+                  Subject (optional) <Hint>Jaise &quot;Chemistry&quot; ya &quot;Physics&quot; — khali chhod dein to sab subjects ke students ko dikhega.</Hint>
+                  <input
+                    value={adCategory}
+                    onChange={(e) => setAdCategory(e.target.value)}
+                    placeholder="e.g. Chemistry"
+                    className="mt-2 w-full rounded-xl border px-4 py-3 text-sm font-normal outline-none focus:border-[#0F766E]"
+                  />
+                </label>
+                <label className="text-xs font-bold normal-case tracking-normal">
+                  Class (optional) <Hint>Jaise &quot;Class 9&quot; — khali chhod dein to sab classes ke students ko dikhega.</Hint>
+                  <input
+                    value={adGradeLevel}
+                    onChange={(e) => setAdGradeLevel(e.target.value)}
+                    placeholder="e.g. Class 9"
+                    className="mt-2 w-full rounded-xl border px-4 py-3 text-sm font-normal outline-none focus:border-[#0F766E]"
+                  />
+                </label>
+              </div>
             )}
           </div>
           {role === "admin" && (

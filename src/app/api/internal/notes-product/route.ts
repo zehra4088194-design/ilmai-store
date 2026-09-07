@@ -20,6 +20,12 @@ const bodySchema = z.object({
   title: z.string().min(1).max(200),
   priceMinor: z.number().int().min(1),
   pageCount: z.number().int().min(1),
+  hasLightVersion: z.boolean(),
+  hasDarkVersion: z.boolean(),
+  // Auto-generated cover (ilmai.study's lib/library/studyCoverSvg.ts) — raw SVG markup, stored
+  // as-is as the product's primary image. Design lives on the ilmai.study side; this store just
+  // uploads whatever bytes it's handed.
+  coverSvg: z.string().min(1),
 });
 
 export async function POST(request: NextRequest) {

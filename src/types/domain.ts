@@ -75,6 +75,9 @@ export interface Product {
   variants: ProductVariant[];
   categories: Category[];
   sellerId?: string;
+  // Who on ilmai.study sees this product as an ad — see validators/product.ts's adAudience
+  // comment. Undefined/all-undefined-fields means "everyone".
+  adTargeting?: { audience?: "student" | "parent" | "teacher" | "principal"; category?: string; gradeLevel?: string };
 }
 
 export interface Address {

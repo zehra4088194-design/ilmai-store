@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
 import { AppError, ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { StorageService } from "./StorageService";
+import { ProductMediaService } from "./ProductMediaService";
 import { PHYSICAL_GOODS_ENABLED, PHYSICAL_PRODUCT_TYPES } from "@/constants/product";
 import { siteConfig } from "@/config/site";
 import type { Product } from "@/types/domain";
@@ -50,6 +51,22 @@ export async function mapProduct(row: Raw): Promise<Product> {
     // Digital files are private entitlements, never public product media.
     media,
     sellerId: row.seller_id ?? undefined,
+    adTargeting:
+      row.metadata?.ad_audience || row.metadata?.ad_category || row.metadata?.ad_grade_level
+        ? {
+            audience: row.metadata?.ad_audience || undefined,
+            category: row.metadata?.ad_category || undefined,
+            gradeLevel: row.metadata?.ad_grade_level || undefined,
+          }
+        : undefined,
+  };
+}
+
+function adTargetingMetadata(input: { adAudience?: string; adCategory?: string; adGradeLevel?: string }) {
+  return {
+    ad_audience: input.adAudience ?? null,
+    ad_category: input.adCategory ?? null,
+    ad_grade_level: input.adGradeLevel ?? null,
   };
 }
 
@@ -83,6 +100,26 @@ function productWriteError(error: { message: string; code?: string }) {
     return new ConflictError("That value is already used by another product.");
   }
   return new ValidationError(error.message);
+}
+
+// Marks the media row created from syncNotesProduct's auto-generated cover so a later re-sync
+// (price/theme change on the same resource) replaces it instead of piling up a new image on top
+// of the old one every time. Any other media on the product (e.g. an admin manually added
+// photos) is left alone except for having is_primary cleared, so the fresh cover is the one shown.
+const AUTO_COVER_ALT_TEXT = "notes-auto-cover";
+
+async function replaceAutoCover(db: ReturnType<typeof createSupabaseAdminClient>, productId: string, coverSvg: string): Promise<void> {
+  const { data: stale } = await db.from("product_media").select("id").eq("product_id", productId).eq("alt_text", AUTO_COVER_ALT_TEXT);
+  for (const row of stale ?? []) await ProductMediaService.adminDelete(productId, row.id);
+  await db.from("product_media").update({ is_primary: false }).eq("product_id", productId);
+  await ProductMediaService.adminUpload(productId, {
+    name: "cover.svg",
+    type: "image/svg+xml",
+    bytes: Buffer.from(coverSvg, "utf-8"),
+    mediaType: "image",
+    altText: AUTO_COVER_ALT_TEXT,
+    isPrimary: true,
+  });
 }
 
 function stockRowsFor(inserted: Raw[] | null, source: { requiresShipping: boolean; stockQuantity?: number; lowStockThreshold?: number }[]): Raw[] {
@@ -205,7 +242,7 @@ export const ProductService = {
 
   async adminCreate(input: z.infer<typeof adminCreateProductSchema>): Promise<Product> {
     const db = createSupabaseAdminClient();
-    const { data, error } = await db.from("products").insert({ slug: input.slug, title: input.title, description: input.description, product_type: input.productType, status: input.status, base_price_minor: input.basePriceMinor, currency: input.currency, compare_at_price_minor: input.compareAtPriceMinor ?? null, delivery_fee_minor: input.deliveryFeeMinor ?? 0, is_featured: input.isFeatured }).select("id").single();
+    const { data, error } = await db.from("products").insert({ slug: input.slug, title: input.title, description: input.description, product_type: input.productType, status: input.status, base_price_minor: input.basePriceMinor, currency: input.currency, compare_at_price_minor: input.compareAtPriceMinor ?? null, delivery_fee_minor: input.deliveryFeeMinor ?? 0, is_featured: input.isFeatured, metadata: adTargetingMetadata(input) }).select("id").single();
     if (error) throw productWriteError(error);
     if (!data) throw new ValidationError("Product could not be created.");
     const { data: variants, error: variantsError } = await db.from("product_variants").insert(input.variants.map((v) => ({ product_id: data.id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams, metadata: v.providerPriceId ? { provider_price_id: v.providerPriceId } : {} }))).select("id,requires_shipping");
@@ -220,8 +257,8 @@ export const ProductService = {
 
   async adminUpdate(input: z.infer<typeof adminUpdateProductSchema>): Promise<Product> {
     const db = createSupabaseAdminClient();
-    const { id, variants, categoryIds, ...fields } = input;
-    const update: Raw = {};
+    const { id, variants, categoryIds, adAudience, adCategory, adGradeLevel, ...fields } = input;
+    const update: Raw = { metadata: adTargetingMetadata({ adAudience, adCategory, adGradeLevel }) };
     for (const [key, value] of Object.entries(fields)) if (value !== undefined) update[key.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`)] = value;
     const { error } = await db.from("products").update(update).eq("id", id);
     if (error) throw productWriteError(error);
@@ -248,6 +285,14 @@ export const ProductService = {
     title: string;
     priceMinor: number;
     pageCount: number;
+    // Which PDF theme version(s) the resource actually has — one variant each when both exist,
+    // so the student picks light/dark right on the product page like any other variant choice;
+    // just one variant when only one theme exists (nothing to choose).
+    hasLightVersion: boolean;
+    hasDarkVersion: boolean;
+    // Auto-generated cover (ilmai.study's studyCoverSvg.ts) — raw SVG markup, stored as this
+    // product's primary image in place of the generic placeholder icon. See replaceAutoCover.
+    coverSvg: string;
   }): Promise<{ id: string; slug: string; url: string }> {
     const slug = `notes-${input.resourceId}`;
     const db = createSupabaseAdminClient();
@@ -259,46 +304,55 @@ export const ProductService = {
       db.from("categories").select("id").eq("slug", "notes").maybeSingle(),
     ]);
     const categoryIds = notesCategory ? [notesCategory.id] : [];
-    const sku = `NOTES-${input.resourceId.replace(/-/g, "").slice(0, 12).toUpperCase()}`;
+    const shortId = input.resourceId.replace(/-/g, "").slice(0, 12).toUpperCase();
     const description = `${input.pageCount} page${input.pageCount === 1 ? "" : "s"} · printed and delivered across Pakistan.`;
+
+    const themes: { key: "light" | "dark"; label: string }[] = [];
+    if (input.hasLightVersion) themes.push({ key: "light", label: "Light theme" });
+    if (input.hasDarkVersion) themes.push({ key: "dark", label: "Dark theme" });
+    if (!themes.length) themes.push({ key: "light", label: "Printed copy" }); // shouldn't happen — always a fallback
     // Print-on-demand, not real finite stock — a generous fixed count so it never shows
     // "out of stock"; there's no physical warehouse inventory to track for this product type.
-    const variant = {
-      sku,
-      name: "Printed copy",
+    const variants = themes.map((theme, index) => ({
+      sku: `NOTES-${shortId}-${theme.key.toUpperCase()}`,
+      name: theme.label,
       priceMinor: input.priceMinor,
       currency: "PKR" as const,
-      isDefault: true,
+      isDefault: index === 0,
       requiresShipping: true,
       stockQuantity: 500,
-    };
+    }));
 
-    if (existing) {
-      await this.adminUpdate({
-        id: existing.id,
-        title: input.title,
-        description,
-        basePriceMinor: input.priceMinor,
-        categoryIds,
-        variants: [variant],
-      });
-      return { id: existing.id, slug, url: `${siteConfig.url}/store/${slug}` };
-    }
+    const productId = existing
+      ? (
+          await this.adminUpdate({
+            id: existing.id,
+            title: input.title,
+            description,
+            basePriceMinor: input.priceMinor,
+            categoryIds,
+            variants,
+          })
+        ).id
+      : (
+          await this.adminCreate({
+            slug,
+            title: input.title,
+            description,
+            productType: "book",
+            status: "published",
+            basePriceMinor: input.priceMinor,
+            currency: "PKR",
+            deliveryFeeMinor: 0,
+            isFeatured: false,
+            categoryIds,
+            variants,
+          })
+        ).id;
 
-    const created = await this.adminCreate({
-      slug,
-      title: input.title,
-      description,
-      productType: "book",
-      status: "published",
-      basePriceMinor: input.priceMinor,
-      currency: "PKR",
-      deliveryFeeMinor: 0,
-      isFeatured: false,
-      categoryIds,
-      variants: [variant],
-    });
-    return { id: created.id, slug, url: `${siteConfig.url}/store/${slug}` };
+    await replaceAutoCover(db, productId, input.coverSvg);
+
+    return { id: productId, slug, url: `${siteConfig.url}/store/${slug}` };
   },
 
   async adminDelete(productId: string): Promise<void> {
@@ -330,7 +384,7 @@ export const ProductService = {
     // A seller-created listing starts in 'draft' regardless of what the
     // form sent — an admin (or the seller, once reviewed) publishes it
     // deliberately rather than a seller being able to go live unmoderated.
-    const { data, error } = await db.from("products").insert({ slug: input.slug, title: input.title, description: input.description, product_type: input.productType, status: "draft", base_price_minor: input.basePriceMinor, currency: input.currency, compare_at_price_minor: input.compareAtPriceMinor ?? null, delivery_fee_minor: input.deliveryFeeMinor ?? 0, is_featured: false, seller_id: sellerId }).select("id").single();
+    const { data, error } = await db.from("products").insert({ slug: input.slug, title: input.title, description: input.description, product_type: input.productType, status: "draft", base_price_minor: input.basePriceMinor, currency: input.currency, compare_at_price_minor: input.compareAtPriceMinor ?? null, delivery_fee_minor: input.deliveryFeeMinor ?? 0, is_featured: false, seller_id: sellerId, metadata: adTargetingMetadata(input) }).select("id").single();
     if (error) throw productWriteError(error);
     if (!data) throw new ValidationError("Product could not be created.");
     const { data: variants, error: variantsError } = await db.from("product_variants").insert(input.variants.map((v) => ({ product_id: data.id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams }))).select("id,requires_shipping");
@@ -345,9 +399,9 @@ export const ProductService = {
 
   async sellerUpdate(sellerId: string, input: z.infer<typeof adminUpdateProductSchema>): Promise<Product> {
     const db = createSupabaseAdminClient();
-    const { id, variants, categoryIds, status: _status, isFeatured: _isFeatured, ...fields } = input;
+    const { id, variants, categoryIds, status: _status, isFeatured: _isFeatured, adAudience, adCategory, adGradeLevel, ...fields } = input;
     void _status; void _isFeatured; // a seller edits their listing's content, not its publish/featured state — admin-only.
-    const update: Raw = {};
+    const update: Raw = { metadata: adTargetingMetadata({ adAudience, adCategory, adGradeLevel }) };
     for (const [key, value] of Object.entries(fields)) if (value !== undefined) update[key.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`)] = value;
     const { data: updated, error } = await db.from("products").update(update).eq("id", id).eq("seller_id", sellerId).select("id");
     if (error) throw productWriteError(error);

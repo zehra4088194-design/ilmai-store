@@ -42,6 +42,14 @@ export const adminCreateProductSchema = z.object({
   isFeatured: z.boolean().default(false),
   categoryIds: z.array(z.string().uuid()).default([]),
   variants: z.array(createProductVariantSchema).min(1),
+  // Who on ilmai.study sees this product as an ad (see lib/ads/storeProductsFeed.ts over there).
+  // Omitted/undefined = shown to everyone, same "no target_audience row" convention the main
+  // app's own house-ad banners already use. adCategory only matters when adAudience is "student"
+  // (or omitted) — a free-typed subject name like "Chemistry", matched case-insensitively against
+  // whatever categoryContext the ilmai.study page passed in, same rule ad_banners.categories uses.
+  adAudience: z.enum(["student", "parent", "teacher", "principal"]).optional(),
+  adCategory: z.string().max(60).optional(),
+  adGradeLevel: z.string().max(30).optional(),
 });
 
 export const adminUpdateProductSchema = adminCreateProductSchema.partial().extend({
