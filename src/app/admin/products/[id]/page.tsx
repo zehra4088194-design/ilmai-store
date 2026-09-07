@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ProductService } from "@/services/ProductService";
+import { CategoryService } from "@/services/CategoryService";
 import { NotFoundError } from "@/lib/errors";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ProductMediaManager } from "@/components/admin/ProductMediaManager";
@@ -12,10 +13,13 @@ type Params = Promise<{ id: string }>;
 export default async function EditProductPage({ params }: { params: Params }) {
   const { id } = await params;
 
-  const product = await ProductService.adminGetById(id).catch((err) => {
-    if (err instanceof NotFoundError) notFound();
-    throw err;
-  });
+  const [product, categories] = await Promise.all([
+    ProductService.adminGetById(id).catch((err) => {
+      if (err instanceof NotFoundError) notFound();
+      throw err;
+    }),
+    CategoryService.adminList(),
+  ]);
 
   return (
     <main className="mx-auto max-w-6xl p-6 lg:p-10">
@@ -28,7 +32,7 @@ export default async function EditProductPage({ params }: { params: Params }) {
         <Link href={`/store/${product.slug}`} className="text-sm font-bold text-[#0F766E]">View live →</Link>
       </div>
       <ProductMediaManager productId={product.id} media={product.media} />
-      <ProductForm mode="edit" product={product} />
+      <ProductForm mode="edit" product={product} categories={categories} />
     </main>
   );
 }

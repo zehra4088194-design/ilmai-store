@@ -1,15 +1,17 @@
 import { requireSeller } from "@/lib/auth/admin";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { CategoryService } from "@/services/CategoryService";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewSellerProductPage() {
   await requireSeller();
+  const categories = await CategoryService.list();
   return (
     <main className="mx-auto max-w-6xl p-6 lg:p-10">
       <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Your catalog</p>
       <h1 className="display-font mt-2 text-5xl">New product</h1>
-      <ProductForm mode="create" role="seller" />
+      <ProductForm mode="create" role="seller" categories={categories} />
     </main>
   );
 }

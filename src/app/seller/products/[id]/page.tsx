@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireSeller } from "@/lib/auth/admin";
 import { ProductService } from "@/services/ProductService";
 import { ProductEventService } from "@/services/ProductEventService";
+import { CategoryService } from "@/services/CategoryService";
 import { NotFoundError } from "@/lib/errors";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ProductMediaManager } from "@/components/admin/ProductMediaManager";
@@ -20,7 +21,10 @@ export default async function EditSellerProductPage({ params }: { params: Params
     if (err instanceof NotFoundError) notFound();
     throw err;
   });
-  const stats = (await ProductEventService.statsForProducts([product.id])).get(product.id);
+  const [stats, categories] = await Promise.all([
+    ProductEventService.statsForProducts([product.id]).then((m) => m.get(product.id)),
+    CategoryService.list(),
+  ]);
 
   return (
     <main className="mx-auto max-w-6xl p-6 lg:p-10">
@@ -40,7 +44,7 @@ export default async function EditSellerProductPage({ params }: { params: Params
       </div>
 
       <ProductMediaManager productId={product.id} media={product.media} role="seller" />
-      <ProductForm mode="edit" product={product} role="seller" />
+      <ProductForm mode="edit" product={product} role="seller" categories={categories} />
     </main>
   );
 }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { PRODUCT_TYPES, PRODUCT_STATUSES, PHYSICAL_PRODUCT_TYPES } from "@/constants/product";
 import { SUPPORTED_CURRENCIES } from "@/constants/order";
-import type { Product } from "@/types/domain";
+import type { Category, Product } from "@/types/domain";
 
 type VariantForm = {
   sku: string;
@@ -35,7 +35,10 @@ function toVariantForm(product: Product): VariantForm[] {
   }));
 }
 
-type Props = ({ mode: "create" } | { mode: "edit"; product: Product }) & { role?: "admin" | "seller" };
+type Props = ({ mode: "create" } | { mode: "edit"; product: Product }) & {
+  role?: "admin" | "seller";
+  categories?: Category[];
+};
 
 /** Plain-language "what this field does + where it shows up" note under a
  * field's label — every field on this form carries one so admin/seller
@@ -50,6 +53,7 @@ export function ProductForm(props: Props) {
   const apiBase = role === "seller" ? "/api/seller/products" : "/api/admin/products";
   const basePath = role === "seller" ? "/seller/products" : "/admin/products";
   const initial = props.mode === "edit" ? props.product : null;
+  const categories = props.categories ?? [];
 
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -61,6 +65,12 @@ export function ProductForm(props: Props) {
     (initial?.basePrice.currency as (typeof SUPPORTED_CURRENCIES)[number]) ?? "PKR",
   );
   const [isFeatured, setIsFeatured] = useState(initial?.isFeatured ?? false);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
+    initial?.categories.map((c) => c.id) ?? [],
+  );
+  function toggleCategory(id: string) {
+    setSelectedCategoryIds((current) => (current.includes(id) ? current.filter((c) => c !== id) : [...current, id]));
+  }
   const [compareAtRupees, setCompareAtRupees] = useState(
     initial?.compareAtPrice ? (initial.compareAtPrice.amountMinor / 100).toString() : "",
   );
@@ -108,7 +118,7 @@ export function ProductForm(props: Props) {
         compareAtPriceMinor: compareAtRupees ? Math.round(Number(compareAtRupees) * 100) : null,
         deliveryFeeMinor: isPhysical && !freeDelivery && deliveryFeeRupees ? Math.round(Number(deliveryFeeRupees) * 100) : 0,
         isFeatured,
-        categoryIds: [] as string[],
+        categoryIds: selectedCategoryIds,
         variants: variants.map((v) => ({
           sku: v.sku,
           name: v.name,
@@ -198,6 +208,31 @@ export function ProductForm(props: Props) {
               {PRODUCT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </label>
+          <div className="text-sm font-bold sm:col-span-2">
+            Categories <Hint>Store par kis section/filter ke neeche ye product milega (jaise &quot;Study Notes&quot;, &quot;Books&quot;) — jitni marzi select kar lein, ek bhi nahi to sirf general listing me hi dikhega.</Hint>
+            {categories.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {categories.map((c) => (
+                  <label
+                    key={c.id}
+                    className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-normal ${selectedCategoryIds.includes(c.id) ? "border-[#0F766E] bg-[#0F766E]/10" : ""}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedCategoryIds.includes(c.id)}
+                      onChange={() => toggleCategory(c.id)}
+                      className="h-4 w-4"
+                    />
+                    {c.name}
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-xs font-normal text-[#64748B]">
+                Koi category nahi mili — pehle Admin → Categories se bana lein.
+              </p>
+            )}
+          </div>
           {role === "admin" && (
             <label className="text-sm font-bold">
               Status <Hint>Draft = sirf aapko dikhega, kisi customer ko nahi. Published = live store pe sabko dikhega. Archived = store se hat jayega.</Hint>

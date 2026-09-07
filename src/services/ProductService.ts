@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
 import { AppError, ConflictError, NotFoundError, ValidationError } from "@/lib/errors";
 import { StorageService } from "./StorageService";
 import { PHYSICAL_GOODS_ENABLED, PHYSICAL_PRODUCT_TYPES } from "@/constants/product";
+import { siteConfig } from "@/config/site";
 import type { Product } from "@/types/domain";
 import type { z } from "zod";
 import type { productListQuerySchema, adminCreateProductSchema, adminUpdateProductSchema } from "@/validators/product";
@@ -229,6 +230,75 @@ export const ProductService = {
     const { data, error: readError } = await db.from("products").select(select).eq("id", id).single();
     if (readError || !data) throw new NotFoundError("Product not found.");
     return mapProduct(data);
+  },
+
+  // Called from POST /api/internal/notes-product (a bearer-secret service-to-service route —
+  // see that route's comment) when a student on ilmai.study taps "Order printed notes" on a
+  // library resource. Idempotent by design: the slug is deterministic from resourceId
+  // (`notes-<resourceId>`), so a repeat call for the same resource updates the existing
+  // product's price/title in place instead of creating a duplicate — the price can legitimately
+  // change if ilmai.study's per-page rate or the resource's cached page count changes.
+  //
+  // Always product_type "book" (not "notes") — this store's own UI (product-detail.tsx) treats
+  // product_type "notes" as a digital/instant-access item, but these are physical printed
+  // copies priced by page count and shipped, so "book" (already in PHYSICAL_PRODUCT_TYPES) is
+  // what actually gets the correct "delivery within Pakistan" checkout treatment.
+  async syncNotesProduct(input: {
+    resourceId: string;
+    title: string;
+    priceMinor: number;
+    pageCount: number;
+  }): Promise<{ id: string; slug: string; url: string }> {
+    const slug = `notes-${input.resourceId}`;
+    const db = createSupabaseAdminClient();
+    const [{ data: existing }, { data: notesCategory }] = await Promise.all([
+      db.from("products").select("id").eq("slug", slug).maybeSingle(),
+      // Looked up by slug, not a hardcoded id, so this still works if the category is ever
+      // recreated with a different id (e.g. on a fresh environment) — see supabase/migrations
+      // for where the "notes" (Study Notes) category is seeded.
+      db.from("categories").select("id").eq("slug", "notes").maybeSingle(),
+    ]);
+    const categoryIds = notesCategory ? [notesCategory.id] : [];
+    const sku = `NOTES-${input.resourceId.replace(/-/g, "").slice(0, 12).toUpperCase()}`;
+    const description = `${input.pageCount} page${input.pageCount === 1 ? "" : "s"} · printed and delivered across Pakistan.`;
+    // Print-on-demand, not real finite stock — a generous fixed count so it never shows
+    // "out of stock"; there's no physical warehouse inventory to track for this product type.
+    const variant = {
+      sku,
+      name: "Printed copy",
+      priceMinor: input.priceMinor,
+      currency: "PKR" as const,
+      isDefault: true,
+      requiresShipping: true,
+      stockQuantity: 500,
+    };
+
+    if (existing) {
+      await this.adminUpdate({
+        id: existing.id,
+        title: input.title,
+        description,
+        basePriceMinor: input.priceMinor,
+        categoryIds,
+        variants: [variant],
+      });
+      return { id: existing.id, slug, url: `${siteConfig.url}/store/${slug}` };
+    }
+
+    const created = await this.adminCreate({
+      slug,
+      title: input.title,
+      description,
+      productType: "book",
+      status: "published",
+      basePriceMinor: input.priceMinor,
+      currency: "PKR",
+      deliveryFeeMinor: 0,
+      isFeatured: false,
+      categoryIds,
+      variants: [variant],
+    });
+    return { id: created.id, slug, url: `${siteConfig.url}/store/${slug}` };
   },
 
   async adminDelete(productId: string): Promise<void> {
