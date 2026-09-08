@@ -9,7 +9,7 @@ import type { Product, ProductVariant } from "@/types/domain";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
 import { WishlistButton } from "@/components/store/wishlist-button";
 import { NotifyMeButton } from "@/components/store/notify-me-button";
-import { formatMoney } from "@/lib/pricing";
+import { formatMoney, isNotesOrderSlug, NOTES_DELIVERY_TIERS } from "@/lib/pricing";
 import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 
 const money = formatMoney;
@@ -24,7 +24,11 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
   const price = variant?.price ?? product.basePrice;
   const compareAt = product.compareAtPrice && product.compareAtPrice.amountMinor > price.amountMinor ? product.compareAtPrice : undefined;
   const digital = ["digital", "course", "notes", "test_series"].includes(product.productType);
-  const freeDelivery = product.deliveryFee.amountMinor === 0;
+  // ilmai.study print-on-demand copies (see isNotesOrderSlug) don't have a flat delivery fee —
+  // it scales with how many copies end up in the order (computeShippingMinor at checkout), so
+  // this shows the tier schedule instead of a single misleading "Free"/flat figure up front.
+  const isNotesOrder = isNotesOrderSlug(product.slug);
+  const freeDelivery = !isNotesOrder && product.deliveryFee.amountMinor === 0;
   // Stock only applies to shippable variants — digital variants never
   // carry an inventory row, so stockQuantity stays undefined for them.
   const trackingStock = variant?.requiresShipping && variant.stockQuantity !== undefined;
@@ -136,10 +140,17 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
         <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[#0F766E]">
           {digital || !PHYSICAL_GOODS_ENABLED
             ? <><Download size={13} /> Instant digital delivery</>
-            : freeDelivery
-              ? <><Truck size={13} /> Free delivery on this order</>
-              : <><Truck size={13} /> Delivery: {money(product.deliveryFee)}</>}
+            : isNotesOrder
+              ? <><Truck size={13} /> Delivery from {NOTES_DELIVERY_TIERS[0].label}</>
+              : freeDelivery
+                ? <><Truck size={13} /> Free delivery on this order</>
+                : <><Truck size={13} /> Delivery: {money(product.deliveryFee)}</>}
         </p>
+        {isNotesOrder && (
+          <p className="mt-1 text-xs text-[#64748B]">
+            {NOTES_DELIVERY_TIERS.map((tier, i) => `${tier.label} for ${i === 0 ? "1" : NOTES_DELIVERY_TIERS[i - 1]!.maxQty + 1}–${tier.maxQty} copies`).join(" · ")}
+          </p>
+        )}
         {trackingStock && (
           outOfStock
             ? <><p className="mt-2 text-xs font-black uppercase tracking-[.1em] text-red-600">Out of stock</p><NotifyMeButton variantId={variant!.id} /></>

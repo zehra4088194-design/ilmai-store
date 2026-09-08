@@ -301,14 +301,16 @@ export const ProductService = {
   }): Promise<{ id: string; slug: string; url: string }> {
     const slug = `notes-${input.resourceId}`;
     const db = createSupabaseAdminClient();
-    const [{ data: existing }, { data: notesCategory }] = await Promise.all([
+    const [{ data: existing }, { data: booksCategory }] = await Promise.all([
       db.from("products").select("id").eq("slug", slug).maybeSingle(),
+      // "books", not the separate "notes" (Study Notes) category — every resource synced from
+      // ilmai.study (notes, textbook chapters, pairing schemes, guess papers alike) is a physical
+      // printed product_type "book" here, so it belongs in the Books category for browsing too.
       // Looked up by slug, not a hardcoded id, so this still works if the category is ever
-      // recreated with a different id (e.g. on a fresh environment) — see supabase/migrations
-      // for where the "notes" (Study Notes) category is seeded.
-      db.from("categories").select("id").eq("slug", "notes").maybeSingle(),
+      // recreated with a different id (e.g. on a fresh environment).
+      db.from("categories").select("id").eq("slug", "books").maybeSingle(),
     ]);
-    const categoryIds = notesCategory ? [notesCategory.id] : [];
+    const categoryIds = booksCategory ? [booksCategory.id] : [];
     const shortId = input.resourceId.replace(/-/g, "").slice(0, 12).toUpperCase();
     const description = `${input.pageCount} page${input.pageCount === 1 ? "" : "s"} · printed and delivered across Pakistan.`;
 

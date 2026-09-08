@@ -9,6 +9,7 @@ import { PromotionService } from "./PromotionService";
 import { InventoryService } from "./InventoryService";
 import { OrderAccessService } from "./OrderAccessService";
 import { EmailService } from "./EmailService";
+import { computeShippingMinor } from "@/lib/pricing";
 import type { Order } from "@/types/domain";
 import type { z } from "zod";
 import type { checkoutSchema, fulfillmentUpdateSchema } from "@/validators/commerce";
@@ -94,13 +95,12 @@ export const OrderService = {
     if (!cart.items.length) throw new ValidationError("Your cart is empty.");
     const userId = await currentUserId();
     const discount = input.couponCode ? (await PromotionService.validateCoupon(input.couponCode, cart.subtotal.amountMinor, cart.subtotal.currency)).discountMinor : 0;
-    const shippableItems = cart.items.filter((item) => ["physical", "book"].includes(item.productType));
-    const hasShipping = shippableItems.length > 0;
+    const hasShipping = cart.items.some((item) => ["physical", "book"].includes(item.productType));
     if (hasShipping && !input.shippingAddress) throw new ValidationError("A shipping address is required for physical products.");
-    // One order = one parcel: when the cart mixes products with different
-    // delivery fees, charge the single highest one rather than stacking
-    // every item's fee — mirrors how a real shipment is priced.
-    const shipping = shippableItems.length ? Math.max(...shippableItems.map((item) => item.deliveryFeeMinor)) : 0;
+    // Shared with the checkout page/API so what the customer is shown/charged before paying is
+    // exactly what the order is created with — this used to be a second, separately-maintained
+    // copy of the same "single highest, never summed" math (see computeShippingMinor's comment).
+    const shipping = computeShippingMinor(cart.items);
     const orderNumber = `IL-${new Date().getFullYear()}-${randomInt(100000, 999999)}`;
     const { data: row, error } = await db.from("orders").insert({ order_number: orderNumber, user_id: userId ?? null, status: "pending", payment_status: "pending", fulfillment_status: "unfulfilled", subtotal_minor: cart.subtotal.amountMinor, discount_minor: discount, shipping_minor: shipping, tax_minor: 0, total_minor: Math.max(0, cart.subtotal.amountMinor - discount + shipping), currency: cart.subtotal.currency, coupon_code: input.couponCode?.toUpperCase() ?? null, customer_email: input.customerEmail, customer_phone: input.customerPhone ?? null, customer_note: input.customerNote, checkout_idempotency_key: options.idempotencyKey ?? null, ...(options.adReferral ? { metadata: { ad_referral: options.adReferral } } : {}) }).select("id").single();
     if (error || !row) throw new Error(error?.message ?? "Order could not be created.");

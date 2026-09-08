@@ -107,6 +107,7 @@ export interface CartItem {
   productId: string;
   productTitle: string;
   productType: ProductType;
+  productSlug: string;
   variantName: string;
   quantity: number;
   unitPrice: Money;
