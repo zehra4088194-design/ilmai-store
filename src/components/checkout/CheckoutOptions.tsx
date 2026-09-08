@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Check, Clipboard, CreditCard, Loader2, Smartphone, WalletCards } from "lucide-react";
 import { MANUAL_PAYMENT_OPTIONS, SUPPORT_WHATSAPP_NUMBER, TRANSACTION_FEE_USD } from "@/constants/manual-payment";
+import { SAFEPAY_ENABLED } from "@/constants/order";
 import { siteConfig } from "@/config/site";
 import { getRecaptchaToken } from "@/lib/recaptcha-client";
 import { computeShippingMinor, manualPaymentTotalPkr } from "@/lib/pricing";
@@ -211,7 +212,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
         <WalletCards className="text-[#0F766E]" size={28}/>
       </div>
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm font-bold text-[#0B1D3A]">Billing country<select value={country} onChange={(event) => { setCountry(event.target.value); if (event.target.value !== "PK") setMethod("safepay"); }} className="mt-2 w-full rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#0F766E]"><option value="PK">Pakistan</option><option value="AE">United Arab Emirates</option><option value="US">United States</option><option value="OTHER">Other</option></select></label>
+        <label className="block text-sm font-bold text-[#0B1D3A]">Billing country<select value={country} onChange={(event) => { setCountry(event.target.value); if (SAFEPAY_ENABLED && event.target.value !== "PK") setMethod("safepay"); }} className="mt-2 w-full rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#0F766E]"><option value="PK">Pakistan</option><option value="AE">United Arab Emirates</option><option value="US">United States</option><option value="OTHER">Other</option></select></label>
         <label className="block text-sm font-bold text-[#0B1D3A]">Phone number<input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="03xx xxxxxxx" className="mt-2 w-full rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#0F766E]"/><span className="mt-1 block text-xs font-normal text-[#64748B]">So we can reach you about this order.</span></label>
       </div>
       {requiresShipping && <div className="mt-6 rounded-2xl border bg-[#F1F5F9] p-4"><p className="text-sm font-bold text-[#0B1D3A]">Shipping address</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" className="rounded-xl border bg-white px-4 py-3"/><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" className="rounded-xl border bg-white px-4 py-3"/><input value={line1} onChange={(e) => setLine1(e.target.value)} placeholder="Address" className="rounded-xl border bg-white px-4 py-3 sm:col-span-2"/><input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="rounded-xl border bg-white px-4 py-3"/><input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="City code / postal code" className="rounded-xl border bg-white px-4 py-3"/></div></div>}
@@ -232,9 +233,15 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
       </div>
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         {country === "PK" && <button type="button" onClick={() => setMethod("jazzcash")} className={`rounded-2xl border p-4 text-left ${method === "jazzcash" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><Smartphone size={19} className="text-[#0F766E]"/><span className="font-bold">Local wallet</span></div><p className="mt-2 text-sm text-[#64748B]">JazzCash QR · manual review</p></button>}
-        <button type="button" onClick={() => setMethod("safepay")} className={`rounded-2xl border p-4 text-left ${method === "safepay" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><CreditCard size={19} className="text-[#0F766E]"/><span className="font-bold">Card checkout</span></div><p className="mt-2 text-sm text-[#64748B]">Secure Safepay checkout</p></button>
+        {/* Kill switch — flip SAFEPAY_ENABLED back to true in constants/order.ts to bring this back. */}
+        {SAFEPAY_ENABLED && <button type="button" onClick={() => setMethod("safepay")} className={`rounded-2xl border p-4 text-left ${method === "safepay" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><CreditCard size={19} className="text-[#0F766E]"/><span className="font-bold">Card checkout</span></div><p className="mt-2 text-sm text-[#64748B]">Secure Safepay checkout</p></button>}
       </div>
-      {method === "jazzcash" && country === "PK" ? <div className="mt-8 rounded-3xl bg-[#F1F5F9] p-5">
+      {!SAFEPAY_ENABLED && country !== "PK" ? (
+        <div className="mt-8 rounded-3xl bg-[#F1F5F9] p-5 text-center">
+          <p className="text-sm font-bold text-[#0B1D3A]">Card checkout is temporarily unavailable.</p>
+          <p className="mt-2 text-sm leading-6 text-[#64748B]">We only take the JazzCash wallet right now, which needs a Pakistani billing country. Please check back soon, or email <a className="font-bold text-[#0F766E]" href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a> for help.</p>
+        </div>
+      ) : method === "jazzcash" && country === "PK" ? <div className="mt-8 rounded-3xl bg-[#F1F5F9] p-5">
         <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm text-[#64748B]">Send exactly</p><p className="mt-1 text-3xl font-black text-[#0B1D3A]">{amountLabel}</p></div><span className="rounded-full bg-[#0F766E] px-3 py-1 text-xs font-bold text-white">includes USD {TRANSACTION_FEE_USD.toFixed(2)} fee</span></div>
         <div className="mt-5 grid place-items-center rounded-2xl bg-white p-4"><div className="min-h-64 min-w-64 rounded-lg bg-white p-2">{qrDataUrl ? <><span className="sr-only">Payment QR code</span><Image src={qrDataUrl} alt={`JazzCash QR for ${amountLabel}`} width={256} height={256} unoptimized className="h-64 w-64"/></> : <div className="grid h-64 w-64 place-items-center text-center text-sm text-[#64748B]">{qrError ? qrError : <Loader2 className="animate-spin"/>}</div>}</div></div>
         <div className="mt-5 rounded-2xl border bg-white p-4"><p className="text-xs font-bold uppercase tracking-widest text-[#64748B]">JazzCash wallet</p><p className="mt-2 font-bold text-[#0B1D3A]">{wallet.accountName}</p><div className="mt-2 flex items-center justify-between gap-3"><span className="text-lg font-black tracking-wider text-[#0F766E]">{wallet.number}</span><button type="button" onClick={copyNumber} className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-bold">{copied ? <Check size={14}/> : <Clipboard size={14}/>} {copied ? "Copied" : "Copy"}</button></div></div>

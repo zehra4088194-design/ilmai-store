@@ -18,7 +18,7 @@ export default async function AdminOrdersPage() {
       {orders.map((order) => {
         const claim = claims.get(order.id);
         const isManualPending = order.paymentProvider === "jazzcash" && order.paymentStatus === "pending";
-        return <article key={order.id} className="rounded-3xl border bg-white p-6">
+        return <article key={order.id} id={`order-${order.id}`} className="scroll-mt-6 rounded-3xl border bg-white p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div><h2 className="font-bold">{order.orderNumber}</h2><p className="mt-1 text-sm text-[#64748B]">{order.customerEmail} · {new Date(order.createdAt).toLocaleDateString()}</p></div>
             <div className="flex flex-wrap items-center justify-end gap-2 text-xs font-bold">

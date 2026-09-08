@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CheckoutService } from "@/services/CheckoutService";
 import { checkoutSchema } from "@/validators/commerce";
+import { SAFEPAY_ENABLED } from "@/constants/order";
 import { isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 import { getClientAddress, rateLimiter } from "@/lib/rate-limit";
@@ -15,6 +16,9 @@ import { ValidationError } from "@/lib/errors";
  */
 export async function POST(request: NextRequest) {
   try {
+    // CheckoutOptions.tsx hides card checkout while this is off, but a
+    // stale page or a direct request must not bypass the kill switch.
+    if (!SAFEPAY_ENABLED) throw new ValidationError("Card checkout is temporarily unavailable — please use the JazzCash wallet option instead.");
     const rate = await rateLimiter.check(`checkout:${getClientAddress(request)}`, 10, 60);
     if (!rate.allowed) return NextResponse.json({ error: "Too many checkout attempts. Please try again shortly." }, { status: 429, headers: { "Retry-After": String(Math.max(1, Math.ceil((rate.resetAt.getTime() - Date.now()) / 1000))) } });
     const body = parseOrThrow(checkoutSchema, await request.json());
