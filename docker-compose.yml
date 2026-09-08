@@ -79,3 +79,25 @@ services:
       resources:
         limits:
           memory: 1G
+
+  cron:
+    build:
+      context: services/cron
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_INTERNAL_URL: http://web:3000
+      # Unlike ilmai.study's own cron service (which requires this with :?), this deployment's
+      # CRON_SECRET has never actually been confirmed set anywhere — :- keeps a missing value from
+      # taking down the whole `docker compose up` the first time this deploys. An empty/missing
+      # secret just means every request below keeps 401ing exactly like it silently has been
+      # already, not a broken deployment.
+      CRON_SECRET: ${CRON_SECRET:-}
+      TZ: UTC
+    depends_on:
+      web:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 64M

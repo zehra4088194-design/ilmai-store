@@ -15,8 +15,14 @@ never reach the browser (see `SECURITY.md` §1).
 | `ILMAI_STUDY_AD_CONVERSION_URL` | server | HTTPS endpoint on ilmai.study that receives paid attributed-order events |
 | `ILMAI_STUDY_AD_CONVERSION_SECRET` | server | Optional bearer token for the conversion endpoint; never expose client-side |
 | `NOTES_PRODUCT_SYNC_SECRET` | server | Bearer secret for `POST /api/internal/notes-product` — ilmai.study's "Order printed notes" button calls this to create/update the matching store product. Same value must be set on ilmai.study. |
-| `EXCHANGE_RATE_API_KEY` | server | ExchangeRate-API v6 key used by the daily USD/PKR refresh |
-| `CRON_SECRET` | server | Bearer secret required by the scheduled exchange-rate endpoint |
+| `EXCHANGE_RATE_API_KEY` | server | ExchangeRate-API v6 key used by the scheduled USD/PKR refresh |
+| `CRON_SECRET` | server | Bearer secret required by every `/api/cron/*` route, including the exchange-rate one — must be set for `services/cron` (see below) to actually be able to call them |
+
+`vercel.json`'s `crons` block only takes effect when this app is hosted on Vercel — this
+deployment runs as a plain Docker container (see `docker-compose.yaml`), where that file does
+nothing. The `cron` service in `docker-compose.yaml` is what actually calls `/api/cron/usd-pkr-rate`,
+`/api/cron/abandoned-cart`, and `/api/cron/release-inventory` on a schedule (see
+`services/cron/crontab`) — without `CRON_SECRET` set, those calls all just 401 silently.
 
 ## Supabase
 
