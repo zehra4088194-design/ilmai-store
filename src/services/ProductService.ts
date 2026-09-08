@@ -183,7 +183,13 @@ export const ProductService = {
   },
   async list(query: z.infer<typeof productListQuerySchema>): Promise<{ items: Product[]; total: number }> {
     const db = await createSupabaseServerClient();
-    let request = db.from("products").select(query.categorySlug ? selectFilteredByCategory : select, { count: "exact" }).eq("status", "published");
+    let request = db.from("products").select(query.categorySlug ? selectFilteredByCategory : select, { count: "exact" }).eq("status", "published")
+      // syncNotesProduct's "notes-<resourceId>" products stay published (so the one student who
+      // ordered it can still open its direct link, pick a theme, and check out normally) but are
+      // never meant to be a browsable storefront listing — this is the one place that excludes
+      // them from general browsing/search, which is also what keeps them out of the
+      // store_products ad feed (it reads this same list via /api/products).
+      .not("slug", "like", "notes-%");
     if (!PHYSICAL_GOODS_ENABLED) request = request.not("product_type", "in", `(${PHYSICAL_PRODUCT_TYPES.join(",")})`);
     if (query.search) {
       // search_product_ids (see migration fuzzy_product_search) does a
@@ -223,7 +229,9 @@ export const ProductService = {
     let request = (await createSupabaseServerClient())
       .from("products")
       .select("slug, updated_at")
-      .eq("status", "published");
+      .eq("status", "published")
+      // Unlisted (see list()'s comment) — no reason to publish these one-off links in the sitemap.
+      .not("slug", "like", "notes-%");
     if (!PHYSICAL_GOODS_ENABLED) request = request.not("product_type", "in", `(${PHYSICAL_PRODUCT_TYPES.join(",")})`);
     const { data, error } = await request.order("updated_at", { ascending: false }).limit(5000);
     if (error) throw new Error(error.message);
@@ -280,6 +288,15 @@ export const ProductService = {
   // (`notes-<resourceId>`), so a repeat call for the same resource updates the existing
   // product's price/title in place instead of creating a duplicate — the price can legitimately
   // change if ilmai.study's per-page rate or the resource's cached page count changes.
+  //
+  // Deliberately unlisted, not a real storefront listing: stays product_categories "Books" and
+  // status "published" (so the direct link this call's caller gets back still works end to end —
+  // theme picker, add to cart, buy — with zero special-casing anywhere else in checkout/orders),
+  // but ProductService.list/listPublishedForSitemap both exclude every "notes-*" slug from
+  // browsing, search, the sitemap, and — since the store_products ad feed reads that same public
+  // list — from ads too. Nobody finds this by browsing the store; only the one student who
+  // ordered it ever gets the link. A hard delete isn't an option once it's been ordered anyway
+  // (products.id is referenced by order_items with no ON DELETE CASCADE — see productDeleteError).
   //
   // Always product_type "book" (not "notes") — this store's own UI (product-detail.tsx) treats
   // product_type "notes" as a digital/instant-access item, but these are physical printed
