@@ -14,11 +14,12 @@ type Props = { initialSearch?: string; categories?: Category[] };
 
 // These link by the real category slug (see FilterSidebar/CategoryManager —
 // "digital"/"books"/"courses"/"bundles" are seeded category slugs), not a
-// `search=` text match — a `search=` link only ever matched product
-// title/description, never actual category membership.
+// `search=` text match — a `search=` link only ever matched product title/description,
+// never actual category membership.
 const NAV_LINKS: Array<[string, string]> = [
   ["Home", "/store"],
   ["Shop", "/store"],
+  ["IlmAI Notes", "/store/ilm-ai-notes"],
   ["Digital Products", "/store?category=digital"],
   ...(PHYSICAL_GOODS_ENABLED ? [["Books", "/store?category=books"] as [string, string]] : []),
   ["Courses", "/store?category=courses"],
