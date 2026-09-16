@@ -43,7 +43,7 @@ services:
       ILMAI_STUDY_AD_CONVERSION_URL: ${ILMAI_STUDY_AD_CONVERSION_URL:-}
       ILMAI_STUDY_AD_CONVERSION_SECRET: ${ILMAI_STUDY_AD_CONVERSION_SECRET:-}
       EXCHANGE_RATE_API_KEY: ${EXCHANGE_RATE_API_KEY:-}
-      CRON_SECRET: ${CRON_SECRET:-}
+      CRON_SECRET: ${CRON_SECRET:?CRON_SECRET must be set for scheduled jobs}
       BREVO_API_KEY: ${BREVO_API_KEY:-}
       BREVO_FROM_EMAIL: ${BREVO_FROM_EMAIL:-store@ilmai.store}
       BREVO_FROM_NAME: ${BREVO_FROM_NAME:-IlmAI Store}
@@ -87,12 +87,7 @@ services:
     restart: unless-stopped
     environment:
       APP_INTERNAL_URL: http://web:3000
-      # Unlike ilmai.study's own cron service (which requires this with :?), this deployment's
-      # CRON_SECRET has never actually been confirmed set anywhere — :- keeps a missing value from
-      # taking down the whole `docker compose up` the first time this deploys. An empty/missing
-      # secret just means every request below keeps 401ing exactly like it silently has been
-      # already, not a broken deployment.
-      CRON_SECRET: ${CRON_SECRET:-}
+      CRON_SECRET: ${CRON_SECRET:?CRON_SECRET must be set for scheduled jobs}
       TZ: UTC
     depends_on:
       web:
