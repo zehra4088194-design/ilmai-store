@@ -2,11 +2,16 @@ name: Daily USD/PKR rate fetch
 
 on:
   schedule:
-    - cron: "0 20 * * *"
+    # Match ilmai.study: 12:00 AM Pakistan time (UTC+5).
+    - cron: "0 19 * * *"
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: usd-pkr-rate
+  cancel-in-progress: false
 
 jobs:
   fetch-rate:
@@ -17,6 +22,15 @@ jobs:
           APP_URL: ${{ secrets.APP_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          curl --fail --silent --show-error --retry 2 \
+          set -euo pipefail
+          if [ -z "$APP_URL" ]; then
+            echo "::error::APP_URL repository secret is not set."
+            exit 1
+          fi
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET repository secret is not set."
+            exit 1
+          fi
+          curl --fail --silent --show-error --retry 3 \
             -H "Authorization: Bearer ${CRON_SECRET}" \
             "${APP_URL%/}/api/cron/usd-pkr-rate"
