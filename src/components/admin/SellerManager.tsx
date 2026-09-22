@@ -76,7 +76,7 @@ export function SellerManager({ sellers }: { sellers: SellerAccount[] }) {
         {error && <p className="mt-3 text-sm font-semibold text-red-600">{error}</p>}
       </form>
 
-      <div className="overflow-hidden rounded-3xl border bg-white">
+      <div className="overflow-x-auto rounded-3xl border bg-white"><div className="min-w-[720px]">
         <div className="grid grid-cols-[1.4fr_1fr_.7fr_.7fr_140px] gap-4 border-b px-5 py-4 text-xs font-bold uppercase tracking-widest text-[#64748B]">
           <span>Email</span><span>Business</span><span>Products</span><span>Status</span><span />
         </div>
