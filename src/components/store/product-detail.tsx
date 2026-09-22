@@ -180,7 +180,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
           </div>
         )}
 
-        <div className="mt-7 flex flex-wrap items-center gap-3">
+        <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap sm:items-center">
           <div className="qty-stepper">
             <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} aria-label="Decrease quantity"><Minus size={14} /></button>
             <span>{quantity}</span>
@@ -191,7 +191,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
             quantity={quantity}
             label={outOfStock ? "Out of stock" : "Add to Cart"}
             disabled={outOfStock}
-            className="flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#0B1D3A] px-6 text-sm font-black text-[#0B1D3A] transition hover:bg-[#0B1D3A] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl border-2 sm:flex-1 border-[#0B1D3A] px-6 text-sm font-black text-[#0B1D3A] transition hover:bg-[#0B1D3A] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           />
           <button
             type="button"
@@ -211,7 +211,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
                 setBuying(false);
               }
             }}
-            className="gold-btn min-h-[46px] flex-1 px-6"
+            className="gold-btn min-h-[46px] w-full px-6 sm:flex-1"
           >
             {buying ? "Preparing…" : outOfStock ? "Out of stock" : "Buy Now"}
           </button>
