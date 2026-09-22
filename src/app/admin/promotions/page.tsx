@@ -42,7 +42,8 @@ export default async function AdminPromotionsPage() {
       <section className="mt-14">
         <h2 className="display-font text-2xl text-[#0B1D3A]">Coupons</h2>
         <CouponForm />
-        <div className="mt-4 overflow-hidden rounded-3xl border bg-white">
+        <div className="mt-4 overflow-x-auto rounded-3xl border bg-white">
+          <div className="min-w-[650px]">
           <div className="grid grid-cols-[1fr_1fr_1fr_80px_90px] gap-4 border-b px-5 py-4 text-xs font-bold uppercase tracking-widest text-[#64748B]">
             <span>Code</span><span>Discount</span><span>Min order</span><span>Status</span><span />
           </div>
@@ -56,6 +57,7 @@ export default async function AdminPromotionsPage() {
             </div>
           ))}
           {!coupons.length && <p className="p-8 text-center text-[#64748B]">No coupons yet.</p>}
+          </div>
         </div>
       </section>
 
