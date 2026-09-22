@@ -54,7 +54,7 @@ export default async function AccountPage() {
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">My account</p>
-            <h1 className="display-font mt-2 text-5xl leading-tight">Your orders.</h1>
+            <h1 className="display-font mt-2 text-4xl leading-tight sm:text-5xl">Your orders.</h1>
             {email && <p className="mt-2 text-sm text-[#64748B]">Signed in as {email}</p>}
           </div>
         </div>
