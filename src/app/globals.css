@@ -506,3 +506,17 @@ button, input, select, textarea { font: inherit; }
 .prose-policy a { color: var(--teal); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 .prose-policy code { background: var(--gray); border-radius: 6px; padding: .15em .45em; font-size: .9em; }
 .prose-policy strong { color: var(--navy); }
+
+
+/* ── Mobile safety / responsive polish ──────────────────────────────── */
+@media (max-width: 639px) {
+  .hero-accent { white-space: normal; }
+  .curated-strip { padding: 24px 18px; border-radius: 22px; }
+  .detail-trust { min-width: 0; padding-inline: 4px; }
+  .detail-trust span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
