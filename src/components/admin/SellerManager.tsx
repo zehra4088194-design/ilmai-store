@@ -101,6 +101,7 @@ export function SellerManager({ sellers }: { sellers: SellerAccount[] }) {
         ))}
         {!sellers.length && <p className="p-10 text-center text-[#64748B]">No sellers yet.</p>}
       </div>
+      </div>
     </div>
   );
 }
