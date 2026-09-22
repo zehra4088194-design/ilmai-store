@@ -141,7 +141,7 @@ export function StoreFooter() {
             <span className="text-white/20">·</span>
             <Link href="/refund-policy" className="hover:text-[#0F766E]">Refunds</Link>
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             {["VISA", "Mastercard", "JazzCash", "Easypaisa"].map((p) => (
               <span key={p} className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-[#B9C4E0]">{p}</span>
             ))}
