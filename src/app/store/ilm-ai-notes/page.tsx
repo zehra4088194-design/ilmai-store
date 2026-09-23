@@ -10,6 +10,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "IlmAI Generated Study Notes | Official Store",
+  description: "Browse generated study-note products created through ilmai.study and fulfilled through the official IlmAI Store.",
+  alternates: { canonical: "/store/ilm-ai-notes" },
+};
+
 function primaryImage(product: Awaited<ReturnType<typeof IlmaiNotesService.listPublic>>[number]) {
   return product.media.find((m) => m.isPrimary) ?? product.media[0];
 }
