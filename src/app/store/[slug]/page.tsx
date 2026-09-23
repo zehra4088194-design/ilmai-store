@@ -13,10 +13,42 @@ import { StoreHeader } from "@/components/store/store-header";
 import { productListQuerySchema } from "@/validators/product";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { siteConfig } from "@/config/site";
 
 export const dynamic = "force-dynamic";
 
 type Params = Promise<{ slug: string }>;
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await ProductService.getBySlug(slug).catch(() => null);
+  if (!product) {
+    return { title: "Product Not Found", robots: { index: false, follow: false } };
+  }
+
+  const title = `${product.title} | IlmAI Store`;
+  const description = product.description || `${product.title} — an educational product from the official IlmAI Store.`;
+  return {
+    title,
+    description,
+    keywords: [
+      product.title,
+      "IlmAI",
+      "study notes",
+      "educational products",
+      ...(product.categories || []).map((category) => category.name),
+    ],
+    alternates: { canonical: `/store/${product.slug}` },
+    openGraph: {
+      type: "website",
+      url: `/store/${product.slug}`,
+      title,
+      description,
+      ...(product.media[0]?.url ? { images: [product.media[0].url] } : {}),
+    },
+  };
+}
 
 export default async function ProductPage({ params }: { params: Params }) {
   const { slug } = await params;
@@ -36,6 +68,31 @@ export default async function ProductPage({ params }: { params: Params }) {
       : Promise.resolve([]),
     user ? ReviewService.hasPurchased(user.id, product.id) : Promise.resolve(false),
   ]);
+
+  const prices = product.variants.length
+    ? product.variants.map((variant) => variant.price.amountMinor / 100)
+    : [product.basePrice.amountMinor / 100];
+  const currency = product.variants[0]?.price.currency || product.basePrice.currency;
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    description: product.description || `${product.title} — an educational product from IlmAI.`,
+    url: `${siteConfig.url.replace(/\/$/, "")}/store/${product.slug}`,
+    brand: { "@type": "Brand", name: "IlmAI" },
+    category: product.categories[0]?.name || "Educational products",
+    ...(product.media.length ? { image: product.media.map((media) => media.url) } : {}),
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: currency,
+      lowPrice: Math.min(...prices).toFixed(2),
+      highPrice: Math.max(...prices).toFixed(2),
+      offerCount: product.variants.length || 1,
+      availability: product.variants.some((variant) => !variant.requiresShipping || variant.inStock !== false)
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  };
 
   // Fire-and-forget: runs after the response is sent, never delays the page.
   after(() => ProductEventService.recordView(product.id));
@@ -59,6 +116,10 @@ export default async function ProductPage({ params }: { params: Params }) {
         </div>
       </div>
       <StoreFooter />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema).replace(/</g, "\\u003c") }}
+      />
     </main>
   );
 }
