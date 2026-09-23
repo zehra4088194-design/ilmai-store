@@ -1,0 +1,10 @@
+# IlmAI Store
+
+IlmAI Store (https://ilmai.store) is the official store of the IlmAI education platform (https://ilmai.study).
+
+Public commerce pages:
+- https://ilmai.store/store
+- https://ilmai.store/store/ilm-ai-notes
+- https://ilmai.store/sitemap.xml
+
+For individual products, use the canonical /store/{slug} page linked from the public catalog and sitemap. Account, checkout, order, admin, and API routes are not public catalog sources.
