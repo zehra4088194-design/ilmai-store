@@ -85,9 +85,10 @@ export function StoreFooter() {
             <span className="rounded-md bg-[#0F766E] px-1.5 py-0.5 text-[10px] font-black uppercase text-white">.store</span>
           </Link>
           <p className="mt-5 max-w-xs text-sm leading-6 text-[#B9C4E0]">
+            Official store of the <a href={siteConfig.ilmaiStudyUrl} className="font-semibold text-white hover:text-[#0F766E]">IlmAI education platform</a>.
             {PHYSICAL_GOODS_ENABLED
-              ? "Your one-stop shop for study materials, books, notes and test series — everything a student actually needs, in one place."
-              : "Your one-stop shop for study materials, notes, courses and test series — everything a student actually needs, in one place."}
+              ? " Shop study materials, books, notes and test series in one place."
+              : " Shop study notes, courses and test series in one place."}
           </p>
           <div className="mt-5 flex items-center gap-3">
             <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" className="footer-social"><Facebook size={16} /></a>
