@@ -6,10 +6,17 @@ const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600", "700", "800
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "IlmAI Store",
-  description: "The official store of the IlmAI education platform.",
+  title: "IlmAI Store | Official Study Notes, Courses & Digital Products",
+  description: "The official store of the IlmAI education platform for study notes, courses, test series, and educational products.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_STORE_URL ?? "https://ilmai.store"),
-  openGraph: { title: "IlmAI Store", description: "Study tools with a little more thought in them.", type: "website" },
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "IlmAI Store | Official Study Notes, Courses & Digital Products",
+    description: "The official store of the IlmAI education platform for study notes, courses, test series, and educational products.",
+    type: "website",
+    url: process.env.NEXT_PUBLIC_STORE_URL ?? "https://ilmai.store",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
