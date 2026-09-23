@@ -9,6 +9,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Study Notes, Courses & Test Series | IlmAI Store",
+  description: "Browse educational notes, courses, test series and digital study products from the official IlmAI Store.",
+  alternates: { canonical: "/store" },
+};
+
 type SearchParams = Promise<{ search?: string; category?: string; page?: string }>;
 
 export default async function StorePage({ searchParams }: { searchParams: SearchParams }) {
