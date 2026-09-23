@@ -11,9 +11,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "IlmAI Generated Study Notes | Official Store",
-  description: "Browse generated study-note products created through ilmai.study and fulfilled through the official IlmAI Store.",
+  title: "IlmAI Generated Study Notes | Direct Purchase",
+  description: "Direct-purchase printed study-note products created through ilmai.study and fulfilled through the official IlmAI Store.",
   alternates: { canonical: "/store/ilm-ai-notes" },
+  robots: { index: false, follow: true },
 };
 
 function primaryImage(product: Awaited<ReturnType<typeof IlmaiNotesService.listPublic>>[number]) {
@@ -36,7 +37,7 @@ export default async function IlmaiNotesPage() {
               <span className="eyebrow inline-flex items-center gap-2"><Sparkles size={14} /> IlmAI Notes</span>
               <h1 className="display-font mt-2 text-4xl sm:text-5xl">Your generated study notes.</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)] sm:text-base">
-                Notes created from ilmai.study appear here automatically. Each note remains separate from the main store catalog while keeping the same checkout and order flow.
+                Notes created from ilmai.study appear here automatically for direct purchase. These generated links stay outside the public store search and product sitemap; the student reaches the relevant copy from the study app.
               </p>
             </div>
             <Link href="/store" className="rounded-full border border-[var(--border)] px-5 py-3 text-sm font-bold text-[var(--navy)]">
