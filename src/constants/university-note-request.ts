@@ -4,6 +4,7 @@ export const UNIVERSITY_NOTE_RESOURCE_TYPES = [
   ["short_questions", "Short Questions"],
   ["long_questions", "Long Questions"],
   ["mcqs", "MCQs"],
+  ["test_series", "Practice Tests / Test Series"],
   ["past_papers", "Past Papers"],
   ["solved_past_papers", "Solved Past Papers"],
   ["important_questions", "Important / Guess Questions"],
