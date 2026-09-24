@@ -238,7 +238,7 @@ export function CheckoutOptions({ cart, exchangeRate }: Props) {
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         {country === "PK" && <button type="button" onClick={() => setMethod("jazzcash")} className={`rounded-2xl border p-4 text-left ${method === "jazzcash" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><Smartphone size={19} className="text-[#0F766E]"/><span className="font-bold">JazzCash</span></div><p className="mt-2 text-sm text-[#64748B]">Exact order total · no card processing fee</p></button>}
         {/* Kill switch — flip SAFEPAY_ENABLED back to true in constants/order.ts to bring this back. */}
-        {cardAvailable && <button type="button" onClick={() => setMethod("safepay") className={`rounded-2xl border p-4 text-left ${method === "safepay" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><CreditCard size={19} className="text-[#0F766E]"/><span className="font-bold">Card checkout</span></div><p className="mt-2 text-sm text-[#64748B]">Secure Safepay checkout · +$0.50 card fee</p></button>}
+        {cardAvailable && <button type="button" onClick={() => setMethod("safepay")} className={`rounded-2xl border p-4 text-left ${method === "safepay" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><CreditCard size={19} className="text-[#0F766E]"/><span className="font-bold">Card checkout</span></div><p className="mt-2 text-sm text-[#64748B]">Secure Safepay checkout · +$0.50 card fee</p></button>}
       </div>
       {!SAFEPAY_ENABLED && country !== "PK" ? (
         <div className="mt-8 rounded-3xl bg-[#F1F5F9] p-5 text-center">
