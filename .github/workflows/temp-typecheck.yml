@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feat/student-notes-basket-requests-fees
+  pull_request:
+    branches:
+      - main
 
 jobs:
   typecheck:
