@@ -10,6 +10,7 @@ import {
   shipmentUpdateTemplate,
   backInStockTemplate,
   abandonedCartTemplate,
+  universityNoteRequestNotificationTemplate,
   type OrderConfirmationData,
   type PaymentConfirmationData,
   type DigitalDeliveryData,
@@ -19,6 +20,7 @@ import {
   type ShipmentUpdateData,
   type BackInStockData,
   type AbandonedCartData,
+  type UniversityNoteRequestNotificationData,
 } from "./email/templates";
 
 const BREVO_SEND_URL = "https://api.brevo.com/v3/smtp/email";
@@ -115,6 +117,16 @@ class EmailServiceImpl {
   async sendAbandonedCart(to: string, data: AbandonedCartData) {
     const { subject, html } = abandonedCartTemplate(data);
     await this.send(to, subject, html);
+  }
+
+  async sendUniversityNoteRequestNotification(data: UniversityNoteRequestNotificationData) {
+    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+    if (!adminEmail) {
+      logger.warn("email.university_note_request_skipped_no_recipient");
+      return;
+    }
+    const { subject, html } = universityNoteRequestNotificationTemplate(data);
+    await this.send(adminEmail, subject, html);
   }
 }
 
