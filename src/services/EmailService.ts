@@ -120,11 +120,7 @@ class EmailServiceImpl {
   }
 
   async sendUniversityNoteRequestNotification(data: UniversityNoteRequestNotificationData) {
-    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
-    if (!adminEmail) {
-      logger.warn("email.university_note_request_skipped_no_recipient");
-      return;
-    }
+    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL ?? siteConfig.supportEmail;
     const { subject, html } = universityNoteRequestNotificationTemplate(data);
     await this.send(adminEmail, subject, html);
   }
