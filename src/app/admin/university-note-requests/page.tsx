@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { ClipboardList, Mail, Phone } from "lucide-react";
 import { UniversityNoteRequestService, type UniversityNoteRequest } from "@/services/UniversityNoteRequestService";
 import { UNIVERSITY_NOTE_RESOURCE_LABELS } from "@/constants/university-note-request";
@@ -79,7 +80,7 @@ export default async function AdminUniversityNoteRequestsPage({ searchParams }: 
   );
 }
 
-function Info({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
+function Info({ label, value, icon }: { label: string; value: string; icon?: ReactNode }) {
   return <div><p className="text-[10px] font-black uppercase tracking-[.12em] text-[#94A3B8]">{label}</p><p className="mt-1 flex items-center gap-1.5 break-words font-semibold text-[#0B1D3A]">{icon}{value}</p></div>;
 }
 
