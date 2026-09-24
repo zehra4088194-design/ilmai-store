@@ -7,7 +7,7 @@ import { MANUAL_PAYMENT_OPTIONS, SUPPORT_WHATSAPP_NUMBER } from "@/constants/man
 import { SAFEPAY_ENABLED } from "@/constants/order";
 import { siteConfig } from "@/config/site";
 import { getRecaptchaToken } from "@/lib/recaptcha-client";
-import { CARD_PROCESSING_FEE_USD, cardProcessingFeeMinor, computeShippingMinor, manualPaymentTotalPkr, NOTES_DELIVERY_TIERS, OTHER_CITY_NOTES_DELIVERY_TIERS } from "@/lib/pricing";
+import { cardProcessingFeeMinor, computeShippingMinor, hasNotesItems, manualPaymentTotalPkr, NOTES_DELIVERY_TIERS, OTHER_CITY_NOTES_DELIVERY_TIERS } from "@/lib/pricing";
 import type { Cart } from "@/types/domain";
 
 type Props = {
@@ -45,11 +45,8 @@ function ManualPaymentProofForm({ orderId }: { orderId: string }) {
   return <div className="mt-4 rounded-2xl border bg-white p-4"><p className="text-sm font-bold text-[#0B1D3A]">Payment proof</p>{submitted ? <p className="mt-2 text-sm text-[#0F766E]">Transaction reference submitted. Support can now verify your payment.</p> : <><label className="mt-3 block text-sm font-semibold">JazzCash transaction ID<input value={reference} onChange={(event) => setReference(event.target.value)} placeholder="e.g. 123456789" className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#0F766E]" /></label><label className="mt-3 block text-sm font-semibold">Screenshot or receipt <span className="font-normal text-[#64748B]">(optional)</span><input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(event) => setProof(event.target.files?.[0] ?? null)} className="mt-2 block w-full text-sm font-normal" /></label><button type="button" disabled={loading || reference.trim().length < 3} onClick={submit} className="mt-3 rounded-full bg-[#D4AF37] px-4 py-2.5 text-sm font-bold text-[#0B1D3A] transition hover:bg-[#B8952E] disabled:opacity-50">{loading ? "Submitting..." : "Submit proof"}</button>{error && <p className="mt-2 text-sm text-red-700">{error}</p>}</>}</div>;
 }
 
-export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
+export function CheckoutOptions({ cart, exchangeRate }: Props) {
   const requiresShipping = useMemo(() => cart.items.some((item) => ["physical", "book"].includes(item.productType)), [cart.items]);
-  // Mirrors OrderService.createFromCart: one order = one parcel, priced at
-  // the single highest delivery fee among shippable items in the cart.
-  const deliveryMinor = useMemo(() => computeShippingMinor(cart.items, selectedCity), [cart.items, selectedCity]);
   const [country, setCountry] = useState("PK");
   const [customerPhone, setCustomerPhone] = useState("");
   const [fullName, setFullName] = useState("");
@@ -73,6 +70,9 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
   const [couponDiscountMinor, setCouponDiscountMinor] = useState<number | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
+  const selectedCity = city === "__other__" ? otherCity.trim() : city.trim();
+  const hasNoteItems = hasNotesItems(cart.items);
+  const deliveryMinor = useMemo(() => computeShippingMinor(cart.items, selectedCity), [cart.items, selectedCity]);
   const selectedCity = city === "__other__" ? otherCity.trim() : city.trim();
   const cardFeeMinorValue = cardProcessingFeeMinor(cart.subtotal.currency, exchangeRate);
   const cardFeePkr = cardFeeMinorValue / 100;
