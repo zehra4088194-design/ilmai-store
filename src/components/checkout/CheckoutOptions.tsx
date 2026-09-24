@@ -2,18 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Check, Clipboard, CreditCard, Loader2, Smartphone, WalletCards } from "lucide-react";
+import { Check, Clipboard, CreditCard, Loader2, Smartphone, Truck, WalletCards } from "lucide-react";
 import { MANUAL_PAYMENT_OPTIONS, SUPPORT_WHATSAPP_NUMBER } from "@/constants/manual-payment";
 import { SAFEPAY_ENABLED } from "@/constants/order";
 import { siteConfig } from "@/config/site";
 import { getRecaptchaToken } from "@/lib/recaptcha-client";
-import { computeShippingMinor, manualPaymentTotalPkr } from "@/lib/pricing";
+import { CARD_PROCESSING_FEE_USD, cardProcessingFeeMinor, computeShippingMinor, manualPaymentTotalPkr, NOTES_DELIVERY_TIERS, OTHER_CITY_NOTES_DELIVERY_TIERS } from "@/lib/pricing";
 import type { Cart } from "@/types/domain";
 
 type Props = {
   cart: Cart;
   exchangeRate: number;
-  totalPkr: number;
 };
 
 type PaymentMethod = "jazzcash" | "safepay";
@@ -50,13 +49,14 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
   const requiresShipping = useMemo(() => cart.items.some((item) => ["physical", "book"].includes(item.productType)), [cart.items]);
   // Mirrors OrderService.createFromCart: one order = one parcel, priced at
   // the single highest delivery fee among shippable items in the cart.
-  const deliveryMinor = useMemo(() => computeShippingMinor(cart.items), [cart.items]);
+  const deliveryMinor = useMemo(() => computeShippingMinor(cart.items, selectedCity), [cart.items, selectedCity]);
   const [country, setCountry] = useState("PK");
   const [customerPhone, setCustomerPhone] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [line1, setLine1] = useState("");
   const [city, setCity] = useState("");
+  const [otherCity, setOtherCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("jazzcash");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -73,6 +73,11 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
   const [couponDiscountMinor, setCouponDiscountMinor] = useState<number | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
+  const selectedCity = city === "__other__" ? otherCity.trim() : city.trim();
+  const cardFeeMinorValue = cardProcessingFeeMinor(cart.subtotal.currency, exchangeRate);
+  const cardFeePkr = cardFeeMinorValue / 100;
+  const cardAvailable = SAFEPAY_ENABLED && cart.subtotal.currency.toUpperCase() === "PKR";
+  const noteDeliveryTiers = selectedCity.toLocaleLowerCase() === "lahore" ? NOTES_DELIVERY_TIERS : OTHER_CITY_NOTES_DELIVERY_TIERS;
   const wallet = MANUAL_PAYMENT_OPTIONS[0];
 
   async function applyCoupon() {
@@ -109,13 +114,13 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
   // discount subtracted in too. The actual order still independently
   // re-validates and applies the coupon server-side — this is display only.
   const effectiveTotalPkr = useMemo(() => {
-    if (!couponDiscountMinor) return totalPkr;
-    const netMinor = Math.max(0, cart.subtotal.amountMinor - couponDiscountMinor + deliveryMinor);
+    const netMinor = Math.max(0, cart.subtotal.amountMinor - (couponDiscountMinor ?? 0) + deliveryMinor);
     return manualPaymentTotalPkr(netMinor, cart.subtotal.currency, exchangeRate);
-  }, [couponDiscountMinor, totalPkr, cart.subtotal.amountMinor, cart.subtotal.currency, deliveryMinor, exchangeRate]);
+  }, [couponDiscountMinor, cart.subtotal.amountMinor, cart.subtotal.currency, deliveryMinor, exchangeRate]);
+  const cardTotalPkr = effectiveTotalPkr + cardFeePkr;
 
   useEffect(() => {
-    if (country !== "PK" || method !== "jazzcash") {
+    if (country !== "PK" || method !== "jazzcash" || (requiresShipping && !selectedCity)) {
       setQrDataUrl(null);
       return;
     }
@@ -139,7 +144,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
       });
 
     return () => controller.abort();
-  }, [country, method, effectiveTotalPkr]);
+  }, [country, method, effectiveTotalPkr, requiresShipping, selectedCity]);
 
   const amountLabel = useMemo(() => `PKR ${new Intl.NumberFormat("en-PK").format(effectiveTotalPkr)}`, [effectiveTotalPkr]);
   const whatsappHref = `https://wa.me/${SUPPORT_WHATSAPP_NUMBER.replace(/\D/g, "")}?text=${encodeURIComponent(
@@ -161,7 +166,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
   async function confirmWalletPayment() {
     if (!email) { setWalletOrderError("Enter the email you want this order registered under."); return; }
     if (!customerPhone) { setWalletOrderError("Enter a phone number so we can reach you about this order."); return; }
-    if (requiresShipping && (!fullName || !phone || !line1 || !city || !postalCode)) { setWalletOrderError("Enter your complete shipping address, including the city code / postal code."); return; }
+    if (requiresShipping && (!fullName || !phone || !line1 || !selectedCity || !postalCode)) { setWalletOrderError("Enter your complete shipping address, including the city code / postal code."); return; }
     setWalletOrderError(null);
     setWalletOrderLoading(true);
     try {
@@ -169,7 +174,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
       const response = await fetch("/api/checkout/jazzcash", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() },
-        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, recaptchaToken: recaptchaToken ?? undefined, ...(couponDiscountMinor ? { couponCode: couponCode.trim() } : {}), ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city, postalCode, country: "PK" } } : {}) }),
+        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, recaptchaToken: recaptchaToken ?? undefined, ...(couponDiscountMinor ? { couponCode: couponCode.trim() } : {}), ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city: selectedCity, postalCode, country: "PK" } } : {}) }),
       });
       const data = await response.json() as { orderId?: string; orderNumber?: string; error?: string };
       if (!response.ok || !data.orderNumber) throw new Error(data.error || "Order could not be recorded.");
@@ -184,7 +189,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
 
   async function startCardCheckout() {
     if (!customerPhone) { setCardError("Enter a phone number so we can reach you about this order."); return; }
-    if (requiresShipping && (!fullName || !phone || !line1 || !city || !postalCode)) { setCardError("Enter your complete shipping address, including the city code / postal code."); return; }
+    if (requiresShipping && (!fullName || !phone || !line1 || !selectedCity || !postalCode)) { setCardError("Enter your complete shipping address, including the city code / postal code."); return; }
     setCardError(null);
     setCardLoading(true);
     try {
@@ -192,7 +197,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() },
-        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, recaptchaToken: recaptchaToken ?? undefined, ...(couponDiscountMinor ? { couponCode: couponCode.trim() } : {}), ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city, postalCode, country: country.length === 2 ? country : "PK" } } : {}) }),
+        body: JSON.stringify({ cartId: cart.id, customerEmail: email, customerPhone, recaptchaToken: recaptchaToken ?? undefined, ...(couponDiscountMinor ? { couponCode: couponCode.trim() } : {}), ...(requiresShipping ? { shippingAddress: { fullName, phone, line1, city: selectedCity, postalCode, country: "PK" } } : {}) }),
       });
       const data = await response.json() as { session?: { checkoutUrl?: string }; error?: string };
       if (!response.ok) throw new Error(data.error || "Card checkout could not be started.");
@@ -215,7 +220,7 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
         <label className="block text-sm font-bold text-[#0B1D3A]">Billing country<select value={country} onChange={(event) => { setCountry(event.target.value); if (SAFEPAY_ENABLED && event.target.value !== "PK") setMethod("safepay"); }} className="mt-2 w-full rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#0F766E]"><option value="PK">Pakistan</option><option value="AE">United Arab Emirates</option><option value="US">United States</option><option value="OTHER">Other</option></select></label>
         <label className="block text-sm font-bold text-[#0B1D3A]">Phone number<input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="03xx xxxxxxx" className="mt-2 w-full rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#0F766E]"/><span className="mt-1 block text-xs font-normal text-[#64748B]">So we can reach you about this order.</span></label>
       </div>
-      {requiresShipping && <div className="mt-6 rounded-2xl border bg-[#F1F5F9] p-4"><p className="text-sm font-bold text-[#0B1D3A]">Shipping address</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" className="rounded-xl border bg-white px-4 py-3"/><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" className="rounded-xl border bg-white px-4 py-3"/><input value={line1} onChange={(e) => setLine1(e.target.value)} placeholder="Address" className="rounded-xl border bg-white px-4 py-3 sm:col-span-2"/><input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="rounded-xl border bg-white px-4 py-3"/><input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="City code / postal code" className="rounded-xl border bg-white px-4 py-3"/></div></div>}
+      {requiresShipping && <div className="mt-6 rounded-2xl border bg-[#F1F5F9] p-4"><div className="flex items-start justify-between gap-4"><div><p className="text-sm font-bold text-[#0B1D3A]">Shipping address</p><p className="mt-1 text-xs leading-5 text-[#64748B]">Printed notes delivery depends on your city and total number of notes.</p></div><Truck size={18} className="text-[#0F766E]" /></div><div className="mt-3 grid gap-3 sm:grid-cols-2"><input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" className="rounded-xl border bg-white px-4 py-3"/><input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" className="rounded-xl border bg-white px-4 py-3"/><input value={line1} onChange={(e) => setLine1(e.target.value)} placeholder="Address" className="rounded-xl border bg-white px-4 py-3 sm:col-span-2"/><select value={city} onChange={(e) => setCity(e.target.value)} className="rounded-xl border bg-white px-4 py-3"><option value="">Select city</option><option value="Lahore">Lahore</option><option value="Karachi">Karachi</option><option value="Rawalpindi">Rawalpindi</option><option value="Islamabad">Islamabad</option><option value="Faisalabad">Faisalabad</option><option value="Multan">Multan</option><option value="Gujranwala">Gujranwala</option><option value="Sialkot">Sialkot</option><option value="Bahawalpur">Bahawalpur</option><option value="Sargodha">Sargodha</option><option value="Hyderabad">Hyderabad</option><option value="Peshawar">Peshawar</option><option value="Quetta">Quetta</option><option value="Abbottabad">Abbottabad</option><option value="__other__">Other city</option></select>{city === "__other__" && <input value={otherCity} onChange={(e) => setOtherCity(e.target.value)} placeholder="Enter your city" className="rounded-xl border bg-white px-4 py-3"/>}<input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="City code / postal code" className="rounded-xl border bg-white px-4 py-3"/></div>{requiresShipping && <div className="mt-3 rounded-xl border border-[#0F766E]/20 bg-white px-4 py-3 text-xs leading-5 text-[#475569]"><strong className="text-[#0B1D3A]">{selectedCity ? `${selectedCity}: ` : "Delivery: "}</strong>{selectedCity ? `${noteDeliveryTiers[0].label} for 1–5 notes · ${noteDeliveryTiers[1].label} for 6–10 · ${noteDeliveryTiers[2].label} for 11+` : "Select your city to calculate note delivery."}</div></div>}
       <div className="mt-6 rounded-2xl border bg-[#F1F5F9] p-4">
         <p className="text-sm font-bold text-[#0B1D3A]">Coupon code</p>
         {couponDiscountMinor ? (
@@ -232,9 +237,9 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
         {couponError && <p className="mt-2 text-sm text-red-700">{couponError}</p>}
       </div>
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
-        {country === "PK" && <button type="button" onClick={() => setMethod("jazzcash")} className={`rounded-2xl border p-4 text-left ${method === "jazzcash" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><Smartphone size={19} className="text-[#0F766E]"/><span className="font-bold">Local wallet</span></div><p className="mt-2 text-sm text-[#64748B]">JazzCash QR · manual review</p></button>}
+        {country === "PK" && <button type="button" onClick={() => setMethod("jazzcash")} className={`rounded-2xl border p-4 text-left ${method === "jazzcash" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><Smartphone size={19} className="text-[#0F766E]"/><span className="font-bold">JazzCash</span></div><p className="mt-2 text-sm text-[#64748B]">Exact order total · no card processing fee</p></button>}
         {/* Kill switch — flip SAFEPAY_ENABLED back to true in constants/order.ts to bring this back. */}
-        {SAFEPAY_ENABLED && <button type="button" onClick={() => setMethod("safepay")} className={`rounded-2xl border p-4 text-left ${method === "safepay" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><CreditCard size={19} className="text-[#0F766E]"/><span className="font-bold">Card checkout</span></div><p className="mt-2 text-sm text-[#64748B]">Secure Safepay checkout</p></button>}
+        {cardAvailable && <button type="button" onClick={() => setMethod("safepay") className={`rounded-2xl border p-4 text-left ${method === "safepay" ? "border-[#0F766E] bg-[#DCFCE7]" : "bg-white"}`}><div className="flex items-center gap-3"><CreditCard size={19} className="text-[#0F766E]"/><span className="font-bold">Card checkout</span></div><p className="mt-2 text-sm text-[#64748B]">Secure Safepay checkout · +$0.50 card fee</p></button>}
       </div>
       {!SAFEPAY_ENABLED && country !== "PK" ? (
         <div className="mt-8 rounded-3xl bg-[#F1F5F9] p-5 text-center">
@@ -247,10 +252,10 @@ export function CheckoutOptions({ cart, exchangeRate, totalPkr }: Props) {
         <div className="mt-5 rounded-2xl border bg-white p-4"><p className="text-xs font-bold uppercase tracking-widest text-[#64748B]">JazzCash wallet</p><p className="mt-2 font-bold text-[#0B1D3A]">{wallet.accountName}</p><div className="mt-2 flex items-center justify-between gap-3"><span className="text-lg font-black tracking-wider text-[#0F766E]">{wallet.number}</span><button type="button" onClick={copyNumber} className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-bold">{copied ? <Check size={14}/> : <Clipboard size={14}/>} {copied ? "Copied" : "Copy"}</button></div></div>
         <p className="mt-5 text-sm leading-6 text-[#64748B]">After sending the payment, confirm below so we can register your order, then share the transaction screenshot with support. A team member will verify it manually and activate your order.</p>
         {!walletOrderNumber ? <div className="mt-4"><label className="block text-sm font-bold">Email for your order<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="mt-2 w-full rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#0F766E]"/></label><button type="button" disabled={walletOrderLoading || !email} onClick={confirmWalletPayment} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#0B1D3A] px-5 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{walletOrderLoading && <Loader2 size={16} className="animate-spin"/>} I&apos;ve sent the payment</button>{walletOrderError && <p className="mt-3 text-sm text-red-700">{walletOrderError}</p>}</div> : <div className="mt-4"><p className="rounded-2xl border border-[#0F766E]/30 bg-white px-4 py-3 text-sm font-bold text-[#0B1D3A]"><Check size={14} className="mr-2 inline text-[#0F766E]"/>Order {walletOrderNumber} recorded — now send proof on WhatsApp.</p><a href={whatsappHref} target="_blank" rel="noreferrer" className="mt-4 inline-flex rounded-full bg-[#0B1D3A] px-5 py-3 text-sm font-bold text-white">Send proof on WhatsApp</a></div>}
-      </div> : <div className="mt-8 rounded-3xl bg-[#F1F5F9] p-5"><label className="block text-sm font-bold">Email for your order<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="mt-2 w-full rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#0F766E]"/></label><button type="button" disabled={cardLoading || !email} onClick={startCardCheckout} className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#0B1D3A] px-5 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{cardLoading && <Loader2 size={16} className="animate-spin"/>} Continue with card</button>{cardError && <p className="mt-3 text-sm text-red-700">{cardError}</p>}</div>}
+      </div> : <div className="mt-8 rounded-3xl bg-[#F1F5F9] p-5"><div className="mb-4 rounded-2xl border border-[#0F766E]/20 bg-white px-4 py-3 text-sm text-[#475569]"><span className="font-bold text-[#0B1D3A]">Card processing fee:</span> $0.50 (about PKR {new Intl.NumberFormat("en-PK").format(cardFeePkr)})</div><label className="block text-sm font-bold">Email for your order<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className="mt-2 w-full rounded-xl border bg-white px-4 py-3 font-normal outline-none focus:border-[#0F766E]"/></label><button type="button" disabled={cardLoading || !email} onClick={startCardCheckout} className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#0B1D3A] px-5 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{cardLoading && <Loader2 size={16} className="animate-spin"/>} Continue with card</button>{cardError && <p className="mt-3 text-sm text-red-700">{cardError}</p>}</div>}
       <p className="mt-6 text-xs leading-5 text-[#64748B]">Need help? Email <a className="font-bold text-[#0F766E]" href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>.</p>
     </section>
     {walletOrderId && <ManualPaymentProofForm orderId={walletOrderId} />}
-    <aside className="h-fit rounded-[2rem] border bg-[#0B1D3A] p-6 text-white sm:p-8"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Your order</p><div className="mt-6 grid gap-4">{cart.items.map((item) => <div key={item.id} className="flex justify-between gap-4 text-sm"><span className="min-w-0 break-words text-[#B9C4E0]">{item.productTitle} × {item.quantity}</span><span className="shrink-0 font-bold">{item.unitPrice.currency} {(item.unitPrice.amountMinor * item.quantity / 100).toFixed(2)}</span></div>)}{requiresShipping && <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Delivery</span><span className="font-bold">{deliveryMinor ? `${cart.subtotal.currency} ${(deliveryMinor / 100).toFixed(2)}` : "Free"}</span></div>}{couponDiscountMinor ? <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Coupon ({couponCode.trim().toUpperCase()})</span><span className="font-bold text-[#4ADE80]">&minus;{cart.subtotal.currency} {(couponDiscountMinor / 100).toFixed(2)}</span></div> : null}</div><div className="mt-6 border-t border-white/20 pt-5"><div className="flex justify-between text-sm text-[#B9C4E0]"><span>Wallet total</span><span>PKR</span></div><div className="mt-2 text-3xl font-black">{new Intl.NumberFormat("en-PK").format(effectiveTotalPkr)}</div><p className="mt-3 text-xs leading-5 text-[#B9C4E0]">USD 1 = PKR {exchangeRate.toFixed(2)}. The JazzCash amount is the exact order total in PKR.</p></div></aside>
+    <aside className="h-fit rounded-[2rem] border bg-[#0B1D3A] p-6 text-white sm:p-8"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Your order</p><div className="mt-6 grid gap-4">{cart.items.map((item) => <div key={item.id} className="flex justify-between gap-4 text-sm"><span className="min-w-0 break-words text-[#B9C4E0]">{item.productTitle} × {item.quantity}</span><span className="shrink-0 font-bold">{item.unitPrice.currency} {(item.unitPrice.amountMinor * item.quantity / 100).toFixed(2)}</span></div>)}{requiresShipping && <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Delivery</span><span className="font-bold">{deliveryMinor ? `${cart.subtotal.currency} ${(deliveryMinor / 100).toFixed(2)}` : "Free"}</span></div>}{method === "safepay" && cardFeePkr > 0 ? <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Card processing fee</span><span className="font-bold">PKR ${(cardFeePkr).toFixed(2)}</span></div> : null}{couponDiscountMinor ? <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Coupon ({couponCode.trim().toUpperCase()})</span><span className="font-bold text-[#4ADE80]">&minus;{cart.subtotal.currency} {(couponDiscountMinor / 100).toFixed(2)}</span></div> : null}</div><div className="mt-6 border-t border-white/20 pt-5"><div className="flex justify-between text-sm text-[#B9C4E0]"><span>{method === "safepay" ? "Card total" : "JazzCash total"}</span><span>PKR</span></div><div className="mt-2 text-3xl font-black">{new Intl.NumberFormat("en-PK").format(method === "safepay" ? cardTotalPkr : effectiveTotalPkr)}</div><p className="mt-3 text-xs leading-5 text-[#B9C4E0]">USD 1 = PKR {exchangeRate.toFixed(2)}. JazzCash uses the exact order total; card checkout adds a fixed $0.50 processing fee.</p></div></aside>
   </div>;
 }
