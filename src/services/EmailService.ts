@@ -1,5 +1,6 @@
 import "server-only";
 import { logger } from "@/lib/logger";
+import { siteConfig } from "@/config/site";
 import {
   orderConfirmationTemplate,
   paymentConfirmationTemplate,
