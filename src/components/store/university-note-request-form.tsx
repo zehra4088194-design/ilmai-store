@@ -92,7 +92,7 @@ export function UniversityNoteRequestForm({ initialName = "", initialEmail = "" 
         <Field label="Department" value={department} onChange={setDepartment} placeholder="e.g. Pharmacy" />
         <Field label="Degree level" value={degreeLevel} onChange={setDegreeLevel} placeholder="Undergraduate / Postgraduate / diploma" />
         <Field label="Year / semester" value={yearOrSemester} onChange={setYearOrSemester} required placeholder="e.g. 3rd year / 5th semester" />
-        <Field label="Subject(s)" value={subject} onChange={setSubject} required placeholder="Exact subject name" />
+        <Field label="Subject(s)" value={subject} onChange={setSubject} required placeholder="Exact subject name(s); separate multiple subjects with commas" />
         <Field label="Course code" value={courseCode} onChange={setCourseCode} placeholder="e.g. PHAR-301" />
         <Field label="Exam / session" value={examSession} onChange={setExamSession} placeholder="e.g. Midterm Fall 2026" />
         <Field label="Language" value={language} onChange={setLanguage} placeholder="English / Urdu / bilingual" />
