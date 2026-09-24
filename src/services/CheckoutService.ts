@@ -5,7 +5,6 @@ import type { checkoutSchema } from "@/validators/commerce";
 import { AD_REFERRAL_COOKIE, normalizeAdReferral } from "@/constants/ad-referral";
 import { OrderService } from "./OrderService";
 import { PaymentService } from "./PaymentService";
-import { cardProcessingFeeMinor } from "@/lib/pricing";
 import type { CheckoutSession } from "./payment/PaymentProvider";
 
 /**
