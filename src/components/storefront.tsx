@@ -24,6 +24,7 @@ import { AddToBagButton } from "@/components/store/add-to-bag-button";
 import { WishlistButton } from "@/components/store/wishlist-button";
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
+import { StudyBasketBar } from "@/components/store/study-basket-bar";
 import { Reveal } from "@/components/store/reveal";
 import { formatMoney } from "@/lib/pricing";
 import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
@@ -548,6 +549,7 @@ export function Storefront({
         </Reveal>
       )}
 
+      <StudyBasketBar />
       <StoreFooter />
     </main>
   );
