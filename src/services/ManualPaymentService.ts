@@ -56,7 +56,7 @@ export const ManualPaymentService = {
     idempotencyKey?: string,
   ): Promise<Order> {
     const adReferral = normalizeAdReferral((await cookies()).get(AD_REFERRAL_COOKIE)?.value);
-    const order = await OrderService.createFromCart(input, { adReferral, idempotencyKey });
+    const order = await OrderService.createFromCart(input, { adReferral, idempotencyKey, paymentMethod: "jazzcash" });
 
     const db = createSupabaseAdminClient();
     const { error } = await db.from("payments").upsert({
