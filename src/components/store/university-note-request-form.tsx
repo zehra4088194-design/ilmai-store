@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Loader2, Send } from "lucide-react";
 import { UNIVERSITY_NOTE_RESOURCE_TYPES } from "@/constants/university-note-request";
@@ -91,7 +92,7 @@ export function UniversityNoteRequestForm({ initialName = "", initialEmail = "" 
         <Field label="Department" value={department} onChange={setDepartment} placeholder="e.g. Pharmacy" />
         <Field label="Degree level" value={degreeLevel} onChange={setDegreeLevel} placeholder="Undergraduate / Postgraduate / diploma" />
         <Field label="Year / semester" value={yearOrSemester} onChange={setYearOrSemester} required placeholder="e.g. 3rd year / 5th semester" />
-        <Field label="Subject" value={subject} onChange={setSubject} required placeholder="Exact subject name" />
+        <Field label="Subject(s)" value={subject} onChange={setSubject} required placeholder="Exact subject name" />
         <Field label="Course code" value={courseCode} onChange={setCourseCode} placeholder="e.g. PHAR-301" />
         <Field label="Exam / session" value={examSession} onChange={setExamSession} placeholder="e.g. Midterm Fall 2026" />
         <Field label="Language" value={language} onChange={setLanguage} placeholder="English / Urdu / bilingual" />
