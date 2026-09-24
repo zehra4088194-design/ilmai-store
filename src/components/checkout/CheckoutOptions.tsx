@@ -73,7 +73,6 @@ export function CheckoutOptions({ cart, exchangeRate }: Props) {
   const selectedCity = city === "__other__" ? otherCity.trim() : city.trim();
   const hasNoteItems = hasNotesItems(cart.items);
   const deliveryMinor = useMemo(() => computeShippingMinor(cart.items, selectedCity), [cart.items, selectedCity]);
-  const selectedCity = city === "__other__" ? otherCity.trim() : city.trim();
   const cardFeeMinorValue = cardProcessingFeeMinor(cart.subtotal.currency, exchangeRate);
   const cardFeePkr = cardFeeMinorValue / 100;
   const cardAvailable = SAFEPAY_ENABLED && cart.subtotal.currency.toUpperCase() === "PKR";
