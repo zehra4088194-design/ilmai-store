@@ -21,7 +21,7 @@ export const universityNoteRequestSchema = z.object({
   resourceTypes: z.array(z.enum(resourceTypeKeys as [string, ...string[]])).min(1).max(20),
   chaptersTopics: z.string().trim().max(3000).optional(),
   preferredFormat: z.enum(["printed", "digital", "both", "not_sure"]).optional(),
-  neededBy: z.string().date().optional(),
+  neededBy: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, "Use YYYY-MM-DD").optional(),
   additionalDetails: z.string().trim().max(4000).optional(),
 });
 
