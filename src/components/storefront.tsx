@@ -153,7 +153,7 @@ function ProductCard({ product, index, saved, isLoggedIn }: { product: Product; 
         </div>
         <AddToBagButton
           variantId={variant?.id}
-          label={outOfStock ? "Out of stock" : undefined}
+          label={outOfStock ? "Out of stock" : "Add to basket"}
           disabled={outOfStock}
           className="gold-btn mt-2.5 h-9 w-full text-[12px] disabled:cursor-not-allowed"
         />
