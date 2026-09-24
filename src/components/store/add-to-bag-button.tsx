@@ -17,7 +17,7 @@ type Props = {
 
 /** POSTs to /api/cart and broadcasts the fresh cart so the header badge
  * (and anything else listening) updates without a full reload. */
-export function AddToBagButton({ variantId, quantity = 1, className, label = "Add to bag", disabled = false }: Props) {
+export function AddToBagButton({ variantId, quantity = 1, className, label = "Add to basket", disabled = false }: Props) {
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
 
   async function addToBag(event: React.MouseEvent) {
