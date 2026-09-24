@@ -179,3 +179,36 @@ export function refundNotificationTemplate(data: RefundNotificationData) {
   );
   return { subject: `Refund processed for order ${data.orderNumber}`, html };
 }
+
+export interface UniversityNoteRequestNotificationData {
+  requestNumber: string;
+  studentName: string;
+  email: string;
+  phone?: string;
+  university: string;
+  campus?: string;
+  city?: string;
+  program: string;
+  department?: string;
+  yearOrSemester: string;
+  subject: string;
+  courseCode?: string;
+  examSession?: string;
+  resourceTypes: string;
+  chaptersTopics?: string;
+  preferredFormat?: string;
+  neededBy?: string;
+  additionalDetails?: string;
+}
+
+export function universityNoteRequestNotificationTemplate(data: UniversityNoteRequestNotificationData) {
+  const html = emailShell(
+    heading("New university note request") +
+      paragraph(`Request <strong style="color:#0B1D3A;">${escapeHtml(data.requestNumber)}</strong> has been submitted by <strong style="color:#0B1D3A;">${escapeHtml(data.studentName)}</strong>.`) +
+      paragraph(`<strong>University:</strong> ${escapeHtml(data.university)}${data.campus ? ` · ${escapeHtml(data.campus)}` : ""}${data.city ? ` · ${escapeHtml(data.city)}` : ""}<br /><strong>Program:</strong> ${escapeHtml(data.program)}${data.department ? ` · ${escapeHtml(data.department)}` : ""}<br /><strong>Year/Semester:</strong> ${escapeHtml(data.yearOrSemester)}<br /><strong>Subject:</strong> ${escapeHtml(data.subject)}${data.courseCode ? ` · ${escapeHtml(data.courseCode)}` : ""}<br /><strong>Student:</strong> ${escapeHtml(data.email)}${data.phone ? ` · ${escapeHtml(data.phone)}` : ""}`) +
+      paragraph(`<strong>Requested resources:</strong> ${escapeHtml(data.resourceTypes)}${data.chaptersTopics ? `<br /><strong>Chapters/topics:</strong> ${escapeHtml(data.chaptersTopics)}` : ""}${data.preferredFormat ? `<br /><strong>Format:</strong> ${escapeHtml(data.preferredFormat)}` : ""}${data.neededBy ? `<br /><strong>Needed by:</strong> ${escapeHtml(data.neededBy)}` : ""}${data.examSession ? `<br /><strong>Exam/session:</strong> ${escapeHtml(data.examSession)}` : ""}`) +
+      paragraph(data.additionalDetails ? `<strong>Additional details:</strong><br />${escapeHtml(data.additionalDetails)}` : "No additional details were provided.") +
+      button("Open university note requests", `${siteConfig.url.replace(/\/$/, "")}/admin/university-note-requests`),
+  );
+  return { subject: `University note request ${data.requestNumber}`, html };
+}
