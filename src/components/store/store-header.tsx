@@ -21,6 +21,7 @@ const NAV_LINKS: Array<[string, string]> = [
   ["Home", "/store"],
   ["Shop", "/store"],
   ["IlmAI Notes", "/store/ilm-ai-notes"],
+  ["Request University Notes", "/store/university-note-request"],
   ["Digital Products", "/store?category=digital"],
   ...(PHYSICAL_GOODS_ENABLED ? [["Books", "/store?category=books"] as [string, string]] : []),
   ["Courses", "/store?category=courses"],
@@ -171,7 +172,7 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
       {open && (
         <div className="border-t border-[var(--line)] bg-[#F1F5F9] md:hidden">
           <nav className="store-container grid gap-2 py-5">
-            {[...NAV_LINKS, ["My account", "/account"] as [string, string], ["Cart", "/cart"] as [string, string]].map(([label, href]) => (
+            {[...NAV_LINKS, ["My account", "/account"] as [string, string], ["Study Basket", "/cart"] as [string, string]].map(([label, href]) => (
               <Link key={label} href={href} onClick={() => setOpen(false)} className="rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm font-bold text-[#0B1D3A]">
                 {label}
               </Link>

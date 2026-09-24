@@ -229,6 +229,35 @@ export interface DigitalEntitlementRow {
   created_at: ISODateString;
 }
 
+export interface UniversityNoteRequestRow {
+  id: UUID;
+  request_number: string;
+  user_id: UUID | null;
+  student_name: string;
+  email: string;
+  phone: string | null;
+  university: string;
+  campus: string | null;
+  city: string | null;
+  program: string;
+  department: string | null;
+  degree_level: string | null;
+  year_or_semester: string;
+  subject: string;
+  course_code: string | null;
+  exam_session: string | null;
+  language: string | null;
+  resource_types: string[];
+  chapters_topics: string | null;
+  preferred_format: string | null;
+  needed_by: string | null;
+  additional_details: string | null;
+  status: "pending" | "in_progress" | "fulfilled" | "cancelled";
+  admin_note: string | null;
+  created_at: ISODateString;
+  updated_at: ISODateString;
+}
+
 export interface PromotionRow {
   id: UUID;
   name: string;

@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const discountMinor = body.couponCode
       ? (await PromotionService.validateCoupon(body.couponCode, cart.subtotal.amountMinor, cart.subtotal.currency)).discountMinor
       : 0;
-    const shippingMinor = computeShippingMinor(cart.items);
+    const shippingMinor = computeShippingMinor(cart.items, body.shippingAddress?.city);
     const netAmountMinor = Math.max(0, cart.subtotal.amountMinor - discountMinor + shippingMinor);
 
     const walletTotalPkr = manualPaymentTotalPkr(

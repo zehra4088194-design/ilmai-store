@@ -170,6 +170,8 @@ export interface Order {
   // action only where it's actually meaningful (never for a 'safepay' order,
   // which resolves via its webhook).
   paymentProvider?: "safepay" | "jazzcash";
+  // Fixed $0.50 card processing fee, stored in PKR minor units on card orders.
+  cardProcessingFeeMinor?: number;
 }
 
 export interface Payment {

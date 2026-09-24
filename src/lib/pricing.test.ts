@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { computeShippingMinor, formatMoney, manualPaymentTotalPkr, usdToPkr } from "./pricing";
+import { cardProcessingFeeMinor, computeShippingMinor, formatMoney, manualPaymentTotalPkr, usdToPkr } from "./pricing";
 
 // Non-notes items don't carry productSlug in real cart data either — computeShippingMinor treats
 // it as "not one of ours" either way (see isNotesOrderSlug), so tests below omit it freely.
@@ -34,31 +34,33 @@ test("computeShippingMinor: one parcel priced at the highest fee, never summed",
   assert.equal(computeShippingMinor(items), 500);
 });
 
-test("computeShippingMinor: ilmai.study notes orders are priced off the quantity tiers, not their own (zero) fee", () => {
+test("computeShippingMinor: Lahore IlmAI notes use 299/499/699 quantity tiers", () => {
   const notesItem = (quantity: number) => ({ productType: "book", productSlug: "notes-abc123", quantity, deliveryFeeMinor: 0 });
-  assert.equal(computeShippingMinor([notesItem(1)]), 15000); // PKR 150
-  assert.equal(computeShippingMinor([notesItem(5)]), 15000); // still PKR 150 at the top of the first tier
-  assert.equal(computeShippingMinor([notesItem(6)]), 30000); // PKR 300
-  assert.equal(computeShippingMinor([notesItem(10)]), 30000);
-  assert.equal(computeShippingMinor([notesItem(11)]), 50000); // PKR 500
-  assert.equal(computeShippingMinor([notesItem(20)]), 50000);
-  assert.equal(computeShippingMinor([notesItem(25)]), 50000); // beyond the schedule — stays at the top tier
+  assert.equal(computeShippingMinor([notesItem(1)], "Lahore"), 29900);
+  assert.equal(computeShippingMinor([notesItem(5)], "Lahore"), 29900);
+  assert.equal(computeShippingMinor([notesItem(6)], "Lahore"), 49900);
+  assert.equal(computeShippingMinor([notesItem(10)], "Lahore"), 49900);
+  assert.equal(computeShippingMinor([notesItem(11)], "Lahore"), 69900);
+  assert.equal(computeShippingMinor([notesItem(50)], "Lahore"), 69900);
+  assert.equal(computeShippingMinor([notesItem(1)], "Karachi"), 39900);
+  assert.equal(computeShippingMinor([notesItem(6)], "Karachi"), 59900);
+  assert.equal(computeShippingMinor([notesItem(11)], "Karachi"), 69900);
 });
 
-test("computeShippingMinor: notes quantity is combined across separate cart lines (e.g. two different chapters)", () => {
+test("computeShippingMinor: notes quantity is combined across separate cart lines", () => {
   const items = [
     { productType: "book", productSlug: "notes-chapter-1", quantity: 3, deliveryFeeMinor: 0 },
     { productType: "book", productSlug: "notes-chapter-2", quantity: 4, deliveryFeeMinor: 0 },
   ];
-  assert.equal(computeShippingMinor(items), 30000); // 3+4=7 copies -> PKR 300 tier, not PKR 150 twice
+  assert.equal(computeShippingMinor(items, "Lahore"), 49900); // 3+4=7 copies -> PKR 499 tier
 });
 
 test("computeShippingMinor: a notes order alongside an ordinary physical product still takes the single highest fee", () => {
   const items = [
-    { productType: "book", productSlug: "notes-abc123", quantity: 2, deliveryFeeMinor: 0 }, // tiers to PKR 150
-    { productType: "physical", quantity: 1, deliveryFeeMinor: 40000 }, // PKR 400 flat
+    { productType: "book", productSlug: "notes-abc123", quantity: 2, deliveryFeeMinor: 0 },
+    { productType: "physical", quantity: 1, deliveryFeeMinor: 40000 },
   ];
-  assert.equal(computeShippingMinor(items), 40000);
+  assert.equal(computeShippingMinor(items, "Lahore"), 40000);
 });
 
 test("manualPaymentTotalPkr: JazzCash uses the exact order total without a processing surcharge", () => {
@@ -72,4 +74,10 @@ test("manualPaymentTotalPkr: JazzCash uses the exact order total without a proce
   assert.equal(withShipping, 5200);
   assert.equal(withoutShipping, 5000);
   assert.equal(withShipping - withoutShipping, 200);
+});
+
+test("cardProcessingFeeMinor: fixed $0.50 is converted to PKR minor units", () => {
+  assert.equal(cardProcessingFeeMinor("PKR", 280), 14000); // PKR 140
+  assert.equal(cardProcessingFeeMinor("PKR", 277.5), 13875);
+  assert.equal(cardProcessingFeeMinor("USD", 280), 0); // Safepay settles this store in PKR
 });

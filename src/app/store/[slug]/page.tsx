@@ -10,6 +10,7 @@ import { RelatedProducts } from "@/components/store/related-products";
 import { ProductReviews } from "@/components/store/product-reviews";
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
+import { StudyBasketBar } from "@/components/store/study-basket-bar";
 import { productListQuerySchema } from "@/validators/product";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -115,6 +116,7 @@ export default async function ProductPage({ params }: { params: Params }) {
           <ProductReviews productId={product.id} productSlug={product.slug} reviews={reviews} isLoggedIn={Boolean(user)} hasPurchased={hasPurchased} />
         </div>
       </div>
+      <StudyBasketBar />
       <StoreFooter />
       <script
         type="application/ld+json"
