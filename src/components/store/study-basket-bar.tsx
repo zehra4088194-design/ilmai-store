@@ -41,7 +41,7 @@ export function StudyBasketBar() {
         <div className="min-w-0 flex-1">
           <p className="text-xs font-black uppercase tracking-[.1em] text-[#0F766E]">Study Basket</p>
           <p className="truncate text-sm font-bold text-[#0B1D3A]">
-            {count} {count === 1 ? "note" : "notes"} saved{cart?.subtotal ? ` · ${formatMoney(cart.subtotal)}` : ""}
+            {count} {count === 1 ? "item" : "items"} saved{cart?.subtotal ? ` · ${formatMoney(cart.subtotal)}` : ""}
           </p>
         </div>
         <Link href="/cart" className="gold-btn min-h-10 shrink-0 px-4 text-xs sm:px-5 sm:text-sm">
