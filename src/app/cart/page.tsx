@@ -13,9 +13,9 @@ export default async function CartPage() {
       <StoreHeader />
       <div className="store-container py-10 sm:py-14">
         <div>
-          <span className="eyebrow">Your saved picks</span>
-          <h1 className="section-title mt-3">Your bag.</h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-[#64748B]">Review your resources, adjust quantities, and continue when you are ready.</p>
+          <span className="eyebrow">Your study picks</span>
+          <h1 className="section-title mt-3">Your study basket.</h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-[#64748B]">Collect the notes, books and other study resources you need here, then check out once you are ready.</p>
         </div>
         <CartLineItems cart={cart ?? { id: "empty", items: [], subtotal: { amountMinor: 0, currency: "PKR" } }} />
       </div>
