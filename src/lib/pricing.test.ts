@@ -7,8 +7,8 @@ import { computeShippingMinor, formatMoney, manualPaymentTotalPkr, usdToPkr } fr
 
 test("converts USD to whole PKR rupees", () => {
   assert.equal(usdToPkr(10, 280), 2800);
-  assert.equal(manualPaymentTotalPkr(1000, "USD", 280), 2940);
-  assert.equal(manualPaymentTotalPkr(125000, "PKR", 280), 1390);
+  assert.equal(manualPaymentTotalPkr(1000, "USD", 280), 2800);
+  assert.equal(manualPaymentTotalPkr(125000, "PKR", 280), 1250);
 });
 
 test("formatMoney renders USD with a $ sign and everything else as CODE amount", () => {
@@ -61,7 +61,7 @@ test("computeShippingMinor: a notes order alongside an ordinary physical product
   assert.equal(computeShippingMinor(items), 40000);
 });
 
-test("manualPaymentTotalPkr: the JazzCash total must include shipping, not just subtotal", () => {
+test("manualPaymentTotalPkr: JazzCash uses the exact order total without a processing surcharge", () => {
   // Regression for the bug where checkout/page.tsx computed the wallet
   // total from cart.subtotal alone, silently dropping the shipping fee the
   // order itself (and the JazzCash API route) actually charges.
@@ -69,6 +69,7 @@ test("manualPaymentTotalPkr: the JazzCash total must include shipping, not just 
   const shippingMinor = computeShippingMinor([{ productType: "book", quantity: 1, deliveryFeeMinor: 20000 }]); // PKR 200
   const withShipping = manualPaymentTotalPkr(subtotalMinor + shippingMinor, "PKR", 280);
   const withoutShipping = manualPaymentTotalPkr(subtotalMinor, "PKR", 280);
-  assert.ok(withShipping > withoutShipping, "including shipping must raise the total");
+  assert.equal(withShipping, 5200);
+  assert.equal(withoutShipping, 5000);
   assert.equal(withShipping - withoutShipping, 200);
 });
