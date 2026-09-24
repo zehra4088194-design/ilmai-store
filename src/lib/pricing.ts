@@ -52,6 +52,7 @@ export const CARD_PROCESSING_FEE_USD = 0.5;
 function notesDeliveryFeeMinor(totalQty: number, city?: string): number {
   if (totalQty <= 0) return 0;
   const normalizedCity = city?.trim().toLocaleLowerCase();
+  if (!normalizedCity) return 0;
   const tiers = normalizedCity === "lahore" ? NOTES_DELIVERY_TIERS : OTHER_CITY_NOTES_DELIVERY_TIERS;
   return (tiers.find((tier) => totalQty <= tier.maxQty) ?? tiers[tiers.length - 1]!).feeMinor;
 }
