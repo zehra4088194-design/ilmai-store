@@ -17,6 +17,7 @@ type Props = { initialSearch?: string; categories?: Category[] };
 // `search=` text match — a `search=` link only ever matched product title/description,
 // never actual category membership.
 const NAV_LINKS: Array<[string, string]> = [
+  ["Study on IlmAI", "https://ilmai.study"],
   ["Home", "/store"],
   ["Shop", "/store"],
   ["IlmAI Notes", "/store/ilm-ai-notes"],
