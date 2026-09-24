@@ -50,7 +50,7 @@ export function UniversityNoteRequestForm({ initialName = "", initialEmail = "" 
         body: JSON.stringify({
           studentName, email, phone, university, campus, city, program, department, degreeLevel,
           yearOrSemester, subject, courseCode, examSession, language, resourceTypes, chaptersTopics,
-          preferredFormat, neededBy, additionalDetails,
+          preferredFormat, ...(neededBy ? { neededBy } : {}), additionalDetails,
         }),
       });
       const data = await response.json() as { requestNumber?: string; error?: string };
