@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CartService } from "@/services/CartService";
 import { getPlatformSettings } from "@/lib/platform-settings/server";
-import { computeShippingMinor, manualPaymentTotalPkr } from "@/lib/pricing";
+import { manualPaymentTotalPkr } from "@/lib/pricing";
 import { CheckoutOptions } from "@/components/checkout/CheckoutOptions";
 import { StoreHeader } from "@/components/store/store-header";
 import { StoreFooter } from "@/components/store/store-footer";
@@ -11,12 +11,10 @@ export const dynamic = "force-dynamic";
 export default async function CheckoutPage() {
   const [cart, settings] = await Promise.all([CartService.getCurrentCart(), getPlatformSettings()]);
   const exchangeRate = settings.exchangeRate.usdToPkr;
-  // Must mirror POST /api/checkout/jazzcash's own netAmountMinor computation
-  // (subtotal + shipping — coupon discount isn't known until the request is
-  // submitted) so the amount shown/encoded in the QR here matches what the
-  // order actually gets charged for once shipping is added.
-  const shippingMinor = cart ? computeShippingMinor(cart.items) : 0;
-  const totalPkr = cart ? manualPaymentTotalPkr(cart.subtotal.amountMinor + shippingMinor, cart.subtotal.currency, exchangeRate) : 0;
+  // Shipping for printed notes depends on the city selected in the checkout form,
+  // so the first render passes the subtotal-only PKR figure. CheckoutOptions derives
+  // the exact total after the buyer selects a city; the server recomputes it again.
+  const totalPkr = cart ? manualPaymentTotalPkr(cart.subtotal.amountMinor, cart.subtotal.currency, exchangeRate) : 0;
 
   return (
     <main className="store-shell">
@@ -32,7 +30,7 @@ export default async function CheckoutPage() {
             <CheckoutOptions cart={cart} exchangeRate={exchangeRate} totalPkr={totalPkr} />
           ) : (
             <div className="empty-state">
-              <h2 className="text-2xl font-black text-[#0B1D3A]">Your bag is empty.</h2>
+              <h2 className="text-2xl font-black text-[#0B1D3A]">Your study basket is empty.</h2>
               <Link href="/store" className="gold-btn mt-6 inline-flex min-h-12 px-6">Browse the store</Link>
             </div>
           )}
