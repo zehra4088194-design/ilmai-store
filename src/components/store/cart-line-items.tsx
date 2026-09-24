@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Loader2, Minus, Plus, ShieldCheck, ShoppingBag, Trash2, Truck } from "lucide-react";
 import type { Cart } from "@/types/domain";
 import { broadcastCartUpdate } from "./cart-events";
-import { formatMoney } from "@/lib/pricing";
+import { formatMoney, hasNotesItems } from "@/lib/pricing";
 
 const money = formatMoney;
 
@@ -34,18 +34,19 @@ export function CartLineItems({ cart: initialCart }: { cart: Cart }) {
     return (
       <div className="empty-state mt-9">
         <div className="grid h-16 w-16 place-items-center rounded-[22px] bg-[#F1F5F9] text-[#0F766E]"><ShoppingBag size={26} /></div>
-        <h1 className="mt-5 text-2xl font-black text-[#0B1D3A]">Your cart is empty.</h1>
-        <p className="mt-2 max-w-sm text-sm leading-6 text-[#64748B]">Add a note, book or course and come back here when you are ready to check out.</p>
+        <h1 className="mt-5 text-2xl font-black text-[#0B1D3A]">Your study basket is empty.</h1>
+        <p className="mt-2 max-w-sm text-sm leading-6 text-[#64748B]">Add notes, books or courses to your basket and keep exploring until you have everything you need.</p>
         <Link href="/store" className="gold-btn mt-6 min-h-12 px-6">Browse the shelf <ArrowRight size={15} /></Link>
       </div>
     );
   }
 
-  // One order = one parcel: mirrors OrderService.createFromCart, which
-  // charges the single highest delivery fee among shippable items rather
-  // than stacking every item's fee.
+  // The exact notes delivery tier depends on the city selected at checkout,
+  // so the basket intentionally does not guess a city. Ordinary physical-product
+  // fees can still be shown immediately.
+  const hasNotes = hasNotesItems(cart.items);
   const shippableItems = cart.items.filter((i) => i.productType === "physical" || i.productType === "book");
-  const delivery = shippableItems.length ? Math.max(...shippableItems.map((i) => i.deliveryFeeMinor)) : 0;
+  const delivery = hasNotes ? 0 : (shippableItems.length ? Math.max(...shippableItems.map((i) => i.deliveryFeeMinor)) : 0);
   const total = cart.subtotal.amountMinor + delivery;
 
   return (
@@ -83,14 +84,14 @@ export function CartLineItems({ cart: initialCart }: { cart: Cart }) {
       </div>
 
       <aside className="rounded-2xl border border-[var(--line)] bg-white p-6 lg:sticky lg:top-28">
-        <h2 className="text-sm font-black uppercase tracking-[.1em] text-[#0B1D3A]">Cart Totals</h2>
+        <h2 className="text-sm font-black uppercase tracking-[.1em] text-[#0B1D3A]">Basket Summary</h2>
         <div className="mt-5 grid gap-3 border-b border-[var(--line)] pb-5 text-sm">
           <div className="flex justify-between text-[#64748B]"><span>Subtotal</span><span className="font-bold text-[#0B1D3A]">{money(cart.subtotal)}</span></div>
-          <div className="flex justify-between text-[#64748B]"><span>Delivery</span><span className="font-bold text-[#0B1D3A]">{delivery ? money({ amountMinor: delivery, currency: cart.subtotal.currency }) : "Free"}</span></div>
+          <div className="flex justify-between text-[#64748B]"><span>Delivery</span><span className="font-bold text-[#0B1D3A]">{hasNotes ? "Calculated at checkout" : delivery ? money({ amountMinor: delivery, currency: cart.subtotal.currency }) : "Free"}</span></div>
         </div>
         <div className="mt-5 flex items-center justify-between">
           <span className="text-sm font-black text-[#0B1D3A]">Total</span>
-          <span className="text-2xl font-black text-[#0B1D3A]">{money({ amountMinor: total, currency: cart.subtotal.currency })}</span>
+          <span className="text-2xl font-black text-[#0B1D3A]">{hasNotes ? money(cart.subtotal) : money({ amountMinor: total, currency: cart.subtotal.currency })}</span>
         </div>
         <Link href="/checkout" className="gold-btn mt-6 flex min-h-[52px] w-full">Proceed to Checkout <ArrowRight size={15} /></Link>
         <Link href="/store" className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[var(--line)] text-sm font-bold text-[#0B1D3A] hover:bg-[#F1F5F9]"><ArrowLeft size={14} /> Continue Shopping</Link>
