@@ -9,7 +9,7 @@ import type { Product, ProductVariant } from "@/types/domain";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
 import { WishlistButton } from "@/components/store/wishlist-button";
 import { NotifyMeButton } from "@/components/store/notify-me-button";
-import { formatMoney, isNotesOrderSlug, NOTES_DELIVERY_TIERS } from "@/lib/pricing";
+import { formatMoney, isNotesOrderSlug, NOTES_DELIVERY_TIERS, OTHER_CITY_NOTES_DELIVERY_TIERS } from "@/lib/pricing";
 import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 
 const money = formatMoney;
@@ -141,14 +141,14 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
           {digital || !PHYSICAL_GOODS_ENABLED
             ? <><Download size={13} /> Instant digital delivery</>
             : isNotesOrder
-              ? <><Truck size={13} /> Delivery from {NOTES_DELIVERY_TIERS[0].label}</>
+              ? <><Truck size={13} /> From {NOTES_DELIVERY_TIERS[0].label} in Lahore · {OTHER_CITY_NOTES_DELIVERY_TIERS[0].label} elsewhere</>
               : freeDelivery
                 ? <><Truck size={13} /> Free delivery on this order</>
                 : <><Truck size={13} /> Delivery: {money(product.deliveryFee)}</>}
         </p>
         {isNotesOrder && (
           <p className="mt-1 text-xs text-[#64748B]">
-            {NOTES_DELIVERY_TIERS.map((tier, i) => `${tier.label} for ${i === 0 ? "1" : NOTES_DELIVERY_TIERS[i - 1]!.maxQty + 1}–${tier.maxQty} copies`).join(" · ")}
+            Lahore: 299 for 1–5 · 499 for 6–10 · 699 for 11+ copies · Other cities: 399 for 1–5 · 599 for 6–10 · 699 for 11+
           </p>
         )}
         {trackingStock && (
@@ -189,7 +189,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
           <AddToBagButton
             variantId={variant?.id}
             quantity={quantity}
-            label={outOfStock ? "Out of stock" : "Add to Cart"}
+            label={outOfStock ? "Out of stock" : "Add to Basket"}
             disabled={outOfStock}
             className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl border-2 sm:flex-1 border-[#0B1D3A] px-6 text-sm font-black text-[#0B1D3A] transition hover:bg-[#0B1D3A] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           />
