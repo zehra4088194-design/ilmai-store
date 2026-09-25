@@ -5,6 +5,16 @@ import { PHYSICAL_GOODS_ENABLED, PHYSICAL_PRODUCT_TYPES } from '@/constants/prod
 
 export const revalidate = 3600;
 
+type PublicCatalogProduct = {
+  slug: string;
+  title: string;
+  description: string | null;
+  product_type: string;
+  base_price_minor: number;
+  currency: string;
+  updated_at: string;
+};
+
 export async function GET() {
   const db = await createSupabaseServerClient();
   let query = db
@@ -36,7 +46,7 @@ export async function GET() {
       website: baseUrl,
       official_study_platform: siteConfig.ilmaiStudyUrl,
       updated_at: new Date().toISOString(),
-      products: (data || []).map((product: any) => ({
+      products: (data || []).map((product: PublicCatalogProduct) => ({
         title: product.title,
         description: product.description || null,
         product_type: product.product_type,
