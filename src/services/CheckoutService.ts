@@ -22,6 +22,7 @@ export const CheckoutService = {
     // verified paid event can report it later.
     const adReferral = normalizeAdReferral((await cookies()).get(AD_REFERRAL_COOKIE)?.value);
     const order = await OrderService.createFromCart(input, { adReferral, idempotencyKey, paymentMethod: "safepay" });
+    const cardProcessingFeeMinorValue = order.cardProcessingFeeMinor ?? 0;
 
     const session = order.checkoutProviderId && order.checkoutUrl
       ? { providerCheckoutId: order.checkoutProviderId, checkoutUrl: order.checkoutUrl }
@@ -45,8 +46,8 @@ export const CheckoutService = {
           ...(order.shipping.amountMinor > 0
             ? [{ name: "Delivery", quantity: 1, unitPriceMinor: order.shipping.amountMinor, currency: order.shipping.currency }]
             : []),
-          ...(order.cardProcessingFeeMinor > 0
-            ? [{ name: "Card processing fee", quantity: 1, unitPriceMinor: order.cardProcessingFeeMinor, currency: order.total.currency }]
+          ...(cardProcessingFeeMinorValue > 0
+            ? [{ name: "Card processing fee", quantity: 1, unitPriceMinor: cardProcessingFeeMinorValue, currency: order.total.currency }]
             : []),
         ],
         successUrl: `${process.env.NEXT_PUBLIC_STORE_URL ?? process.env.NEXT_PUBLIC_APP_URL}/orders/${order.id}`,
