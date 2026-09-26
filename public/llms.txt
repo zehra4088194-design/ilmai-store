@@ -4,8 +4,7 @@ IlmAI Store (https://ilmai.store) is the official store of the IlmAI education p
 
 Public commerce pages:
 - https://ilmai.store/store
-- https://ilmai.store/store/ilm-ai-notes
 - https://ilmai.store/sitemap.xml
 - https://ilmai.store/ai/catalog
 
-For individual products, use the canonical /store/{slug} page linked from the public catalog and sitemap. Account, checkout, order, admin, and API routes are not public catalog sources.
+For individual products, use the canonical /store/{slug} page linked from the public catalog and sitemap. Generated one-off notes (notes-*) are intentionally excluded from the public AI catalog and product sitemap; students normally reach their own generated-note purchase from https://ilmai.study. Account, checkout, order, admin, and API routes are not public catalog sources.
