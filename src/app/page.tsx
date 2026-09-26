@@ -21,7 +21,30 @@ export default async function HomePage() {
     user ? WishlistService.listProductIds(user.id) : Promise.resolve(new Set<string>()),
   ]);
 
+  const siteUrl = 'https://ilmai.store';
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        name: 'IlmAI Store',
+        url: siteUrl,
+        description: 'The official store of the IlmAI education platform.',
+        publisher: { '@id': `${siteUrl}/#organization` },
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${siteUrl}/#organization`,
+        name: 'IlmAI',
+        url: 'https://ilmai.study',
+        sameAs: [siteUrl],
+      },
+    ],
+  };
+
   return (
+    <>
     <Storefront
       products={products}
       banners={banners}
@@ -31,5 +54,7 @@ export default async function HomePage() {
       wishlistProductIds={Array.from(wishlistProductIds)}
       isLoggedIn={Boolean(user)}
     />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }} />
+    </>
   );
 }
