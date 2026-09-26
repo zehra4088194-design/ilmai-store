@@ -14,7 +14,7 @@ export const metadata = {
   title: "IlmAI Study Notes | Search & Order Notes",
   description: "Explore and order available IlmAI study notes, chapter resources, MCQs, short questions, long questions and more from the official IlmAI Store.",
   alternates: { canonical: "/store/ilm-ai-notes" },
-  robots: { index: true, follow: true },
+  robots: { index: false, follow: true },
 };
 
 type SearchParams = Promise<{ search?: string }> ;
@@ -50,7 +50,7 @@ export default async function IlmAiNotesPage({ searchParams }: { searchParams: S
             <div>
               <span className="eyebrow inline-flex items-center gap-2"><Sparkles size={14} /> IlmAI Notes</span>
               <h1 className="display-font mt-3 text-4xl sm:text-5xl">Build your study basket.</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--muted)] sm:text-base">Search what you need, explore the available notes, and keep adding resources to one basket. You do not need to open ilmai.study first — this notes shelf is made for direct browsing and ordering.</p>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--muted)] sm:text-base">Search and order an available generated note when you already know what you need. This direct-purchase shelf is intentionally kept out of search indexing and the public product discovery catalog; the main ilmai.study app is the normal entry point for generating and buying your own notes.</p>
               <form action="/store/ilm-ai-notes" method="GET" className="mt-7 flex overflow-hidden rounded-2xl border-2 border-[#0B1D3A]/10 bg-[#F8FAFC] focus-within:border-[#0F766E]">
                 <div className="grid w-12 shrink-0 place-items-center text-[#64748B]"><Search size={18} /></div>
                 <input name="search" defaultValue={search} placeholder="Search subject, chapter, MCQs, short questions..." className="min-w-0 flex-1 bg-transparent px-1 py-4 text-sm font-semibold outline-none" />
