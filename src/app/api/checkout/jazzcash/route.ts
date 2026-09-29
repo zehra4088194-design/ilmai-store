@@ -3,7 +3,7 @@ import { CartService } from "@/services/CartService";
 import { ManualPaymentService } from "@/services/ManualPaymentService";
 import { PromotionService } from "@/services/PromotionService";
 import { getPlatformSettings } from "@/lib/platform-settings/server";
-import { computeShippingMinor, manualPaymentTotalPkr } from "@/lib/pricing";
+import { computeShippingMinor, manualPaymentTotalPkr, studyBasketDiscountMinor } from "@/lib/pricing";
 import { checkoutSchema } from "@/validators/commerce";
 import { ValidationError, isAppError, parseOrThrow } from "@/lib/errors";
 import { logger } from "@/lib/logger";
@@ -30,16 +30,14 @@ export async function POST(request: NextRequest) {
     const [cart, settings] = await Promise.all([CartService.getCurrentCart(), getPlatformSettings()]);
     if (!cart || !cart.items.length) throw new ValidationError("Your cart is empty.");
 
-    // Must mirror OrderService.createFromCart's own total_minor computation
-    // exactly (subtotal - coupon discount + shipping) — validateCoupon is a
-    // read-only check (no reservation side effect; that happens separately
-    // inside createFromCart), so calling it here just to preview the
-    // discount is safe. Without this, a couponCode or a paid delivery fee
-    // would change the order's own total_minor but leave the QR/
-    // payments.amount_minor demanding a different amount.
-    const discountMinor = body.couponCode
+    // Must mirror OrderService.createFromCart's subtotal discounts + shipping
+    // exactly so the QR/payment amount matches the pending order. Coupon
+    // validation is read-only here; reservation happens inside createFromCart.
+    const basketDiscountMinor = studyBasketDiscountMinor(cart.items, cart.subtotal.amountMinor);
+    const couponDiscountMinor = body.couponCode
       ? (await PromotionService.validateCoupon(body.couponCode, cart.subtotal.amountMinor, cart.subtotal.currency)).discountMinor
       : 0;
+    const discountMinor = Math.min(cart.subtotal.amountMinor, basketDiscountMinor + couponDiscountMinor);
     const shippingMinor = computeShippingMinor(cart.items, body.shippingAddress?.city);
     const netAmountMinor = Math.max(0, cart.subtotal.amountMinor - discountMinor + shippingMinor);
 

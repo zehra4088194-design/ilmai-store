@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { BadgeCheck, BookOpen, Download, Facebook, Minus, Plus, Share2, ShieldCheck, Star, Truck, Twitter } from "lucide-react";
+import { BadgeCheck, BookOpen, Download, Facebook, Minus, Plus, Share2, ShieldCheck, Star, Store, Truck, Twitter } from "lucide-react";
 import type { Product, ProductVariant } from "@/types/domain";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
 import { WishlistButton } from "@/components/store/wishlist-button";
@@ -72,11 +72,15 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
   }
 
   const bullets = useMemo(() => [
-    "Complete, topic-wise coverage — nothing skipped.",
-    "Easy to learn and revise before exams.",
-    digital || !PHYSICAL_GOODS_ENABLED ? "Instant access after successful payment." : "Made for delivery within Pakistan.",
-    "Follows the latest board/curriculum syllabus.",
-  ], [digital]);
+    product.productType === "service" ? "Enter any supported whole-rupee amount and refresh the payment QR instantly." : "Complete, topic-wise coverage — nothing skipped.",
+    product.productType === "service" ? "Generate, download and print QRs for your own verified JazzCash account." : "Easy to learn and revise before exams.",
+    product.productType === "service"
+      ? "Portal access is linked to your IlmAI Store account after verified payment."
+      : digital || !PHYSICAL_GOODS_ENABLED
+        ? "Instant access after successful payment."
+        : "Made for delivery within Pakistan.",
+    product.productType === "service" ? "JazzCash merchant onboarding and receiving ID verification are required." : "Follows the latest board/curriculum syllabus.",
+  ], [digital, product.productType]);
 
   return (
     <div className="grid grid-cols-1 gap-9 lg:grid-cols-[1fr_1.05fr] lg:items-start">
@@ -138,7 +142,9 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
           {digital && <span className="rounded-full bg-[#DCFCE7] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] text-[#0F766E]">Instant access</span>}
         </div>
         <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[#0F766E]">
-          {digital || !PHYSICAL_GOODS_ENABLED
+          {product.productType === "service"
+            ? <><ShieldCheck size={13} /> Account portal access after verified payment</>
+            : digital || !PHYSICAL_GOODS_ENABLED
             ? <><Download size={13} /> Instant digital delivery</>
             : isNotesOrder
               ? <><Truck size={13} /> From {NOTES_DELIVERY_TIERS[0].label} in Lahore · {OTHER_CITY_NOTES_DELIVERY_TIERS[0].label} elsewhere</>
@@ -181,6 +187,12 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
         )}
 
         <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap sm:items-center">
+          {product.productType === "service" && !isLoggedIn ? (
+            <div className="w-full rounded-2xl bg-[#F1F5F9] p-4">
+              <p className="text-sm font-bold text-[#0B1D3A]">Sign in is required to purchase account-based service access.</p>
+              <Link href="/login" className="gold-btn mt-3 inline-flex min-h-11 px-5 text-sm">Sign in to continue</Link>
+            </div>
+          ) : <>
           <div className="qty-stepper">
             <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} aria-label="Decrease quantity"><Minus size={14} /></button>
             <span>{quantity}</span>
@@ -215,6 +227,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
           >
             {buying ? "Preparing…" : outOfStock ? "Out of stock" : "Buy Now"}
           </button>
+          </>}
         </div>
 
         {!!product.categories.length && (
@@ -236,7 +249,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
         <div className="mt-6 grid grid-cols-3 gap-2">
           <div className="detail-trust"><ShieldCheck size={16} /><span>Secure</span></div>
           <div className="detail-trust"><BadgeCheck size={16} /><span>Official</span></div>
-          <div className="detail-trust">{digital ? <Download size={16} /> : <Truck size={16} />}<span>{digital ? "Instant" : "Delivery"}</span></div>
+          <div className="detail-trust">{product.productType === "service" ? <Store size={16} /> : digital ? <Download size={16} /> : <Truck size={16} />}<span>{product.productType === "service" ? "Portal" : digital ? "Instant" : "Delivery"}</span></div>
         </div>
       </div>
     </div>

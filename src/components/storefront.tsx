@@ -24,7 +24,6 @@ import { AddToBagButton } from "@/components/store/add-to-bag-button";
 import { WishlistButton } from "@/components/store/wishlist-button";
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
-import { StudyBasketBar } from "@/components/store/study-basket-bar";
 import { Reveal } from "@/components/store/reveal";
 import { formatMoney } from "@/lib/pricing";
 import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
@@ -152,12 +151,16 @@ function ProductCard({ product, index, saved, isLoggedIn }: { product: Product; 
           <span className="text-sm font-bold text-[var(--navy)] sm:text-[15px]">{money(price)}</span>
           {compareAt && <span className="text-[11px] font-medium text-[#94A3B8] line-through">{money(compareAt)}</span>}
         </div>
-        <AddToBagButton
-          variantId={variant?.id}
-          label={outOfStock ? "Out of stock" : "Add to basket"}
-          disabled={outOfStock}
-          className="gold-btn mt-2.5 h-9 w-full text-[12px] disabled:cursor-not-allowed"
-        />
+        {product.productType === "service" && !isLoggedIn ? (
+          <Link href="/login" className="gold-btn mt-2.5 h-9 w-full text-[12px]">Sign in to buy</Link>
+        ) : (
+          <AddToBagButton
+            variantId={variant?.id}
+            label={outOfStock ? "Out of stock" : "Add to basket"}
+            disabled={outOfStock}
+            className="gold-btn mt-2.5 h-9 w-full text-[12px] disabled:cursor-not-allowed"
+          />
+        )}
       </div>
     </article>
   );
@@ -549,7 +552,6 @@ export function Storefront({
         </Reveal>
       )}
 
-      <StudyBasketBar />
       <StoreFooter />
     </main>
   );

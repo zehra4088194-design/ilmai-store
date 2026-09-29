@@ -9,7 +9,8 @@ import { PromotionService } from "./PromotionService";
 import { InventoryService } from "./InventoryService";
 import { OrderAccessService } from "./OrderAccessService";
 import { EmailService } from "./EmailService";
-import { cardProcessingFeeMinor, computeShippingMinor } from "@/lib/pricing";
+import { cardProcessingFeeMinor, computeShippingMinor, STUDY_BASKET_MIN_ITEMS, studyBasketDiscountMinor, studyBasketItemCount } from "@/lib/pricing";
+import { SHOPKEEPER_QR_PRODUCT_SLUG } from "@/constants/shopkeeper";
 import { getPlatformSettings } from "@/lib/platform-settings/server";
 import type { Order } from "@/types/domain";
 import type { z } from "zod";
@@ -96,11 +97,20 @@ export const OrderService = {
     }
     const cart = await CartService.getOrCreateCart();
     if (!cart.items.length) throw new ValidationError("Your cart is empty.");
+    const itemCount = studyBasketItemCount(cart.items);
+    if (itemCount < STUDY_BASKET_MIN_ITEMS) {
+      throw new ValidationError(`Add at least ${STUDY_BASKET_MIN_ITEMS} items to your study basket before checkout. Your basket currently has ${itemCount}.`);
+    }
     const userId = await currentUserId();
+    if (!userId && cart.items.some((item) => item.productSlug === SHOPKEEPER_QR_PRODUCT_SLUG)) {
+      throw new ValidationError("Sign in before purchasing the shopkeeper QR service so access can be linked to your account.");
+    }
     const paymentMethod = options.paymentMethod ?? "jazzcash";
     const settings = paymentMethod === "safepay" ? await getPlatformSettings() : null;
     const cardFeeMinor = paymentMethod === "safepay" ? cardProcessingFeeMinor(cart.subtotal.currency, settings?.exchangeRate.usdToPkr ?? 0) : 0;
-    const discount = input.couponCode ? (await PromotionService.validateCoupon(input.couponCode, cart.subtotal.amountMinor, cart.subtotal.currency)).discountMinor : 0;
+    const basketDiscount = studyBasketDiscountMinor(cart.items, cart.subtotal.amountMinor);
+    const couponDiscount = input.couponCode ? (await PromotionService.validateCoupon(input.couponCode, cart.subtotal.amountMinor, cart.subtotal.currency)).discountMinor : 0;
+    const discount = Math.min(cart.subtotal.amountMinor, basketDiscount + couponDiscount);
     const hasShipping = cart.items.some((item) => ["physical", "book"].includes(item.productType));
     if (hasShipping && !input.shippingAddress) throw new ValidationError("A shipping address is required for physical products.");
     // Shared with the checkout page/API so what the customer is shown/charged before paying is

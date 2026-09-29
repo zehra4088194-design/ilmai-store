@@ -61,6 +61,18 @@ export function hasNotesItems(items: { productSlug?: string | null; quantity: nu
   return items.some((item) => isNotesOrderSlug(item.productSlug));
 }
 
+export const STUDY_BASKET_MIN_ITEMS = 3;
+export const STUDY_BASKET_DISCOUNT_PERCENT = 10;
+
+export function studyBasketItemCount(items: { quantity: number }[]): number {
+  return items.reduce((count, item) => count + item.quantity, 0);
+}
+
+export function studyBasketDiscountMinor(items: { quantity: number }[], subtotalMinor: number): number {
+  if (studyBasketItemCount(items) < STUDY_BASKET_MIN_ITEMS) return 0;
+  return Math.round(subtotalMinor * STUDY_BASKET_DISCOUNT_PERCENT / 100);
+}
+
 export function cardProcessingFeeMinor(currency: string, exchangeRate: number): number {
   if (currency.toUpperCase() !== "PKR" || !Number.isFinite(exchangeRate) || exchangeRate <= 0) return 0;
   return Math.round(CARD_PROCESSING_FEE_USD * exchangeRate * 100);

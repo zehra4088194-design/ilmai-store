@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, Heart, LifeBuoy, Loader2, LogOut, Menu, PackageSearch, Phone, Search, Star, UserRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CartBadge } from "@/components/store/cart-badge";
+import { StudyBasketBar } from "@/components/store/study-basket-bar";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 import { siteConfig } from "@/config/site";
@@ -18,6 +19,7 @@ type Props = { initialSearch?: string; categories?: Category[] };
 // never actual category membership.
 const NAV_LINKS: Array<[string, string]> = [
   ["Study on IlmAI", "https://ilmai.study"],
+  ["Shopkeeper QR", "/shopkeeper"],
   ["Home", "/store"],
   ["Shop", "/store"],
   ["IlmAI Notes", "/store/ilm-ai-notes"],
@@ -65,6 +67,7 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
   }
 
   return (
+    <>
     <header className="sticky top-0 z-40">
       {/* Utility bar */}
       <div className="utility-bar hidden sm:block">
@@ -193,5 +196,7 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
         </div>
       )}
     </header>
+    <StudyBasketBar />
+    </>
   );
 }

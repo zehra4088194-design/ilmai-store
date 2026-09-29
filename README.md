@@ -28,22 +28,13 @@ on the same server.
 
 ## Database
 
-Supabase is intentionally not modified by the application agent. Run these
-migrations manually in order in the target project:
-
-1. `001_initial_store_schema.sql`
-2. `002_production_helpers.sql`
-3. `003_fulfillment_integrity.sql`
-4. `004_platform_settings.sql`
-5. `005_manual_wallet_payments.sql`
-6. `006_payment_operations.sql`
-7. `007_guest_order_access.sql`
-8. `008_inventory_reservations.sql`
-9. `009_rate_limits.sql`
-10. `010_shipping_fulfillment.sql`
-11. `011_coupon_redemptions.sql`
-12. `012_rate_limit_and_rpc_lockdown.sql`
-13. `013_study_account_handoff.sql`
+Supabase migrations are applied manually to the target project, in numeric
+order from `supabase/migrations/`. Shopkeeper Dynamic JazzCash QR adds
+`028_shopkeeper_jazzcash_qr.sql`; it creates a draft, zero-price service
+listing and the tenant-scoped shopkeeper account table. Before publishing
+that product, set its commercial price in Admin → Products. Each buyer also
+needs a JazzCash-issued merchant receiving identifier verified in Admin →
+Shopkeepers; a mobile number is not used to derive that identifier.
 
 The daily exchange-rate workflow calls `/api/cron/usd-pkr-rate` at 20:00 UTC
 (01:00 Pakistan time). The inventory cleanup workflow calls
@@ -71,3 +62,32 @@ the ilmai.study side (referenced in code comments as
 `/api/store-handoff`) — that does **not exist yet** in the main app. Until
 it's added there, `/auth/handoff` safely falls through to a normal
 logged-out visit; nothing is broken by its absence, it's just inert.
+
+### Shopkeeper Dynamic JazzCash QR
+
+The JazzCash QR service is a normal `service` catalog product, not a free QR
+utility. Its draft catalog listing must be priced and published by an admin.
+After an authenticated buyer's Store order is marked paid through the
+existing payment verification/manual review flow, the order completion
+service creates or updates that user's shopkeeper access record. The
+shopkeeper submits their business name, displayed JazzCash number, and
+account name at `/shopkeeper`; an admin configures and verifies the exact
+merchant receiving identifier issued for that JazzCash account before
+activating QR use. The app does not derive a merchant ID from a phone number.
+
+`POST /api/shopkeeper/qr` takes only an amount. It derives the user from the
+authenticated session, checks the linked Store order is still paid, and
+uses that user's active, verified record. The QR reuses
+`src/lib/payments/paymentQr.ts`: JazzCash merchant identity is the value in
+payload tag `04`, amount is tag `05`, expiry is tag `07` in `Asia/Karachi`,
+and CRC is recalculated. The printed/copied mobile number is informational;
+it is not encoded into the QR. Shopkeeper account rows have owner/admin
+read-only RLS and no client write policy; profile edits and QR generation
+are server-scoped to the session user. Suspended, revoked, refunded, or
+unverified accounts cannot generate QRs.
+
+Shopkeeper customer collections are separate from IlmAI Store orders:
+generating a QR creates no Store order, payment, webhook, inventory
+movement, referral, or digital entitlement. The normal customer checkout QR
+continues to use the default merchant identity and existing payment-review
+flow.

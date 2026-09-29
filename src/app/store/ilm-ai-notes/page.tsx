@@ -4,7 +4,6 @@ import { BookOpen, FileText, Search, Sparkles, ClipboardList, ArrowRight } from 
 import { StoreHeader } from "@/components/store/store-header";
 import { StoreFooter } from "@/components/store/store-footer";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
-import { StudyBasketBar } from "@/components/store/study-basket-bar";
 import { IlmaiNotesService } from "@/services/IlmaiNotesService";
 import { formatMoney } from "@/lib/pricing";
 
@@ -118,7 +117,6 @@ export default async function IlmAiNotesPage({ searchParams }: { searchParams: S
           </div>
         )}
       </main>
-      <StudyBasketBar />
       <StoreFooter />
     </div>
   );

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { cardProcessingFeeMinor, computeShippingMinor, formatMoney, manualPaymentTotalPkr, usdToPkr } from "./pricing";
+import { cardProcessingFeeMinor, computeShippingMinor, formatMoney, manualPaymentTotalPkr, studyBasketDiscountMinor, studyBasketItemCount, usdToPkr } from "./pricing";
 
 // Non-notes items don't carry productSlug in real cart data either — computeShippingMinor treats
 // it as "not one of ours" either way (see isNotesOrderSlug), so tests below omit it freely.
@@ -80,4 +80,12 @@ test("cardProcessingFeeMinor: fixed $0.50 is converted to PKR minor units", () =
   assert.equal(cardProcessingFeeMinor("PKR", 280), 14000); // PKR 140
   assert.equal(cardProcessingFeeMinor("PKR", 277.5), 13875);
   assert.equal(cardProcessingFeeMinor("USD", 280), 0); // Safepay settles this store in PKR
+});
+
+test("study basket requires three total units and discounts the subtotal by 10%", () => {
+  const items = [{ quantity: 1 }, { quantity: 1 }, { quantity: 1 }];
+  assert.equal(studyBasketItemCount(items), 3);
+  assert.equal(studyBasketDiscountMinor(items, 10001), 1000);
+  assert.equal(studyBasketDiscountMinor([{ quantity: 2 }, { quantity: 1 }], 10000), 1000);
+  assert.equal(studyBasketDiscountMinor([{ quantity: 2 }], 10000), 0);
 });

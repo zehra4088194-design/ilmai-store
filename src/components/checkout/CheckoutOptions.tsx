@@ -7,7 +7,7 @@ import { MANUAL_PAYMENT_OPTIONS, SUPPORT_WHATSAPP_NUMBER } from "@/constants/man
 import { SAFEPAY_ENABLED } from "@/constants/order";
 import { siteConfig } from "@/config/site";
 import { getRecaptchaToken } from "@/lib/recaptcha-client";
-import { cardProcessingFeeMinor, computeShippingMinor, hasNotesItems, manualPaymentTotalPkr, NOTES_DELIVERY_TIERS, OTHER_CITY_NOTES_DELIVERY_TIERS } from "@/lib/pricing";
+import { cardProcessingFeeMinor, computeShippingMinor, hasNotesItems, manualPaymentTotalPkr, NOTES_DELIVERY_TIERS, OTHER_CITY_NOTES_DELIVERY_TIERS, STUDY_BASKET_DISCOUNT_PERCENT, studyBasketDiscountMinor } from "@/lib/pricing";
 import type { Cart } from "@/types/domain";
 
 type Props = {
@@ -72,6 +72,8 @@ export function CheckoutOptions({ cart, exchangeRate }: Props) {
   const [couponError, setCouponError] = useState<string | null>(null);
   const selectedCity = city === "__other__" ? otherCity.trim() : city.trim();
   const hasNoteItems = hasNotesItems(cart.items);
+  const basketDiscountMinor = studyBasketDiscountMinor(cart.items, cart.subtotal.amountMinor);
+  const effectiveCouponDiscountMinor = Math.min(couponDiscountMinor ?? 0, Math.max(0, cart.subtotal.amountMinor - basketDiscountMinor));
   const deliveryMinor = useMemo(() => computeShippingMinor(cart.items, selectedCity), [cart.items, selectedCity]);
   const cardFeeMinorValue = cardProcessingFeeMinor(cart.subtotal.currency, exchangeRate);
   const cardFeePkr = cardFeeMinorValue / 100;
@@ -109,13 +111,11 @@ export function CheckoutOptions({ cart, exchangeRate }: Props) {
   // Re-derives the wallet total client-side once a coupon is applied — the
   // server-computed `totalPkr` prop only knows about subtotal + shipping
   // (the coupon can't be known until the shopper types it in here), so this
-  // mirrors POST /api/checkout/jazzcash's own netAmountMinor math with the
-  // discount subtracted in too. The actual order still independently
-  // re-validates and applies the coupon server-side — this is display only.
+  // mirrors POST /api/checkout/jazzcash and OrderService's server-side total.
   const effectiveTotalPkr = useMemo(() => {
-    const netMinor = Math.max(0, cart.subtotal.amountMinor - (couponDiscountMinor ?? 0) + deliveryMinor);
+    const netMinor = Math.max(0, cart.subtotal.amountMinor - basketDiscountMinor - effectiveCouponDiscountMinor + deliveryMinor);
     return manualPaymentTotalPkr(netMinor, cart.subtotal.currency, exchangeRate);
-  }, [couponDiscountMinor, cart.subtotal.amountMinor, cart.subtotal.currency, deliveryMinor, exchangeRate]);
+  }, [basketDiscountMinor, effectiveCouponDiscountMinor, cart.subtotal.amountMinor, cart.subtotal.currency, deliveryMinor, exchangeRate]);
   const cardTotalPkr = effectiveTotalPkr + cardFeePkr;
 
   useEffect(() => {
@@ -255,6 +255,6 @@ export function CheckoutOptions({ cart, exchangeRate }: Props) {
       <p className="mt-6 text-xs leading-5 text-[#64748B]">Need help? Email <a className="font-bold text-[#0F766E]" href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>.</p>
     </section>
     {walletOrderId && <ManualPaymentProofForm orderId={walletOrderId} />}
-    <aside className="h-fit rounded-[2rem] border bg-[#0B1D3A] p-6 text-white sm:p-8"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Your order</p><div className="mt-6 grid gap-4">{cart.items.map((item) => <div key={item.id} className="flex justify-between gap-4 text-sm"><span className="min-w-0 break-words text-[#B9C4E0]">{item.productTitle} × {item.quantity}</span><span className="shrink-0 font-bold">{item.unitPrice.currency} {(item.unitPrice.amountMinor * item.quantity / 100).toFixed(2)}</span></div>)}{requiresShipping && <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Delivery</span><span className="font-bold">{deliveryMinor ? `${cart.subtotal.currency} ${(deliveryMinor / 100).toFixed(2)}` : "Free"}</span></div>}{method === "safepay" && cardFeePkr > 0 ? <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Card processing fee</span><span className="font-bold">PKR ${(cardFeePkr).toFixed(2)}</span></div> : null}{couponDiscountMinor ? <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Coupon ({couponCode.trim().toUpperCase()})</span><span className="font-bold text-[#4ADE80]">&minus;{cart.subtotal.currency} {(couponDiscountMinor / 100).toFixed(2)}</span></div> : null}</div><div className="mt-6 border-t border-white/20 pt-5"><div className="flex justify-between text-sm text-[#B9C4E0]"><span>{method === "safepay" ? "Card total" : "JazzCash total"}</span><span>PKR</span></div><div className="mt-2 text-3xl font-black">{new Intl.NumberFormat("en-PK").format(method === "safepay" ? cardTotalPkr : effectiveTotalPkr)}</div><p className="mt-3 text-xs leading-5 text-[#B9C4E0]">USD 1 = PKR {exchangeRate.toFixed(2)}. JazzCash uses the exact order total; card checkout adds a fixed $0.50 processing fee.</p></div></aside>
+    <aside className="h-fit rounded-[2rem] border bg-[#0B1D3A] p-6 text-white sm:p-8"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Your order</p><div className="mt-6 grid gap-4">{cart.items.map((item) => <div key={item.id} className="flex justify-between gap-4 text-sm"><span className="min-w-0 break-words text-[#B9C4E0]">{item.productTitle} × {item.quantity}</span><span className="shrink-0 font-bold">{item.unitPrice.currency} {(item.unitPrice.amountMinor * item.quantity / 100).toFixed(2)}</span></div>)}{basketDiscountMinor > 0 && <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Study basket ({STUDY_BASKET_DISCOUNT_PERCENT}% off)</span><span className="font-bold text-[#4ADE80]">&minus;{cart.subtotal.currency} {(basketDiscountMinor / 100).toFixed(2)}</span></div>}{requiresShipping && <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Delivery</span><span className="font-bold">{deliveryMinor ? `${cart.subtotal.currency} ${(deliveryMinor / 100).toFixed(2)}` : "Free"}</span></div>}{method === "safepay" && cardFeePkr > 0 ? <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Card processing fee</span><span className="font-bold">PKR ${(cardFeePkr).toFixed(2)}</span></div> : null}{effectiveCouponDiscountMinor > 0 ? <div className="flex justify-between gap-4 text-sm"><span className="text-[#B9C4E0]">Coupon ({couponCode.trim().toUpperCase()})</span><span className="font-bold text-[#4ADE80]">&minus;{cart.subtotal.currency} {(effectiveCouponDiscountMinor / 100).toFixed(2)}</span></div> : null}</div><div className="mt-6 border-t border-white/20 pt-5"><div className="flex justify-between text-sm text-[#B9C4E0]"><span>{method === "safepay" ? "Card total" : "JazzCash total"}</span><span>PKR</span></div><div className="mt-2 text-3xl font-black">{new Intl.NumberFormat("en-PK").format(method === "safepay" ? cardTotalPkr : effectiveTotalPkr)}</div><p className="mt-3 text-xs leading-5 text-[#B9C4E0]">USD 1 = PKR {exchangeRate.toFixed(2)}. JazzCash uses the exact order total; card checkout adds a fixed $0.50 processing fee.</p></div></aside>
   </div>;
 }
