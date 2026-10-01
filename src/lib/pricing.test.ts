@@ -82,6 +82,15 @@ test("cardProcessingFeeMinor: fixed $0.50 is converted to PKR minor units", () =
   assert.equal(cardProcessingFeeMinor("USD", 280), 0); // Safepay settles this store in PKR
 });
 
+test("shopkeeper QR service does not count toward the study basket threshold", () => {
+  const items = [
+    { quantity: 2, productSlug: "notes-abc" },
+    { quantity: 1, productSlug: "jazzcash-dynamic-qr-for-shopkeepers" },
+  ];
+  assert.equal(studyBasketItemCount(items), 2);
+  assert.equal(studyBasketDiscountMinor(items, 10000), 0);
+});
+
 test("study basket requires three total units and discounts the subtotal by 10%", () => {
   const items = [{ quantity: 1 }, { quantity: 1 }, { quantity: 1 }];
   assert.equal(studyBasketItemCount(items), 3);
