@@ -2,7 +2,6 @@ import Link from "next/link";
 import { CartService } from "@/services/CartService";
 import { getPlatformSettings } from "@/lib/platform-settings/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-
 import { CheckoutOptions } from "@/components/checkout/CheckoutOptions";
 import { StoreHeader } from "@/components/store/store-header";
 import { StoreFooter } from "@/components/store/store-footer";
@@ -48,6 +47,7 @@ export default async function CheckoutPage() {
             </div>
           ) : cart?.items.length && (validShopkeeperCart || studyCheckoutAllowed) ? (
             <CheckoutOptions cart={cart} exchangeRate={exchangeRate} />
+          ) : cart?.items.length ? (
             <div className="rounded-3xl border border-[#D4AF37]/40 bg-[#FFFBEB] p-6 text-center sm:p-9">
               <h2 className="text-2xl font-black text-[#0B1D3A]">Add a few more study picks.</h2>
               <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#64748B]">Checkout opens when your basket has at least {STUDY_BASKET_MIN_ITEMS} items. You have {studyBasketItemCount(cart.items)} so far — add more notes to unlock 10% off.</p>
