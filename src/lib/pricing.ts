@@ -64,8 +64,8 @@ export function hasNotesItems(items: { productSlug?: string | null; quantity: nu
 export const STUDY_BASKET_MIN_ITEMS = 3;
 export const STUDY_BASKET_DISCOUNT_PERCENT = 10;
 
-export function studyBasketItemCount(items: { quantity: number }[]): number {
-  return items.reduce((count, item) => count + item.quantity, 0);
+export function studyBasketItemCount(items: { quantity: number; productSlug?: string | null }[]): number {
+  return items.reduce((count, item) => count + (item.productSlug === "jazzcash-dynamic-qr-for-shopkeepers" ? 0 : item.quantity), 0);
 }
 
 export function studyBasketDiscountMinor(items: { quantity: number }[], subtotalMinor: number): number {
