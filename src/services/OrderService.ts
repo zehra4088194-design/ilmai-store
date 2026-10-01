@@ -97,13 +97,21 @@ export const OrderService = {
     }
     const cart = await CartService.getOrCreateCart();
     if (!cart.items.length) throw new ValidationError("Your cart is empty.");
-    const itemCount = studyBasketItemCount(cart.items);
-    if (itemCount < STUDY_BASKET_MIN_ITEMS) {
-      throw new ValidationError(`Add at least ${STUDY_BASKET_MIN_ITEMS} items to your study basket before checkout. Your basket currently has ${itemCount}.`);
-    }
+
+    const shopkeeperItems = cart.items.filter((item) => item.productSlug === SHOPKEEPER_QR_PRODUCT_SLUG);
+    const hasShopkeeperQr = shopkeeperItems.length > 0;
     const userId = await currentUserId();
-    if (!userId && cart.items.some((item) => item.productSlug === SHOPKEEPER_QR_PRODUCT_SLUG)) {
-      throw new ValidationError("Sign in before purchasing the shopkeeper QR service so access can be linked to your account.");
+
+    if (hasShopkeeperQr) {
+      if (!userId) throw new ValidationError("Sign in before purchasing the shopkeeper QR service so access can be linked to your account.");
+      if (cart.items.length !== 1 || shopkeeperItems[0]?.quantity !== 1) {
+        throw new ValidationError("The Shopkeeper Dynamic JazzCash QR service must be purchased separately from other Store items.");
+      }
+    } else {
+      const itemCount = studyBasketItemCount(cart.items);
+      if (itemCount < STUDY_BASKET_MIN_ITEMS) {
+        throw new ValidationError(`Add at least ${STUDY_BASKET_MIN_ITEMS} items to your study basket before checkout. Your basket currently has ${itemCount}.`);
+      }
     }
     const paymentMethod = options.paymentMethod ?? "jazzcash";
     const settings = paymentMethod === "safepay" ? await getPlatformSettings() : null;
