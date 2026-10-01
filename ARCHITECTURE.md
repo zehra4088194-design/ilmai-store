@@ -80,17 +80,15 @@ can move `payment_status` to `paid`.
 
 ## Shopkeeper Dynamic JazzCash QR
 
-The service is sold as a normal `service` product through the existing
-catalog, cart, and order payment flow. Guest checkout is rejected only when
-that service is in the cart, so its verified purchase can be linked to an
-authenticated Store user. `OrderCompletionService` provisions the
-`shopkeepers` row only after the normal Store payment transition to `paid`;
-refunds revoke it. Admins set the product price before publishing and
-configure the JazzCash-issued receiving identifier before activation.
+Shopkeeper access is provisioned by an administrator for an existing Store
+account using its email and the shopkeeper's JazzCash number. This feature is
+not sold as a catalog product and does not create Store orders or auth
+accounts. The exact JazzCash-issued receiving identifier must be entered and
+explicitly verified by an admin before access can be activated.
 
 `/shopkeeper` displays only the signed-in user's shop record. Its QR endpoint
-accepts an amount, not an owner ID; it resolves the session user, requires a
-paid linked order and active, verified account, then calls the shared
+accepts an amount, not an owner ID; it resolves the session user and requires
+an active, verified account, then calls the shared
 `paymentQr.ts` builder. Payload tag `04` contains the provider-issued
 merchant identifier, not the display mobile number. The builder keeps the
 existing tag layout, Pakistan-time expiry, and CRC algorithm; normal

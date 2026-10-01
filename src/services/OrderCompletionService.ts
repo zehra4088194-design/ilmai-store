@@ -8,7 +8,6 @@ import { InventoryService } from "./InventoryService";
 import { OrderService } from "./OrderService";
 import { PromotionService } from "./PromotionService";
 import { ReferralService } from "./ReferralService";
-import { ShopkeeperService } from "./ShopkeeperService";
 import type { ProviderTransaction } from "./payment/PaymentProvider";
 import type { Order } from "@/types/domain";
 
@@ -83,7 +82,6 @@ export const OrderCompletionService = {
     await InventoryService.commitForOrder(order.id);
     await PromotionService.commitCouponForOrder(order.id);
     await createDigitalEntitlements(order);
-    await ShopkeeperService.grantFromPaidOrder(order.id, order.userId);
     if (order.userId) await ReferralService.rewardReferrerIfEligible(order.id, order.userId);
 
     if (!await hasEvent(order.id, "payment_confirmation_email")) {
@@ -113,7 +111,6 @@ export const OrderCompletionService = {
     const order = await OrderService.getByIdAdmin(orderId);
     const { error } = await db.from("orders").update({ payment_status: "refunded", status: "refunded" }).eq("id", orderId);
     if (error) throw new Error(error.message);
-    await ShopkeeperService.revokeForOrder(orderId);
     await InventoryService.refundForOrder(orderId);
     if (transaction) {
       const { error: paymentError } = await db.from("payments").upsert({ order_id: orderId, provider: "safepay", provider_transaction_id: transaction.providerTransactionId, status: "refunded", amount_minor: transaction.amountMinor, currency: transaction.currency }, { onConflict: "provider,provider_transaction_id" });

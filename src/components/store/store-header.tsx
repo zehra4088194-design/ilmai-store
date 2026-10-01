@@ -19,7 +19,6 @@ type Props = { initialSearch?: string; categories?: Category[] };
 // never actual category membership.
 const NAV_LINKS: Array<[string, string]> = [
   ["Study on IlmAI", "https://ilmai.study"],
-  ["Shopkeeper QR", "/shopkeeper"],
   ["Home", "/store"],
   ["Shop", "/store"],
   ["IlmAI Notes", "/store/ilm-ai-notes"],
