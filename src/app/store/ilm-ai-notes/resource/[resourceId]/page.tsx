@@ -30,11 +30,11 @@ export default async function StudyNoteResourcePage({ params }: { params: Params
 
   const pathBits = [
     { label: "Study Notes", href: "/store/ilm-ai-notes" },
-    { label: resource.academicLevel === "school" ? "School" : "College / Intermediate", href: \`/store/ilm-ai-notes?level=\${encodeURIComponent(resource.academicLevel)}\` },
-    resource.gradeLevel && { label: resource.gradeLevel.replace("GRADE_", "Grade "), href: \`/store/ilm-ai-notes?level=\${encodeURIComponent(resource.academicLevel)}&grade=\${encodeURIComponent(resource.gradeLevel)}\` },
-    { label: resource.subjectName, href: \`/store/ilm-ai-notes?level=\${encodeURIComponent(resource.academicLevel)}&grade=\${encodeURIComponent(resource.gradeLevel || "")}&subject=\${encodeURIComponent(resource.subjectSlug)}\` },
-    { label: resource.bookTitle, href: \`/store/ilm-ai-notes?level=\${encodeURIComponent(resource.academicLevel)}&grade=\${encodeURIComponent(resource.gradeLevel || "")}&subject=\${encodeURIComponent(resource.subjectSlug)}&book=\${encodeURIComponent(resource.bookTitle)}\` },
-    resource.chapterSlug && { label: resource.chapterName || "Chapter", href: \`/store/ilm-ai-notes?level=\${encodeURIComponent(resource.academicLevel)}&grade=\${encodeURIComponent(resource.gradeLevel || "")}&subject=\${encodeURIComponent(resource.subjectSlug)}&book=\${encodeURIComponent(resource.bookTitle)}&chapter=\${encodeURIComponent(resource.chapterSlug)}\` },
+    { label: resource.academicLevel === "school" ? "School" : "College / Intermediate", href: `/store/ilm-ai-notes?level=${encodeURIComponent(resource.academicLevel)}` },
+    resource.gradeLevel && { label: resource.gradeLevel.replace("GRADE_", "Grade "), href: `/store/ilm-ai-notes?level=${encodeURIComponent(resource.academicLevel)}&grade=${encodeURIComponent(resource.gradeLevel)}` },
+    { label: resource.subjectName, href: `/store/ilm-ai-notes?level=${encodeURIComponent(resource.academicLevel)}&grade=${encodeURIComponent(resource.gradeLevel || "")}&subject=${encodeURIComponent(resource.subjectSlug)}` },
+    { label: resource.bookTitle, href: `/store/ilm-ai-notes?level=${encodeURIComponent(resource.academicLevel)}&grade=${encodeURIComponent(resource.gradeLevel || "")}&subject=${encodeURIComponent(resource.subjectSlug)}&book=${encodeURIComponent(resource.bookTitle)}` },
+    resource.chapterSlug && { label: resource.chapterName || "Chapter", href: `/store/ilm-ai-notes?level=${encodeURIComponent(resource.academicLevel)}&grade=${encodeURIComponent(resource.gradeLevel || "")}&subject=${encodeURIComponent(resource.subjectSlug)}&book=${encodeURIComponent(resource.bookTitle)}&chapter=${encodeURIComponent(resource.chapterSlug)}` },
   ].filter(Boolean) as { label: string; href: string }[];
 
   return (

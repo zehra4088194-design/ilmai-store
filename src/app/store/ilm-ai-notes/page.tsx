@@ -39,7 +39,7 @@ function withParams(current: Record<string, string | undefined>, patch: Record<s
     else next.set(key, value);
   }
   const query = next.toString();
-  return query ? \`/store/ilm-ai-notes?\${query}\` : "/store/ilm-ai-notes";
+  return query ? `/store/ilm-ai-notes?${query}` : "/store/ilm-ai-notes";
 }
 
 function distinct<T>(rows: StudyNoteCatalogEntry[], key: (row: StudyNoteCatalogEntry) => T | null | undefined) {
@@ -102,7 +102,7 @@ export default async function StudyNotesPage({ searchParams }: { searchParams: S
         return {
           key: String(level),
           title: labelLevel(level as "school" | "college"),
-          meta: \`\${new Set(rowsForLevel.map((row) => row.gradeLevel).filter(Boolean)).size} grades · \${rowsForLevel.length} notes\`,
+          meta: `${new Set(rowsForLevel.map((row) => row.gradeLevel).filter(Boolean)).size} grades · ${rowsForLevel.length} notes`,
           href: withParams(current, { level: String(level), grade: null, subject: null, book: null, chapter: null, section: null }),
         };
       })
@@ -112,7 +112,7 @@ export default async function StudyNotesPage({ searchParams }: { searchParams: S
           return {
             key: String(grade),
             title: String(grade).replace("GRADE_", "Grade "),
-            meta: \`\${new Set(rowsForGrade.map((row) => row.subjectSlug)).size} subjects · \${rowsForGrade.length} notes\`,
+            meta: `${new Set(rowsForGrade.map((row) => row.subjectSlug)).size} subjects · ${rowsForGrade.length} notes`,
             href: withParams(current, { grade: String(grade), subject: null, book: null, chapter: null, section: null }),
           };
         })
@@ -124,7 +124,7 @@ export default async function StudyNotesPage({ searchParams }: { searchParams: S
             return {
               key: subjectSlug,
               title: match.subjectName,
-              meta: \`\${new Set(subjectRows.map((row) => row.bookTitle)).size} books · \${subjectRows.length} notes\`,
+              meta: `${new Set(subjectRows.map((row) => row.bookTitle)).size} books · ${subjectRows.length} notes`,
               href: withParams(current, { subject: subjectSlug, book: null, chapter: null, section: null }),
             };
           })
@@ -135,7 +135,7 @@ export default async function StudyNotesPage({ searchParams }: { searchParams: S
               return {
                 key: bookTitle,
                 title: bookTitle,
-                meta: \`\${new Set(bookRows.map((row) => row.chapterSlug).filter(Boolean)).size} chapters · \${bookRows.length} notes\`,
+                meta: `${new Set(bookRows.map((row) => row.chapterSlug).filter(Boolean)).size} chapters · ${bookRows.length} notes`,
                 href: withParams(current, { book: bookTitle, chapter: null, section: null }),
               };
             })
@@ -146,8 +146,8 @@ export default async function StudyNotesPage({ searchParams }: { searchParams: S
                 const chapterRows = scoped.filter((row) => row.chapterSlug === slug);
                 return {
                   key: slug,
-                  title: match.chapterNumber ? \`Chapter \${match.chapterNumber}: \${match.chapterName}\` : (match.chapterName || "Chapter"),
-                  meta: \`\${chapterRows.length} resources · \${new Set(chapterRows.map((row) => row.contentSection)).size} sections\`,
+                  title: match.chapterNumber ? `Chapter ${match.chapterNumber}: ${match.chapterName}` : (match.chapterName || "Chapter"),
+                  meta: `${chapterRows.length} resources · ${new Set(chapterRows.map((row) => row.contentSection)).size} sections`,
                   href: withParams(current, { chapter: slug, section: null }),
                 };
               })
@@ -158,7 +158,7 @@ export default async function StudyNotesPage({ searchParams }: { searchParams: S
                   return {
                     key: value,
                     title: SECTION_LABELS[value],
-                    meta: \`\${sectionRows.length} resources\`,
+                    meta: `${sectionRows.length} resources`,
                     href: withParams(current, { section: value }),
                   };
                 })
@@ -273,7 +273,7 @@ export default async function StudyNotesPage({ searchParams }: { searchParams: S
                 <article key={resource.resourceId} className="rounded-3xl border border-[var(--border)] bg-white p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <span className="rounded-full bg-[#0F766E]/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#0F766E]">{SECTION_LABELS[resource.contentSection]}</span>
-                    <span className="text-[11px] font-bold text-[var(--muted)]">{resource.pageCount ? \`\${resource.pageCount} pages\` : "Pages checked when added"}</span>
+                    <span className="text-[11px] font-bold text-[var(--muted)]">{resource.pageCount ? `${resource.pageCount} pages` : "Pages checked when added"}</span>
                   </div>
                   <p className="mt-4 text-xs font-black uppercase tracking-wide text-[var(--muted)]">{resource.subjectName}</p>
                   <h3 className="mt-1 line-clamp-2 text-base font-black">{resource.resourceTitle}</h3>
@@ -283,7 +283,7 @@ export default async function StudyNotesPage({ searchParams }: { searchParams: S
                     {resource.hasDarkVersion && <span className="rounded-full border px-2 py-1 text-[10px] font-bold">Dark theme</span>}
                   </div>
                   <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
-                    <Link href={\`/store/ilm-ai-notes/resource/\${resource.resourceId}\`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[var(--line)] px-3 text-xs font-black hover:border-[#0F766E] hover:text-[#0F766E]">View resource <ArrowRight size={14} /></Link>
+                    <Link href={`/store/ilm-ai-notes/resource/${resource.resourceId}`} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[var(--line)] px-3 text-xs font-black hover:border-[#0F766E] hover:text-[#0F766E]">View resource <ArrowRight size={14} /></Link>
                     <StudyNoteAddToBasket resourceId={resource.resourceId} hasLightVersion={resource.hasLightVersion} hasDarkVersion={resource.hasDarkVersion} compact />
                   </div>
                 </article>

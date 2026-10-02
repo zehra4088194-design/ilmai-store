@@ -43,12 +43,12 @@ async function fetchPage(offset: number, limit: number): Promise<CatalogResponse
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   const response = await fetch(url, {
-    headers: { Authorization: \`Bearer \${sharedSecret()}\` },
+    headers: { Authorization: `Bearer ${sharedSecret()}` },
     cache: "no-store",
     signal: AbortSignal.timeout(30_000),
   });
   const json = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(json?.error || \`ilmAI catalog sync failed (\${response.status}).\`);
+  if (!response.ok) throw new Error(json?.error || `ilmAI catalog sync failed (${response.status}).`);
   return json as CatalogResponse;
 }
 

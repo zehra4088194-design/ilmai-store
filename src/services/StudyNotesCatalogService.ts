@@ -99,12 +99,12 @@ export const StudyNotesCatalogService = {
     if (term) {
       const safe = term.replace(/[(),]/g, " ").replace(/[%_]/g, " ").replace(/\s+/g, " ").trim().slice(0, 100);
       if (safe) {
-        const pattern = \`%\${safe}%\`;
+        const pattern = `%${safe}%`;
         request = request.or([
-          \`resource_title.ilike.\${pattern}\`,
-          \`subject_name.ilike.\${pattern}\`,
-          \`book_title.ilike.\${pattern}\`,
-          \`chapter_name.ilike.\${pattern}\`,
+          `resource_title.ilike.${pattern}`,
+          `subject_name.ilike.${pattern}`,
+          `book_title.ilike.${pattern}`,
+          `chapter_name.ilike.${pattern}`,
         ].join(","));
       }
     }
