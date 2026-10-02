@@ -28,7 +28,9 @@ export type StudyNoteCatalogEntry = {
   productSlug?: string | null;
 };
 
-// Supabase responses are intentionally kept local to this mapper.\n// eslint-disable-next-line @typescript-eslint/no-explicit-any\ntype Raw = Record<string, any>;
+// Supabase responses are intentionally kept local to this mapper.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Raw = Record<string, any>;
 
 const SECTION_ORDER: Record<StudyNoteCatalogEntry["contentSection"], number> = {
   reading: 0,
