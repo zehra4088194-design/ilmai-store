@@ -43,6 +43,10 @@ async function fetchPrintableResource(resourceId: string): Promise<RemoteResourc
 
 export const StudyNotesMaterializationService = {
   async materialize(resourceId: string, theme?: StudyNoteTheme) {
+    const catalog = await StudyNotesCatalogService.getByResourceId(resourceId);
+    if (!catalog) {
+      throw new ValidationError("This Study Note is no longer available for Store purchase.");
+    }
     const remote = await fetchPrintableResource(resourceId);
     const availableThemes: StudyNoteTheme[] = [];
     if (remote.hasLightVersion) availableThemes.push("light");

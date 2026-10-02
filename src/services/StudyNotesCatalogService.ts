@@ -245,6 +245,7 @@ export const StudyNotesCatalogService = {
     }));
     const { error } = await db.from("study_note_catalog").upsert(payload, { onConflict: "resource_id" });
     if (error) throw new Error(error.message);
+    return { inserted, updated, unchanged };
   },
 
   async markMissingUnavailable(syncStartedAt: string): Promise<number> {
