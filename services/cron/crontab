@@ -6,3 +6,4 @@
 0 20 * * * curl -fsS --retry 3 -H "Authorization: Bearer $CRON_SECRET" "$APP_INTERNAL_URL/api/cron/usd-pkr-rate"
 0 * * * * curl -fsS --retry 2 -H "Authorization: Bearer $CRON_SECRET" "$APP_INTERNAL_URL/api/cron/abandoned-cart"
 */15 * * * * curl -fsS --retry 2 -H "Authorization: Bearer $CRON_SECRET" "$APP_INTERNAL_URL/api/cron/release-inventory"
+*/30 * * * * curl -fsS --retry 2 -H "Authorization: Bearer $CRON_SECRET" "$APP_INTERNAL_URL/api/cron/study-notes-sync"

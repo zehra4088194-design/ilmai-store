@@ -11,6 +11,7 @@ import { OrderAccessService } from "./OrderAccessService";
 import { EmailService } from "./EmailService";
 import { cardProcessingFeeMinor, computeShippingMinor, STUDY_BASKET_MIN_ITEMS, studyBasketDiscountMinor, studyBasketItemCount } from "@/lib/pricing";
 import { getPlatformSettings } from "@/lib/platform-settings/server";
+import { SHOPKEEPER_QR_PRODUCT_SLUG } from "@/constants/shopkeeper";
 import type { Order } from "@/types/domain";
 import type { z } from "zod";
 import type { checkoutSchema, fulfillmentUpdateSchema } from "@/validators/commerce";
@@ -100,8 +101,6 @@ export const OrderService = {
     const shopkeeperItems = cart.items.filter((item) => item.productSlug === SHOPKEEPER_QR_PRODUCT_SLUG);
     const hasShopkeeperQr = shopkeeperItems.length > 0;
     const userId = await currentUserId();
-<<<<<<< Updated upstream
-
     if (hasShopkeeperQr) {
       if (!userId) throw new ValidationError("Sign in before purchasing the shopkeeper QR service so access can be linked to your account.");
       if (cart.items.length !== 1 || shopkeeperItems[0]?.quantity !== 1) {
@@ -113,8 +112,6 @@ export const OrderService = {
         throw new ValidationError(`Add at least ${STUDY_BASKET_MIN_ITEMS} items to your study basket before checkout. Your basket currently has ${itemCount}.`);
       }
     }
-=======
->>>>>>> Stashed changes
     const paymentMethod = options.paymentMethod ?? "jazzcash";
     const settings = paymentMethod === "safepay" ? await getPlatformSettings() : null;
     const cardFeeMinor = paymentMethod === "safepay" ? cardProcessingFeeMinor(cart.subtotal.currency, settings?.exchangeRate.usdToPkr ?? 0) : 0;
