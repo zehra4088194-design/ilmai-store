@@ -56,12 +56,12 @@ before deployment.
 Customer auth (`/login`, `/signup`, `/account`, `/orders/[id]`), the full
 admin panel (products + variants + media, categories, promotions/banners/
 coupons, reviews moderation, order fulfillment/mark-paid/reject, inventory,
-settings), and a cross-app SSO handoff (`/auth/handoff`) are also
-implemented. The handoff route expects a matching token-minting endpoint on
-the ilmai.study side (referenced in code comments as
-`/api/store-handoff`) — that does **not exist yet** in the main app. Until
-it's added there, `/auth/handoff` safely falls through to a normal
-logged-out visit; nothing is broken by its absence, it's just inert.
+settings), a cross-app SSO handoff (`/auth/handoff`), and the hierarchical
+IlmAI Study Notes catalog are also implemented. The Study Notes catalog mirrors
+printable `library_resources` metadata from ilmai.study without copying the
+educational file contents; products are materialized lazily from the existing
+`ProductService.syncNotesProduct` flow and are added through the normal cart
+and checkout path.
 
 ### Shopkeeper Dynamic JazzCash QR
 
