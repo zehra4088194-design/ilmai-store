@@ -347,18 +347,21 @@ export const ProductService = {
       stockQuantity: 500,
     }));
 
-    const productId = existing
-      ? (
-          await this.adminUpdate({
-            id: existing.id,
-            title: input.title,
-            description,
-            basePriceMinor: input.priceMinor,
-            categoryIds,
-            variants,
-          })
-        ).id
-      : (
+    let productId: string;
+    if (existing) {
+      productId = (
+        await this.adminUpdate({
+          id: existing.id,
+          title: input.title,
+          description,
+          basePriceMinor: input.priceMinor,
+          categoryIds,
+          variants,
+        })
+      ).id;
+    } else {
+      try {
+        productId = (
           await this.adminCreate({
             slug,
             title: input.title,
@@ -373,6 +376,23 @@ export const ProductService = {
             variants,
           })
         ).id;
+      } catch (error) {
+        // Another request can win the deterministic slug race between our
+        // initial lookup and INSERT. Re-read the canonical product and let
+        // the losing request continue instead of returning a duplicate error.
+        const { data: raced } = await db.from("products").select("id").eq("slug", slug).maybeSingle();
+        if (!raced) throw error;
+        productId = raced.id;
+        await this.adminUpdate({
+          id: productId,
+          title: input.title,
+          description,
+          basePriceMinor: input.priceMinor,
+          categoryIds,
+          variants,
+        });
+      }
+    }
 
     await replaceAutoCover(db, productId, input.coverSvg);
 

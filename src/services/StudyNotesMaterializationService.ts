@@ -29,15 +29,15 @@ function sharedSecret() {
 }
 
 async function fetchPrintableResource(resourceId: string): Promise<RemoteResource> {
-  const url = new URL(\`/api/internal/store/study-notes/resource/\${encodeURIComponent(resourceId)}\`, studyAppUrl());
+  const url = new URL(`/api/internal/store/study-notes/resource/${encodeURIComponent(resourceId)}`, studyAppUrl());
   url.searchParams.set("resolvePrice", "1");
   const response = await fetch(url, {
-    headers: { Authorization: \`Bearer \${sharedSecret()}\` },
+    headers: { Authorization: `Bearer ${sharedSecret()}` },
     cache: "no-store",
     signal: AbortSignal.timeout(30_000),
   });
   const json = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(json?.error || \`ilmAI resource resolution failed (\${response.status}).\`);
+  if (!response.ok) throw new Error(json?.error || `ilmAI resource resolution failed (${response.status}).`);
   return json as RemoteResource;
 }
 
@@ -72,13 +72,13 @@ export const StudyNotesMaterializationService = {
       const { data: existing } = await db
         .from("products")
         .select("id,slug")
-        .eq("slug", \`notes-\${resourceId}\`)
+        .eq("slug", `notes-${resourceId}`)
         .maybeSingle();
       if (!existing) throw error;
       productResult = {
         id: existing.id,
         slug: existing.slug,
-        url: \`\${(process.env.NEXT_PUBLIC_STORE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://ilmai.store").replace(/\/$/, "")}/store/\${existing.slug}\`,
+        url: `${(process.env.NEXT_PUBLIC_STORE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://ilmai.store").replace(/\/$/, "")}/store/${existing.slug}`,
       };
     }
 

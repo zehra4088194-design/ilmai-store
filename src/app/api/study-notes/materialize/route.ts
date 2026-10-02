@@ -12,7 +12,7 @@ const schema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const rate = await rateLimiter.check(\`study-notes-materialize:\${getClientAddress(request)}\`, 30, 60);
+    const rate = await rateLimiter.check(`study-notes-materialize:${getClientAddress(request)}`, 30, 60);
     if (!rate.allowed) {
       return NextResponse.json({ error: "Too many note requests. Please try again shortly." }, { status: 429 });
     }
