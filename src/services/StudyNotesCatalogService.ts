@@ -165,9 +165,57 @@ export const StudyNotesCatalogService = {
     return data ? mapRow(data) : null;
   },
 
-  async upsertBatch(rows: Raw[]): Promise<void> {
-    if (!rows.length) return;
+  async upsertBatch(rows: Raw[]): Promise<{ inserted: number; updated: number; unchanged: number }> {
+    if (!rows.length) return { inserted: 0, updated: 0, unchanged: 0 };
     const db = createSupabaseAdminClient();
+    const ids = rows.map((row) => row.resourceId);
+    const { data: existingRows, error: existingError } = await db
+      .from("study_note_catalog")
+      .select("resource_id,academic_level,board,grade_level,subject_id,subject_name,subject_slug,book_title,chapter_id,chapter_number,chapter_name,chapter_slug,content_section,section_order,resource_type,resource_title,resource_display_order,page_count,has_light_version,has_dark_version,is_available,source_created_at")
+      .in("resource_id", ids);
+    if (existingError) throw new Error(existingError.message);
+    const existingById = new Map((existingRows ?? []).map((row: Raw) => [row.resource_id as string, row]));
+    const comparable = [
+      "academic_level","board","grade_level","subject_id","subject_name","subject_slug","book_title",
+      "chapter_id","chapter_number","chapter_name","chapter_slug","content_section","section_order",
+      "resource_type","resource_title","resource_display_order","page_count","has_light_version",
+      "has_dark_version","is_available","source_created_at",
+    ] as const;
+    let inserted = 0;
+    let updated = 0;
+    let unchanged = 0;
+    for (const row of rows) {
+      const existing = existingById.get(row.resourceId);
+      if (!existing) { inserted += 1; continue; }
+      const same = comparable.every((key) => {
+        const incoming = key === "academic_level" ? row.academicLevel
+          : key === "grade_level" ? row.gradeLevel ?? null
+          : key === "subject_id" ? row.subjectId ?? null
+          : key === "subject_name" ? row.subjectName
+          : key === "subject_slug" ? row.subjectSlug
+          : key === "book_title" ? row.bookTitle
+          : key === "chapter_id" ? row.chapterId ?? null
+          : key === "chapter_number" ? row.chapterNumber ?? null
+          : key === "chapter_name" ? row.chapterName ?? null
+          : key === "chapter_slug" ? row.chapterSlug ?? null
+          : key === "content_section" ? row.contentSection
+          : key === "section_order" ? SECTION_ORDER[row.contentSection as StudyNoteCatalogEntry["contentSection"]] ?? 99
+          : key === "resource_type" ? "notes"
+          : key === "resource_title" ? row.resourceTitle
+          : key === "resource_display_order" ? row.resourceDisplayOrder ?? 0
+          : key === "page_count" ? row.pageCount ?? null
+          : key === "has_light_version" ? Boolean(row.hasLightVersion)
+          : key === "has_dark_version" ? Boolean(row.hasDarkVersion)
+          : key === "is_available" ? true
+          : key === "source_created_at" ? row.sourceCreatedAt ?? null
+          : key === "board" ? row.board ?? null
+          : null;
+        return incoming === existing[key];
+      });
+      if (same) unchanged += 1;
+      else updated += 1;
+    }
+
     const now = new Date().toISOString();
     const payload = rows.map((row) => ({
       resource_id: row.resourceId,

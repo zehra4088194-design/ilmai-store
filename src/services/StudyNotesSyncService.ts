@@ -53,27 +53,33 @@ async function fetchPage(offset: number, limit: number): Promise<CatalogResponse
 }
 
 export const StudyNotesSyncService = {
-  async syncFromStudyApp(): Promise<{ upserted: number; deactivated: number; pages: number; total: number }> {
+  async syncFromStudyApp(): Promise<{ fetched: number; inserted: number; updated: number; unchanged: number; unpublished: number; failed: number; pages: number; total: number }> {
     const startedAt = new Date().toISOString();
     const pageSize = 400;
     let offset = 0;
     let pages = 0;
     let total = 0;
-    let upserted = 0;
+    let fetched = 0;
+    let inserted = 0;
+    let updated = 0;
+    let unchanged = 0;
 
     while (true) {
       const page = await fetchPage(offset, pageSize);
       pages += 1;
       total = page.total;
+      fetched += page.items.length;
       if (page.items.length) {
-        await StudyNotesCatalogService.upsertBatch(page.items);
-        upserted += page.items.length;
+        const result = await StudyNotesCatalogService.upsertBatch(page.items);
+        inserted += result.inserted;
+        updated += result.updated;
+        unchanged += result.unchanged;
       }
       if (page.nextOffset === null || page.items.length === 0) break;
       offset = page.nextOffset;
     }
 
-    const deactivated = await StudyNotesCatalogService.markMissingUnavailable(startedAt);
-    return { upserted, deactivated, pages, total };
+    const unpublished = await StudyNotesCatalogService.markMissingUnavailable(startedAt);
+    return { fetched, inserted, updated, unchanged, unpublished, failed: 0, pages, total };
   },
 };
