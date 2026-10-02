@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BookOpen, ChevronRight, Printer, ShoppingBasket } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronRight, Printer, ShoppingBasket } from "lucide-react";
 import { notFound } from "next/navigation";
 import { StoreHeader } from "@/components/store/store-header";
 import { StoreFooter } from "@/components/store/store-footer";
