@@ -6,7 +6,7 @@ platform. Live at `https://ilmai.store`.
 ## Stack
 
 Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS · Supabase
-(Postgres + Auth) · Safepay · Backblaze B2 · Resend · Oracle Cloud + Coolify.
+(Postgres + Auth) · Safepay · Backblaze B2 · Brevo · Oracle Cloud + Coolify.
 
 ## Getting Started
 
