@@ -23,18 +23,18 @@ export default async function UniversityNoteRequestPage() {
       <StoreHeader />
       <div className="store-container py-8 sm:py-12">
         <Link href="/store/ilm-ai-notes" className="section-link"><ArrowLeft size={14} /> Back to IlmAI Notes</Link>
-        <section className="mt-6 overflow-hidden rounded-[32px] bg-[#0B1D3A] p-7 text-white sm:p-10">
+        <section className="mt-6 overflow-hidden rounded-[32px] bg-[var(--chrome)] p-7 text-white sm:p-10">
           <div className="flex items-start gap-4">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/10 text-[#D4AF37]"><GraduationCap size={24} /></div>
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/10 text-[var(--commerce)]"><GraduationCap size={24} /></div>
             <div>
-              <p className="text-xs font-black uppercase tracking-[.18em] text-[#D4AF37]">University resource request</p>
+              <p className="text-xs font-black uppercase tracking-[.18em] text-[var(--commerce)]">University resource request</p>
               <h1 className="display-font mt-2 text-4xl sm:text-5xl">Tell us exactly what you need.</h1>
-              <p className="mt-4 max-w-3xl text-sm leading-7 text-[#B9C4E0] sm:text-base">University notes are being expanded. Until a subject or resource is available on the store, send the full academic details below. You can request complete notes, MCQs, short questions, long questions, past papers, solved papers, practicals, viva material and more in one request.</p>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--chrome-muted)] sm:text-base">University notes are being expanded. Until a subject or resource is available on the store, send the full academic details below. You can request complete notes, MCQs, short questions, long questions, past papers, solved papers, practicals, viva material and more in one request.</p>
             </div>
           </div>
         </section>
 
-        <div className="mt-6 flex items-center gap-3 rounded-2xl border border-[#0F766E]/20 bg-[#ECFDF5] px-4 py-3 text-sm leading-6 text-[#14532D]">
+        <div className="mt-6 flex items-center gap-3 rounded-2xl border border-[rgba(124,58,237,.20)] bg-[var(--success-soft)] px-4 py-3 text-sm leading-6 text-[#166534]">
           <ClipboardList size={18} className="shrink-0" />
           <span>The more exact your university, course, semester and chapter details are, the easier it is to prepare the right material.</span>
         </div>
