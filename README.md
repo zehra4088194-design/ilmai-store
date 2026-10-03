@@ -84,7 +84,7 @@ admin authorization, and QR generation is scoped to the session user.
 Suspended, pending, or unverified accounts cannot generate QRs.
 
 Shopkeeper customer collections are separate from IlmAI Store orders:
-generating a QR creates no Store order, payment, webhook, inventory
+generating a QR creates no Store order, Store payment, webhook, inventory
 movement, referral, or digital entitlement. The normal customer checkout QR
 continues to use the default merchant identity and existing payment-review
 flow.
