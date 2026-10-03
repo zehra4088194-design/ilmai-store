@@ -20,7 +20,7 @@ function NewsletterForm() {
         setStatus("loading");
         window.setTimeout(() => setStatus("done"), 600);
       }}
-      className="mt-4 flex overflow-hidden rounded-xl border border-white/15 bg-white/5"
+      className="mt-4 flex overflow-hidden rounded-xl border border-white/12 bg-white/[0.05]"
     >
       <input
         type="email"
@@ -28,7 +28,7 @@ function NewsletterForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Enter your email"
-        className="min-w-0 flex-1 border-0 bg-transparent px-4 py-3 text-sm text-white outline-none placeholder:text-[#B9C4E0]"
+        className="min-w-0 flex-1 border-0 bg-transparent px-4 py-3 text-sm text-white outline-none placeholder:text-[var(--chrome-muted)]"
       />
       <button type="submit" disabled={status === "loading"} className="gold-btn min-w-[46px] rounded-none px-4">
         {status === "loading" ? <Loader2 size={15} className="animate-spin" /> : status === "done" ? <Check size={15} /> : "Subscribe"}
@@ -60,12 +60,12 @@ function AccountLinks() {
   }
 
   return (
-    <div className="mt-5 grid gap-3 text-sm text-[#B9C4E0]">
+    <div className="mt-5 grid gap-3 text-sm text-[var(--chrome-muted)]">
       <Link href="/account">My Account</Link>
       <Link href="/orders">My Orders</Link>
       <Link href="/cart">Cart</Link>
       {email ? (
-        <button type="button" onClick={signOut} disabled={signingOut} className="flex items-center gap-2 text-left text-[#B9C4E0] hover:text-[#0F766E]">
+        <button type="button" onClick={signOut} disabled={signingOut} className="flex items-center gap-2 text-left text-[var(--chrome-muted)] hover:text-[var(--brand-primary)]">
           {signingOut && <Loader2 size={13} className="animate-spin" />} Sign out {email ? `(${email})` : ""}
         </button>
       ) : (
@@ -77,15 +77,15 @@ function AccountLinks() {
 
 export function StoreFooter() {
   return (
-    <footer className="mt-20 bg-[#0B1D3A] text-white">
+    <footer className="mt-20 bg-[var(--chrome)] text-white">
       <div className="store-container grid gap-12 py-16 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Link href="/" className="flex items-center gap-2">
             <span className="text-lg font-black text-white">IlmAI</span>
-            <span className="rounded-md bg-[#0F766E] px-1.5 py-0.5 text-[10px] font-black uppercase text-white">.store</span>
+            <span className="rounded-md bg-[var(--brand-primary)] px-1.5 py-0.5 text-[10px] font-black uppercase text-white">.store</span>
           </Link>
-          <p className="mt-5 max-w-xs text-sm leading-6 text-[#B9C4E0]">
-            Official store of the <a href={siteConfig.ilmaiStudyUrl} className="font-semibold text-white hover:text-[#0F766E]">IlmAI education platform</a>.
+          <p className="mt-5 max-w-xs text-sm leading-6 text-[var(--chrome-muted)]">
+            Official store of the <a href={siteConfig.ilmaiStudyUrl} className="font-semibold text-white hover:text-[var(--brand-primary)]">IlmAI education platform</a>.
             {PHYSICAL_GOODS_ENABLED
               ? " Shop study materials, books, notes and test series in one place."
               : " Shop study notes, courses and test series in one place."}
@@ -98,8 +98,8 @@ export function StoreFooter() {
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#0F766E]">Shop</h3>
-          <div className="mt-5 grid gap-3 text-sm text-[#B9C4E0]">
+          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[var(--brand-primary)]">Shop</h3>
+          <div className="mt-5 grid gap-3 text-sm text-[var(--chrome-muted)]">
             <Link href="/store">All Products</Link>
             {PHYSICAL_GOODS_ENABLED && <Link href="/store?category=books">Books</Link>}
             <Link href="/store?category=notes">Notes</Link>
@@ -111,8 +111,8 @@ export function StoreFooter() {
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#0F766E]">Customer Service</h3>
-          <div className="mt-5 grid gap-3 text-sm text-[#B9C4E0]">
+          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[var(--brand-primary)]">Customer Service</h3>
+          <div className="mt-5 grid gap-3 text-sm text-[var(--chrome-muted)]">
             <a href={`mailto:${siteConfig.supportEmail}`}>Contact Us</a>
             <Link href="/orders">Track Order</Link>
             <Link href="/account">My Orders</Link>
@@ -123,31 +123,31 @@ export function StoreFooter() {
         </div>
 
         <div>
-          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[#0F766E]">Account</h3>
+          <h3 className="text-xs font-black uppercase tracking-[.2em] text-[var(--brand-primary)]">Account</h3>
           <AccountLinks />
-          <h3 className="mt-7 text-xs font-black uppercase tracking-[.2em] text-[#0F766E]">Newsletter</h3>
-          <p className="mt-2 text-xs leading-5 text-[#B9C4E0]">Subscribe to get updates on new products and offers.</p>
+          <h3 className="mt-7 text-xs font-black uppercase tracking-[.2em] text-[var(--brand-primary)]">Newsletter</h3>
+          <p className="mt-2 text-xs leading-5 text-[var(--chrome-muted)]">Subscribe to get updates on new products and offers.</p>
           <NewsletterForm />
         </div>
       </div>
 
       <div className="border-t border-white/10">
-        <div className="store-container flex flex-col gap-4 py-6 text-xs text-[#B9C4E0] sm:flex-row sm:items-center sm:justify-between">
+        <div className="store-container flex flex-col gap-4 py-6 text-xs text-[var(--chrome-muted)] sm:flex-row sm:items-center sm:justify-between">
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span>© {new Date().getFullYear()} IlmAI Store. All Rights Reserved.</span>
             <span className="hidden text-white/20 sm:inline">·</span>
-            <Link href="/privacy" className="hover:text-[#0F766E]">Privacy</Link>
+            <Link href="/privacy" className="hover:text-[var(--brand-primary)]">Privacy</Link>
             <span className="text-white/20">·</span>
-            <Link href="/terms" className="hover:text-[#0F766E]">Terms</Link>
+            <Link href="/terms" className="hover:text-[var(--brand-primary)]">Terms</Link>
             <span className="text-white/20">·</span>
-            <Link href="/refund-policy" className="hover:text-[#0F766E]">Refunds</Link>
+            <Link href="/refund-policy" className="hover:text-[var(--brand-primary)]">Refunds</Link>
           </span>
           <div className="flex flex-wrap items-center gap-2">
             {["VISA", "Mastercard", "JazzCash", "Easypaisa"].map((p) => (
-              <span key={p} className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-[#B9C4E0]">{p}</span>
+              <span key={p} className="rounded-md border border-white/12 bg-white/[0.05] px-2.5 py-1 text-[10px] font-bold text-[var(--chrome-muted)]">{p}</span>
             ))}
           </div>
-          <Link href={siteConfig.ilmaiStudyUrl} className="inline-flex items-center gap-1.5 font-bold text-[#0F766E]">
+          <Link href={siteConfig.ilmaiStudyUrl} className="inline-flex items-center gap-1.5 font-bold text-[var(--brand-primary)]">
             Visit IlmAI Study <ArrowUpRight size={13} />
           </Link>
           <span className="inline-flex items-center gap-1.5"><Mail size={12} /> {siteConfig.supportEmail}</span>
