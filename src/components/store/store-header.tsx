@@ -18,7 +18,7 @@ type Props = { initialSearch?: string; categories?: Category[] };
 // `search=` text match — a `search=` link only ever matched product title/description,
 // never actual category membership.
 const NAV_LINKS: Array<[string, string]> = [
-  ["Study on IlmAI", "https://ilmai.study"],
+  ["Study on IlmAI", siteConfig.ilmaiStudyUrl],
   ["Home", "/store"],
   ["Shop", "/store"],
   ["IlmAI Notes", "/store/ilm-ai-notes"],
@@ -71,26 +71,26 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
       {/* Utility bar */}
       <div className="utility-bar hidden sm:block">
         <div className="store-container flex min-h-9 items-center justify-between gap-4">
-          <span className="inline-flex items-center gap-1.5"><Star size={12} className="text-[#0F766E]" fill="currentColor" /> Welcome to IlmAI Store</span>
-          <span className="inline-flex items-center gap-1.5 text-[#0F766E]"><PackageSearch size={13} /> {PHYSICAL_GOODS_ENABLED ? "Delivery charge (if any) shown at checkout" : "Instant access after checkout"}</span>
+          <span className="inline-flex items-center gap-1.5"><Star size={12} className="text-[var(--brand-primary)]" fill="currentColor" /> Welcome to IlmAI Store</span>
+          <span className="inline-flex items-center gap-1.5 text-[var(--brand-primary)]"><PackageSearch size={13} /> {PHYSICAL_GOODS_ENABLED ? "Delivery charge (if any) shown at checkout" : "Instant access after checkout"}</span>
           <span className="flex items-center gap-4">
-            <Link href="/orders" className="inline-flex items-center gap-1.5 hover:text-[#0F766E]"><PackageSearch size={12} /> Track order</Link>
-            <a href={`mailto:${siteConfig.supportEmail}`} className="inline-flex items-center gap-1.5 hover:text-[#0F766E]"><LifeBuoy size={12} /> Help</a>
-            <a href={`mailto:${siteConfig.supportEmail}`} className="inline-flex items-center gap-1.5 hover:text-[#0F766E]"><Phone size={12} /> Contact us</a>
+            <Link href="/orders" className="inline-flex items-center gap-1.5 hover:text-[var(--brand-primary)]"><PackageSearch size={12} /> Track order</Link>
+            <a href={`mailto:${siteConfig.supportEmail}`} className="inline-flex items-center gap-1.5 hover:text-[var(--brand-primary)]"><LifeBuoy size={12} /> Help</a>
+            <a href={`mailto:${siteConfig.supportEmail}`} className="inline-flex items-center gap-1.5 hover:text-[var(--brand-primary)]"><Phone size={12} /> Contact us</a>
           </span>
         </div>
       </div>
 
       {/* Main bar: logo + search + account icons */}
-      <div className="border-b border-[var(--line)] bg-white">
+      <div className="border-b border-[var(--border)] bg-[var(--surface-strong)]">
         <div className="store-container flex min-h-[76px] items-center gap-4">
           <Link href="/" className="flex items-center gap-2.5 shrink-0" aria-label="IlmAI Store home">
-            <span className="text-xl font-black tracking-[-.04em] text-[#0B1D3A]">IlmAI</span>
-            <span className="rounded-md bg-[#0F766E] px-2 py-1 text-[11px] font-black uppercase tracking-[.06em] text-white">.store</span>
+            <span className="text-xl font-black tracking-[-.04em] text-[var(--foreground)]">IlmAI</span>
+            <span className="rounded-md bg-[var(--brand-primary)] px-2 py-1 text-[11px] font-black uppercase tracking-[.06em] text-white">.store</span>
           </Link>
 
-          <form action="/store" method="GET" className="hidden min-w-0 flex-1 items-stretch overflow-hidden rounded-xl border border-[var(--line)] md:flex">
-            <label className="hidden items-center gap-1.5 border-r border-[var(--line)] bg-[#F1F5F9] px-3 text-xs font-bold text-[#64748B] lg:flex">
+          <form action="/store" method="GET" className="hidden min-w-0 flex-1 items-stretch overflow-hidden rounded-xl border border-[var(--border)] md:flex">
+            <label className="hidden items-center gap-1.5 border-r border-[var(--border)] bg-[var(--gray)] px-3 text-xs font-bold text-[#64748B] lg:flex">
               All Categories <ChevronDown size={13} />
             </label>
             <input
@@ -98,21 +98,21 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={PHYSICAL_GOODS_ENABLED ? "Search for books, notes, courses…" : "Search for notes, courses, test series…"}
-              className="min-w-0 flex-1 border-0 px-4 text-sm text-[#0B1D3A] outline-none"
+              className="min-w-0 flex-1 border-0 px-4 text-sm text-[var(--foreground)] outline-none"
             />
-            <button type="submit" aria-label="Search" className="grid w-14 shrink-0 place-items-center bg-[#0F766E] text-white transition hover:bg-[#115E59]">
+            <button type="submit" aria-label="Search" className="grid w-14 shrink-0 place-items-center bg-[var(--brand-primary)] text-white transition hover:bg-[var(--brand-primary-dark)]">
               <Search size={18} />
             </button>
           </form>
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
-            <Link href="/account" className="hidden items-center gap-2 text-xs font-bold text-[#0B1D3A] sm:flex" aria-label="Wishlist">
+            <Link href="/account" className="hidden items-center gap-2 text-xs font-bold text-[var(--foreground)] sm:flex" aria-label="Wishlist">
               <Heart size={19} /> <span className="hidden lg:inline">Wishlist</span>
             </Link>
             <CartBadge />
             {email ? (
               <div className="hidden items-center gap-2 sm:flex">
-                <Link href="/account" className="flex items-center gap-2 text-xs font-bold text-[#0B1D3A]" aria-label="Account">
+                <Link href="/account" className="flex items-center gap-2 text-xs font-bold text-[var(--foreground)]" aria-label="Account">
                   <UserRound size={19} /> <span className="hidden max-w-[120px] truncate lg:inline">{email}</span>
                 </Link>
                 <button onClick={signOut} disabled={signingOut} aria-label="Sign out" title="Sign out" className="icon-button h-9 w-9">
@@ -120,7 +120,7 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
                 </button>
               </div>
             ) : email === null ? (
-              <Link href="/login" className="hidden items-center gap-2 text-xs font-bold text-[#0B1D3A] sm:flex" aria-label="Sign in">
+              <Link href="/login" className="hidden items-center gap-2 text-xs font-bold text-[var(--foreground)] sm:flex" aria-label="Sign in">
                 <UserRound size={19} /> <span className="hidden lg:inline">Sign in</span>
               </Link>
             ) : (
@@ -132,9 +132,9 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
           </div>
         </div>
 
-        <form action="/store" method="GET" className="store-container flex items-stretch overflow-hidden rounded-xl border border-[var(--line)] pb-3 md:hidden">
+        <form action="/store" method="GET" className="store-container flex items-stretch overflow-hidden rounded-xl border border-[var(--border)] pb-3 md:hidden">
           <input name="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search the store…" className="min-w-0 flex-1 border-0 px-4 text-sm outline-none" />
-          <button type="submit" aria-label="Search" className="grid w-12 shrink-0 place-items-center bg-[#0F766E] text-white"><Search size={16} /></button>
+          <button type="submit" aria-label="Search" className="grid w-12 shrink-0 place-items-center bg-[var(--brand-primary)] text-white"><Search size={16} /></button>
         </form>
       </div>
 
@@ -144,19 +144,19 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
           <div className="relative">
             <button
               onClick={() => setCatOpen((v) => !v)}
-              className="flex items-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2.5 text-xs font-black text-white"
+              className="flex items-center gap-2 rounded-lg bg-[var(--brand-primary)] px-4 py-2.5 text-xs font-black text-white"
             >
               <Menu size={15} /> All Categories <ChevronDown size={13} />
             </button>
             {catOpen && (
-              <div className="absolute left-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-[var(--line)] bg-white py-2 shadow-2xl">
+              <div className="absolute left-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] py-2 shadow-2xl">
                 {(categories.length ? categories : []).map((c) => (
-                  <Link key={c.id} href={`/store?category=${encodeURIComponent(c.slug)}`} onClick={() => setCatOpen(false)} className="block px-4 py-2.5 text-sm font-semibold text-[#0B1D3A] hover:bg-[#F1F5F9]">
+                  <Link key={c.id} href={`/store?category=${encodeURIComponent(c.slug)}`} onClick={() => setCatOpen(false)} className="block px-4 py-2.5 text-sm font-semibold text-[var(--foreground)] transition hover:bg-[var(--gray)]">
                     {c.name}
                   </Link>
                 ))}
                 {!categories.length && FALLBACK_CATEGORY_LINKS.map(([label, slug]) => (
-                  <Link key={label} href={`/store?category=${encodeURIComponent(slug)}`} onClick={() => setCatOpen(false)} className="block px-4 py-2.5 text-sm font-semibold text-[#0B1D3A] hover:bg-[#F1F5F9]">
+                  <Link key={label} href={`/store?category=${encodeURIComponent(slug)}`} onClick={() => setCatOpen(false)} className="block px-4 py-2.5 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--gray)]">
                     {label}
                   </Link>
                 ))}
@@ -172,22 +172,22 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
       </div>
 
       {open && (
-        <div className="border-t border-[var(--line)] bg-[#F1F5F9] md:hidden">
+        <div className="border-t border-[var(--border)] bg-[var(--gray)] md:hidden">
           <nav className="store-container grid gap-2 py-5">
             {[...NAV_LINKS, ["My account", "/account"] as [string, string], ["Study Basket", "/cart"] as [string, string]].map(([label, href]) => (
-              <Link key={label} href={href} onClick={() => setOpen(false)} className="rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm font-bold text-[#0B1D3A]">
+              <Link key={label} href={href} onClick={() => setOpen(false)} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-3 text-sm font-bold text-[var(--foreground)]">
                 {label}
               </Link>
             ))}
             {email ? (
               <button
                 onClick={() => { setOpen(false); signOut(); }}
-                className="rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-left text-sm font-bold text-[#a13f3f]"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-3 text-left text-sm font-bold text-[#a13f3f]"
               >
                 Sign out ({email})
               </button>
             ) : (
-              <Link href="/login" onClick={() => setOpen(false)} className="rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm font-bold text-[#0B1D3A]">
+              <Link href="/login" onClick={() => setOpen(false)} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-3 text-sm font-bold text-[var(--foreground)]">
                 Sign in
               </Link>
             )}
