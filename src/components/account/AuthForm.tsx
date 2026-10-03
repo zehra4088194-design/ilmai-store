@@ -52,7 +52,18 @@ export function AuthForm({ mode }: { mode: Mode }) {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
         await fetch("/api/cart/merge", { method: "POST" }).catch(() => {});
-        router.push(redirectTo);
+        try {
+          const destinationResponse = await fetch(
+            `/api/auth/post-login-destination?redirect=${encodeURIComponent(redirectTo)}`,
+            { cache: "no-store" },
+          );
+          const destinationJson = await destinationResponse.json().catch(() => null);
+          const destination =
+            typeof destinationJson?.destination === "string" ? destinationJson.destination : redirectTo;
+          router.push(destination);
+        } catch {
+          router.push(redirectTo);
+        }
         router.refresh();
       } else {
         const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
