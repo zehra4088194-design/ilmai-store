@@ -86,7 +86,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
     <div className="grid grid-cols-1 gap-9 lg:grid-cols-[1fr_1.05fr] lg:items-start">
       <div>
         <div
-          className="relative aspect-square touch-pan-y overflow-hidden rounded-2xl border border-[var(--line)] bg-gradient-to-br from-[#142a52] to-[#0B1D3A]"
+          className="relative aspect-square touch-pan-y overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--brand-primary)] via-[#5b21b6] to-[var(--chrome-strong)]"
           onTouchStart={onImageTouchStart}
           onTouchEnd={onImageTouchEnd}
         >
@@ -103,7 +103,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
             isLoggedIn={isLoggedIn}
             size={17}
             className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/90"
-            unsavedColorClass="text-[#0B1D3A]"
+            unsavedColorClass="text-[var(--foreground)]"
           />
           {images.length > 1 && (
             <div className="absolute inset-x-0 bottom-3 flex items-center justify-center gap-1.5 sm:hidden">
@@ -119,29 +119,29 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
             <button
               key={media?.id ?? index}
               onClick={() => setActiveImage(index)}
-              className={`relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border-2 bg-[#F1F5F9] ${index === activeImage ? "border-[#0F766E]" : "border-[var(--line)]"}`}
+              className={`relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border-2 bg-[var(--gray)] ${index === activeImage ? "border-[var(--brand-primary)]" : "border-[var(--border)]"}`}
             >
-              {media ? <Image src={media.url} alt={media.altText ?? product.title} fill sizes="64px" className="object-cover" /> : <BookOpen size={20} className="text-[#0B1D3A]/25" />}
+              {media ? <Image src={media.url} alt={media.altText ?? product.title} fill sizes="64px" className="object-cover" /> : <BookOpen size={20} className="text-[var(--foreground)]/25" />}
             </button>
           ))}
         </div>
       </div>
 
       <div>
-        <p className="text-xs font-black uppercase tracking-[.12em] text-[#64748B]">{product.productType.replaceAll("_", " ")}</p>
-        <h1 className="mt-2 text-3xl font-black leading-tight tracking-[-.03em] text-[#0B1D3A] sm:text-4xl">{product.title}</h1>
+        <p className="text-xs font-black uppercase tracking-[.12em] text-[var(--muted)]">{product.productType.replaceAll("_", " ")}</p>
+        <h1 className="mt-2 text-3xl font-black leading-tight tracking-[-.03em] text-[var(--foreground)] sm:text-4xl">{product.title}</h1>
 
         <div className="mt-3 flex items-center gap-4 text-sm">
           <div className="rating-row">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={15} fill="currentColor" />)}</div>
-          <span className="text-[#64748B]">New listing</span>
+          <span className="text-[var(--muted)]">New listing</span>
         </div>
 
         <div className="mt-5 flex flex-wrap items-baseline gap-3">
           {compareAt && <span className="text-lg font-bold text-[#94A3B8] line-through">{money(compareAt)}</span>}
-          <span className="text-4xl font-black tracking-[-.03em] text-[#0B1D3A]">{money(price)}</span>
-          {digital && <span className="rounded-full bg-[#DCFCE7] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] text-[#0F766E]">Instant access</span>}
+          <span className="text-4xl font-black tracking-[-.03em] text-[var(--foreground)]">{money(price)}</span>
+          {digital && <span className="rounded-full bg-[var(--success-soft)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] text-[var(--brand-primary)]">Instant access</span>}
         </div>
-        <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[#0F766E]">
+        <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[var(--brand-primary)]">
           {product.productType === "service"
             ? <><ShieldCheck size={13} /> Account portal access after verified payment</>
             : digital || !PHYSICAL_GOODS_ENABLED
@@ -153,32 +153,32 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
                 : <><Truck size={13} /> Delivery: {money(product.deliveryFee)}</>}
         </p>
         {isNotesOrder && (
-          <p className="mt-1 text-xs text-[#64748B]">
+          <p className="mt-1 text-xs text-[var(--muted)]">
             Lahore: 299 for 1–5 · 499 for 6–10 · 699 for 11+ copies · Other cities: 399 for 1–5 · 599 for 6–10 · 699 for 11+
           </p>
         )}
         {trackingStock && (
           outOfStock
             ? <><p className="mt-2 text-xs font-black uppercase tracking-[.1em] text-red-600">Out of stock</p><NotifyMeButton variantId={variant!.id} /></>
-            : <p className={`mt-2 text-xs font-black uppercase tracking-[.1em] ${lowStock ? "text-amber-600" : "text-[#64748B]"}`}>{lowStock ? `Only ${variant!.stockQuantity} left in stock` : `${variant!.stockQuantity} in stock`}</p>
+            : <p className={`mt-2 text-xs font-black uppercase tracking-[.1em] ${lowStock ? "text-amber-600" : "text-[var(--muted)]"}`}>{lowStock ? `Only ${variant!.stockQuantity} left in stock` : `${variant!.stockQuantity} in stock`}</p>
         )}
 
-        {product.description && <p className="mt-5 text-[15px] leading-7 text-[#64748B]">{product.description}</p>}
+        {product.description && <p className="mt-5 text-[15px] leading-7 text-[var(--muted)]">{product.description}</p>}
 
         <div className="mt-6 grid gap-2.5">
           {bullets.map((item) => (
-            <div key={item} className="flex items-start gap-2.5 text-sm leading-6 text-[#64748B]">
-              <BadgeCheck size={16} className="mt-0.5 shrink-0 text-[#0F766E]" /> {item}
+            <div key={item} className="flex items-start gap-2.5 text-sm leading-6 text-[var(--muted)]">
+              <BadgeCheck size={16} className="mt-0.5 shrink-0 text-[var(--brand-primary)]" /> {item}
             </div>
           ))}
         </div>
 
         {product.variants.length > 1 && (
           <div className="mt-7">
-            <p className="mb-2.5 text-xs font-black uppercase tracking-[.12em] text-[#64748B]">Choose an option</p>
+            <p className="mb-2.5 text-xs font-black uppercase tracking-[.12em] text-[var(--muted)]">Choose an option</p>
             <div className="flex flex-wrap gap-2">
               {product.variants.map((v) => (
-                <button key={v.id} onClick={() => setVariant(v)} className={`rounded-full border px-4 py-2 text-sm font-bold transition ${variant?.id === v.id ? "border-[#0B1D3A] bg-[#0B1D3A] text-white" : "bg-white text-[#0B1D3A] hover:border-[#CBD5E1]"}`}>
+                <button key={v.id} onClick={() => setVariant(v)} className={`rounded-full border px-4 py-2 text-sm font-bold transition ${variant?.id === v.id ? "border-[var(--brand-primary)] bg-[#0B1D3A] text-white" : "bg-white text-[var(--foreground)] hover:border-[rgba(124,58,237,.35)]"}`}>
                   {v.name} · {money(v.price)}
                 </button>
               ))}
@@ -188,8 +188,8 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
 
         <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap sm:items-center">
           {product.productType === "service" && !isLoggedIn ? (
-            <div className="w-full rounded-2xl bg-[#F1F5F9] p-4">
-              <p className="text-sm font-bold text-[#0B1D3A]">Sign in is required to purchase account-based service access.</p>
+            <div className="w-full rounded-2xl bg-[var(--gray)] p-4">
+              <p className="text-sm font-bold text-[var(--foreground)]">Sign in is required to purchase account-based service access.</p>
               <Link href="/login" className="gold-btn mt-3 inline-flex min-h-11 px-5 text-sm">Sign in to continue</Link>
             </div>
           ) : <>
@@ -203,7 +203,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
             quantity={quantity}
             label={outOfStock ? "Out of stock" : "Add to Basket"}
             disabled={outOfStock}
-            className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl border-2 sm:flex-1 border-[#0B1D3A] px-6 text-sm font-black text-[#0B1D3A] transition hover:bg-[#0B1D3A] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl border-2 sm:flex-1 border-[var(--brand-primary)] px-6 text-sm font-black text-[var(--foreground)] transition hover:bg-[var(--brand-primary)] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           />
           <button
             type="button"
@@ -232,15 +232,15 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
 
         {!!product.categories.length && (
           <div className="mt-6 flex flex-wrap items-center gap-2 text-sm">
-            <span className="font-bold text-[#0B1D3A]">Categories:</span>
+            <span className="font-bold text-[var(--foreground)]">Categories:</span>
             {product.categories.map((c) => (
-              <Link key={c.id} href={`/store?category=${encodeURIComponent(c.slug)}`} className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs font-bold text-[#0F766E] hover:bg-[#DCFCE7]">{c.name}</Link>
+              <Link key={c.id} href={`/store?category=${encodeURIComponent(c.slug)}`} className="rounded-full bg-[var(--gray)] px-3 py-1 text-xs font-bold text-[var(--brand-primary)] hover:bg-[var(--success-soft)]">{c.name}</Link>
             ))}
           </div>
         )}
 
-        <div className="mt-4 flex items-center gap-3 text-sm text-[#64748B]">
-          <span className="font-bold text-[#0B1D3A]">Share:</span>
+        <div className="mt-4 flex items-center gap-3 text-sm text-[var(--muted)]">
+          <span className="font-bold text-[var(--foreground)]">Share:</span>
           <button type="button" onClick={() => shareTo("facebook")} aria-label="Share on Facebook" className="icon-button h-9 w-9"><Facebook size={14} /></button>
           <button type="button" onClick={() => shareTo("twitter")} aria-label="Share on Twitter" className="icon-button h-9 w-9"><Twitter size={14} /></button>
           <button type="button" onClick={() => shareTo("native")} aria-label="Share this product" className="icon-button h-9 w-9"><Share2 size={14} /></button>
