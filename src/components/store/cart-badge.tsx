@@ -25,9 +25,9 @@ export function CartBadge() {
   }, []);
 
   return (
-    <a href="/cart" aria-label="Study Basket" title="Study Basket" className="relative rounded-full border bg-white/60 p-3 hover:bg-white">
+    <a href="/cart" aria-label="Study Basket" title="Study Basket" className="relative rounded-full border border-[var(--border)] bg-white/70 p-3 hover:bg-[var(--surface-strong)]">
       <ShoppingBag size={18} />
-      {count > 0 && <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[#0F766E] text-[10px] font-bold text-white">{count}</span>}
+      {count > 0 && <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[var(--brand-primary)] text-[10px] font-bold text-white">{count}</span>}
     </a>
   );
 }
