@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Trash2 } from "lucide-react";
 import { SHOPKEEPER_STATUSES } from "@/constants/shopkeeper";
 import type { ShopkeeperAccount } from "@/services/ShopkeeperService";
 
@@ -11,6 +11,22 @@ export function ShopkeeperManager({ shopkeepers }: { shopkeepers: ShopkeeperAcco
   const addForm = useRef<HTMLFormElement>(null);
   const [busy, setBusy] = useState<string | boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function remove(id: string, email: string) {
+    if (!confirm(`Remove Shopkeeper access for ${email}? Their Store account will remain active, but the private Shopkeeper facility will be revoked.`)) return;
+    setBusy(id);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/shopkeepers/${id}`, { method: "DELETE" });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error || "Shopkeeper access could not be removed.");
+      router.refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Shopkeeper access could not be removed.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function submit(url: string, method: "POST" | "PATCH", body: object, key: string | boolean) {
     setBusy(key);
@@ -68,7 +84,19 @@ export function ShopkeeperManager({ shopkeepers }: { shopkeepers: ShopkeeperAcco
         <label className="flex items-center gap-2 text-xs font-semibold"><input type="checkbox" name="receivingIdentifierVerified" defaultChecked={shopkeeper.receiving_identifier_verified} /> Receiving ID verified with JazzCash</label>
         <label className="text-xs font-bold">Access status<select name="status" defaultValue={shopkeeper.status} className="mt-1.5 w-full rounded-xl border bg-white px-3 py-3 text-sm font-normal">{SHOPKEEPER_STATUSES.map((status) => <option key={status} value={status}>{status.replaceAll("_", " ")}</option>)}</select></label>
       </div>
-      <button disabled={Boolean(busy)} className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#0B1D3A] px-4 text-xs font-bold text-white">{busy === shopkeeper.id ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save</button>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <button type="submit" disabled={Boolean(busy)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#0B1D3A] px-4 text-xs font-bold text-white">
+          {busy === shopkeeper.id ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
+        </button>
+        <button
+          type="button"
+          disabled={Boolean(busy)}
+          onClick={() => void remove(shopkeeper.id, shopkeeper.email)}
+          className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-red-200 px-4 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50"
+        >
+          <Trash2 size={14} /> Remove access
+        </button>
+      </div>
     </form>)}
     {!shopkeepers.length && <p className="rounded-2xl border bg-white p-8 text-center text-sm text-[#64748B]">No shopkeepers added yet.</p>}
   </div>;
