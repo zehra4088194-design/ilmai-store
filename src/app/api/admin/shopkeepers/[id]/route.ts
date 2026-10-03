@@ -25,3 +25,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Shopkeeper account could not be updated." }, { status: 500 });
   }
 }
+
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requireAdmin();
+    const { id } = parseOrThrow(z.object({ id: z.string().uuid() }), await params);
+    await ShopkeeperService.adminRemove(id);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    if (isAppError(error)) return NextResponse.json({ error: error.publicMessage }, { status: error.statusCode });
+    logger.error("DELETE /api/admin/shopkeepers/[id] failed", { error: String(error) });
+    return NextResponse.json({ error: "Shopkeeper access could not be removed." }, { status: 500 });
+  }
+}
