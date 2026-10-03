@@ -6,13 +6,13 @@
   "keywords": [
     "new"
   ],
-  "homepage": "https://github.com/ilmai-store/store#readme",
+  "homepage": "https://ilmai.store",
   "bugs": {
-    "url": "https://github.com/ilmai-store/store/issues"
+    "url": "https://github.com/zehra4088194-design/ilmai-store/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ilmai-store/store.git"
+    "url": "git+https://github.com/zehra4088194-design/ilmai-store.git"
   },
   "license": "ISC",
   "author": "Husnain noor",
