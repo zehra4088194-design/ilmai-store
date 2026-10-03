@@ -67,6 +67,11 @@ export const ShopkeeperService = {
     if (error) throw new Error(error.message);
   },
 
+  async adminRemove(id: string): Promise<void> {
+    const { error } = await createSupabaseAdminClient().from("shopkeepers").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+  },
+
   async updateForAdmin(id: string, input: z.infer<typeof shopkeeperAdminUpdateSchema>): Promise<void> {
     const { data, error } = await createSupabaseAdminClient().from("shopkeepers").update({
       jazzcash_number: input.jazzcashNumber,
