@@ -21,7 +21,7 @@ type Props = {
  * signed-in shopper — a guest is sent to log in instead of the click
  * silently doing nothing.
  */
-export function WishlistButton({ productId, initialSaved, isLoggedIn, size = 13, className, savedColorClass = "text-[#E11D48]", unsavedColorClass = "text-[var(--navy)]" }: Props) {
+export function WishlistButton({ productId, initialSaved, isLoggedIn, size = 13, className, savedColorClass = "text-[#E11D48]", unsavedColorClass = "text-[var(--foreground)]" }: Props) {
   const [saved, setSaved] = useState(initialSaved);
   const [pending, setPending] = useState(false);
   const router = useRouter();
