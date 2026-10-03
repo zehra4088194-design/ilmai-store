@@ -201,7 +201,7 @@ export default async function StudyNotesPage({ searchParams }: { searchParams: S
               </div>
             </div>
 
-            <form action="/store/ilm-ai-notes" method="GET" className="mt-7 flex overflow-hidden rounded-2xl border-2 border-[var(--border)] bg-[var(--surface-strong)]/70 focus-within:border-[#0F766E]">
+            <form action="/store/ilm-ai-notes" method="GET" className="mt-7 flex overflow-hidden rounded-2xl border-2 border-[var(--border)] bg-[var(--surface-strong)]/70 focus-within:border-[rgba(124,58,237,.48)]">
               <div className="grid w-12 shrink-0 place-items-center text-[var(--muted)]"><Search size={18} /></div>
               <input name="search" defaultValue={search} placeholder="Search subject, book, chapter, MCQs, short questions..." className="min-w-0 flex-1 bg-transparent px-1 py-4 text-sm font-semibold outline-none" />
               <button type="submit" className="m-1 rounded-xl bg-[var(--chrome)] px-5 text-sm font-black text-white">Search</button>
