@@ -104,7 +104,9 @@ export function ForgotPasswordForm() {
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={onSubmit}
+            onClick={() => {
+              void sendRecoveryEmail();
+            }}
             disabled={loading}
             className="inline-flex items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-bold text-[#0B1D3A] transition hover:bg-[#F1F5F9] disabled:opacity-60"
           >
