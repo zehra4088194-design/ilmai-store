@@ -28,7 +28,7 @@ export function ResetPasswordForm() {
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
-    if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
     if (password !== confirm) { setError("Passwords don't match."); return; }
     setLoading(true);
     try {
@@ -64,10 +64,10 @@ export function ResetPasswordForm() {
         <input
           type="password"
           required
-          minLength={6}
+          minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="At least 6 characters"
+          placeholder="At least 8 characters"
           className="rounded-xl border bg-white px-4 py-3 text-sm font-normal text-[#0B1D3A] outline-none placeholder:text-[#64748B] focus:border-[#0F766E]"
         />
       </label>
@@ -76,7 +76,7 @@ export function ResetPasswordForm() {
         <input
           type="password"
           required
-          minLength={6}
+          minLength={8}
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           placeholder="Repeat your new password"
