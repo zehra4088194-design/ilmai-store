@@ -3,6 +3,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
 import { verifyStoreHandoffToken } from "@/lib/auth/handoff";
 import { logger } from "@/lib/logger";
+import { ShopkeeperService } from "@/services/ShopkeeperService";
+
 
 /**
  * GET /auth/handoff — the landing point for ilmai.study's "Store" link
@@ -98,7 +100,13 @@ export async function GET(request: NextRequest) {
     });
     if (verifyError) throw verifyError;
 
-    return NextResponse.redirect(new URL(destination, request.url));
+    const shopkeeper = userId ? await ShopkeeperService.getForUser(userId) : null;
+    const finalDestination =
+      shopkeeper && (destination === "/" || destination === "/store")
+        ? "/shopkeeper"
+        : destination;
+
+    return NextResponse.redirect(new URL(finalDestination, request.url));
   } catch (error) {
     logger.error("GET /auth/handoff failed", { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.redirect(new URL(destination, request.url));
