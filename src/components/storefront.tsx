@@ -466,7 +466,7 @@ export function Storefront({
             </div>
 
             <div className="promo-card text-[var(--foreground)]" style={{ background: "linear-gradient(135deg,#F3EEFF,#E5DAFF)" }}>
-              <Tags size={22} className="text-[#6d28d9]" />
+              <Tags size={22} className="text-[var(--brand-primary-dark)]" />
               <h3 className="mt-4 text-xl font-bold leading-tight sm:text-2xl">Digital Products</h3>
               <p className="mt-1 text-sm font-bold text-[var(--muted)]">Instant Download</p>
               <p className="mt-2 text-xs text-[var(--muted)]">PDF notes, past papers, eBooks &amp; more</p>
@@ -511,7 +511,7 @@ export function Storefront({
                     {featuredProducts.slice(0, 4).map((product) => (
                       <Link key={product.id} href={`/store/${product.slug}`} className="featured-mini">
                         <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-[var(--brand-secondary)]"><BookOpen size={18} /></span>
-                        <span className="min-w-0"><span className="block truncate text-sm font-bold text-white">{product.title}</span><span className="mt-1 block text-xs text-[#B9C4E0]">{money(product.basePrice)}</span></span>
+                        <span className="min-w-0"><span className="block truncate text-sm font-bold text-white">{product.title}</span><span className="mt-1 block text-xs text-[var(--chrome-muted)]">{money(product.basePrice)}</span></span>
                         <ArrowRight size={16} className="ml-auto text-[#a8a0c4]" />
                       </Link>
                     ))}
