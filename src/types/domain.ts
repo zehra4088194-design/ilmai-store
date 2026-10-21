@@ -78,6 +78,8 @@ export interface Product {
   // Who on ilmai.study sees this product as an ad — see validators/product.ts's adAudience
   // comment. Undefined/all-undefined-fields means "everyone".
   adTargeting?: { audience?: "student" | "parent" | "teacher" | "principal"; category?: string; gradeLevel?: string };
+  // Direct download URL for app-type products (Google Drive or other)
+  downloadLink?: string;
 }
 
 export interface Address {

@@ -14,6 +14,7 @@ export const PRODUCT_TYPES = [
   "test_series",
   "bundle",
   "service",
+  "app",
 ] as const;
 
 export type ProductType = (typeof PRODUCT_TYPES)[number];

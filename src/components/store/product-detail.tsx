@@ -24,6 +24,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
   const price = variant?.price ?? product.basePrice;
   const compareAt = product.compareAtPrice && product.compareAtPrice.amountMinor > price.amountMinor ? product.compareAtPrice : undefined;
   const digital = ["digital", "course", "notes", "test_series"].includes(product.productType);
+  const isAppProduct = product.productType === "app";
   // ilmai.study print-on-demand copies (see isNotesOrderSlug) don't have a flat delivery fee —
   // it scales with how many copies end up in the order (computeShippingMinor at checkout), so
   // this shows the tier schedule instead of a single misleading "Free"/flat figure up front.
@@ -137,9 +138,10 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
         </div>
 
         <div className="mt-5 flex flex-wrap items-baseline gap-3">
-          {compareAt && <span className="text-lg font-bold text-[#94A3B8] line-through">{money(compareAt)}</span>}
-          <span className="text-4xl font-black tracking-[-.03em] text-[var(--foreground)]">{money(price)}</span>
+          {!isAppProduct && compareAt && <span className="text-lg font-bold text-[#94A3B8] line-through">{money(compareAt)}</span>}
+          {!isAppProduct && <span className="text-4xl font-black tracking-[-.03em] text-[var(--foreground)]">{money(price)}</span>}
           {digital && <span className="rounded-full bg-[var(--success-soft)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] text-[var(--brand-primary)]">Instant access</span>}
+          {isAppProduct && <span className="rounded-full bg-[var(--brand-secondary)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] text-white">Free App</span>}
         </div>
         <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[var(--brand-primary)]">
           {product.productType === "service"
@@ -187,7 +189,20 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
         )}
 
         <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap sm:items-center">
-          {product.productType === "service" && !isLoggedIn ? (
+          {isAppProduct ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (product.downloadLink && typeof window !== "undefined") {
+                  window.open(product.downloadLink, "_blank");
+                }
+              }}
+              className="gold-btn min-h-[46px] w-full px-6 sm:flex-1 flex items-center justify-center gap-2"
+            >
+              <Download size={18} />
+              Download App
+            </button>
+          ) : product.productType === "service" && !isLoggedIn ? (
             <div className="w-full rounded-2xl bg-[var(--gray)] p-4">
               <p className="text-sm font-bold text-[var(--foreground)]">Sign in is required to purchase account-based service access.</p>
               <Link href="/login" className="gold-btn mt-3 inline-flex min-h-11 px-5 text-sm">Sign in to continue</Link>
@@ -249,7 +264,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
         <div className="mt-6 grid grid-cols-3 gap-2">
           <div className="detail-trust"><ShieldCheck size={16} /><span>Secure</span></div>
           <div className="detail-trust"><BadgeCheck size={16} /><span>Official</span></div>
-          <div className="detail-trust">{product.productType === "service" ? <Store size={16} /> : digital ? <Download size={16} /> : <Truck size={16} />}<span>{product.productType === "service" ? "Portal" : digital ? "Instant" : "Delivery"}</span></div>
+          <div className="detail-trust">{product.productType === "service" ? <Store size={16} /> : isAppProduct ? <Download size={16} /> : digital ? <Download size={16} /> : <Truck size={16} />}<span>{product.productType === "service" ? "Portal" : isAppProduct ? "Download" : digital ? "Instant" : "Delivery"}</span></div>
         </div>
       </div>
     </div>

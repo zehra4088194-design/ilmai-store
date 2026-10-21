@@ -68,6 +68,10 @@ function isDigital(product: Product) {
   return ["digital", "course", "notes", "test_series"].includes(product.productType);
 }
 
+function isApp(product: Product) {
+  return product.productType === "app";
+}
+
 // Category color-coding (design spec §8) — a stable hash-free mapping by
 // slug for known categories, with a small rotation for anything custom an
 // admin/seller adds later so it still looks intentional rather than gray.
@@ -116,6 +120,7 @@ function ProductCard({ product, index, saved, isLoggedIn }: { product: Product; 
   const price = variant?.price ?? product.basePrice;
   const compareAt = product.compareAtPrice && product.compareAtPrice.amountMinor > price.amountMinor ? product.compareAtPrice : undefined;
   const digital = isDigital(product);
+  const app = isApp(product);
   const category = product.categories[0];
   const chip = categoryChipClass(category?.slug, index);
   const outOfStock = variant?.requiresShipping && variant.stockQuantity !== undefined && variant.stockQuantity <= 0;
@@ -137,6 +142,7 @@ function ProductCard({ product, index, saved, isLoggedIn }: { product: Product; 
           className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-white/90 shadow-sm"
         />
         {digital && <span className="badge badge-digital absolute left-2 top-2">Digital</span>}
+        {app && <span className="badge absolute left-2 top-2 bg-[var(--brand-secondary)]">App</span>}
         {outOfStock && <span className="badge absolute left-2 top-2 bg-[var(--chrome)] text-white">Out of stock</span>}
       </Link>
 
@@ -147,11 +153,24 @@ function ProductCard({ product, index, saved, isLoggedIn }: { product: Product; 
         <Link href={`/store/${product.slug}`}>
           <h3 className="mt-1.5 line-clamp-2 text-[13px] font-semibold leading-snug text-[var(--foreground)] sm:text-sm">{product.title}</h3>
         </Link>
-        <div className="mt-1.5 flex items-baseline gap-1.5">
-          <span className="text-sm font-bold text-[var(--foreground)] sm:text-[15px]">{money(price)}</span>
-          {compareAt && <span className="text-[11px] font-medium text-[#94a3b8] line-through">{money(compareAt)}</span>}
-        </div>
-        {product.productType === "service" && !isLoggedIn ? (
+        {!app && (
+          <div className="mt-1.5 flex items-baseline gap-1.5">
+            <span className="text-sm font-bold text-[var(--foreground)] sm:text-[15px]">{money(price)}</span>
+            {compareAt && <span className="text-[11px] font-medium text-[#94a3b8] line-through">{money(compareAt)}</span>}
+          </div>
+        )}
+        {app ? (
+          <button
+            onClick={() => {
+              if (product.downloadLink && typeof window !== "undefined") {
+                window.open(product.downloadLink, "_blank");
+              }
+            }}
+            className="gold-btn mt-2.5 h-9 w-full text-[12px]"
+          >
+            Download
+          </button>
+        ) : product.productType === "service" && !isLoggedIn ? (
           <Link href="/login" className="gold-btn mt-2.5 h-9 w-full text-[12px]">Sign in to buy</Link>
         ) : (
           <AddToBagButton

@@ -42,6 +42,8 @@ export const adminCreateProductSchema = z.object({
   isFeatured: z.boolean().default(false),
   categoryIds: z.array(z.string().uuid()).default([]),
   variants: z.array(createProductVariantSchema).min(1),
+  // Direct download link for app-type products (Google Drive or other)
+  downloadLink: z.string().url().optional(),
   // Who on ilmai.study sees this product as an ad (see lib/ads/storeProductsFeed.ts over there).
   // Omitted/undefined = shown to everyone, same "no target_audience row" convention the main
   // app's own house-ad banners already use. adCategory only matters when adAudience is "student"

@@ -64,6 +64,7 @@ export async function mapProduct(row: Raw): Promise<Product> {
             gradeLevel: row.metadata?.ad_grade_level || undefined,
           }
         : undefined,
+    downloadLink: row.download_link ?? undefined,
   };
 }
 
@@ -255,7 +256,7 @@ export const ProductService = {
 
   async adminCreate(input: z.infer<typeof adminCreateProductSchema>): Promise<Product> {
     const db = createSupabaseAdminClient();
-    const { data, error } = await db.from("products").insert({ slug: input.slug, title: input.title, description: input.description, product_type: input.productType, status: input.status, base_price_minor: input.basePriceMinor, currency: input.currency, compare_at_price_minor: input.compareAtPriceMinor ?? null, delivery_fee_minor: input.deliveryFeeMinor ?? 0, is_featured: input.isFeatured, metadata: adTargetingMetadata(input) }).select("id").single();
+    const { data, error } = await db.from("products").insert({ slug: input.slug, title: input.title, description: input.description, product_type: input.productType, status: input.status, base_price_minor: input.basePriceMinor, currency: input.currency, compare_at_price_minor: input.compareAtPriceMinor ?? null, delivery_fee_minor: input.deliveryFeeMinor ?? 0, is_featured: input.isFeatured, download_link: input.downloadLink, metadata: adTargetingMetadata(input) }).select("id").single();
     if (error) throw productWriteError(error);
     if (!data) throw new ValidationError("Product could not be created.");
     const { data: variants, error: variantsError } = await db.from("product_variants").insert(input.variants.map((v) => ({ product_id: data.id, sku: v.sku, name: v.name, price_minor: v.priceMinor, currency: v.currency, is_default: v.isDefault, requires_shipping: v.requiresShipping, weight_grams: v.weightGrams, metadata: v.providerPriceId ? { provider_price_id: v.providerPriceId } : {} }))).select("id,requires_shipping");
