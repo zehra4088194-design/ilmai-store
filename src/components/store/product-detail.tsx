@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { BadgeCheck, BookOpen, Download, Facebook, Minus, Plus, Share2, ShieldCheck, Star, Store, Truck, Twitter } from "lucide-react";
+import { AppWindow, BadgeCheck, BookOpen, Download, Facebook, Minus, Plus, Share2, ShieldCheck, Star, Store, Truck, Twitter } from "lucide-react";
 import type { Product, ProductVariant } from "@/types/domain";
 import { AddToBagButton } from "@/components/store/add-to-bag-button";
 import { WishlistButton } from "@/components/store/wishlist-button";
@@ -73,14 +73,16 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
   }
 
   const bullets = useMemo(() => [
-    product.productType === "service" ? "Enter any supported whole-rupee amount and refresh the payment QR instantly." : "Complete, topic-wise coverage — nothing skipped.",
-    product.productType === "service" ? "Generate, download and print QRs for your own verified JazzCash account." : "Easy to learn and revise before exams.",
-    product.productType === "service"
-      ? "Portal access is linked to your IlmAI Store account after verified payment."
-      : digital || !PHYSICAL_GOODS_ENABLED
-        ? "Instant access after successful payment."
-        : "Made for delivery within Pakistan.",
-    product.productType === "service" ? "JazzCash merchant onboarding and receiving ID verification are required." : "Follows the latest board/curriculum syllabus.",
+    product.productType === "app" ? "Free download — no purchase or payment needed." : product.productType === "service" ? "Enter any supported whole-rupee amount and refresh the payment QR instantly." : "Complete, topic-wise coverage — nothing skipped.",
+    product.productType === "app" ? "Direct download link — one click and you're ready to install." : product.productType === "service" ? "Generate, download and print QRs for your own verified JazzCash account." : "Easy to learn and revise before exams.",
+    product.productType === "app"
+      ? "Works on its supported platform; check the description for system requirements."
+      : product.productType === "service"
+        ? "Portal access is linked to your IlmAI Store account after verified payment."
+        : digital || !PHYSICAL_GOODS_ENABLED
+          ? "Instant access after successful payment."
+          : "Made for delivery within Pakistan.",
+    product.productType === "app" ? "Provided and verified by the IlmAI Store team." : product.productType === "service" ? "JazzCash merchant onboarding and receiving ID verification are required." : "Follows the latest board/curriculum syllabus.",
   ], [digital, product.productType]);
 
   return (
@@ -95,7 +97,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
             <Image src={images[activeImage]?.url ?? ""} alt={images[activeImage]?.altText ?? product.title} fill priority sizes="(min-width: 1024px) 45vw, 100vw" className="select-none object-cover" draggable={false} />
           ) : (
             <div className="grid h-full place-items-center">
-              <BookOpen size={110} strokeWidth={1} className="text-white/25" />
+              {isAppProduct ? <AppWindow size={110} strokeWidth={1} className="text-white/25" /> : <BookOpen size={110} strokeWidth={1} className="text-white/25" />}
             </div>
           )}
           <WishlistButton
@@ -122,7 +124,7 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
               onClick={() => setActiveImage(index)}
               className={`relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border-2 bg-[var(--gray)] ${index === activeImage ? "border-[var(--brand-primary)]" : "border-[var(--border)]"}`}
             >
-              {media ? <Image src={media.url} alt={media.altText ?? product.title} fill sizes="64px" className="object-cover" /> : <BookOpen size={20} className="text-[var(--foreground)]/25" />}
+              {media ? <Image src={media.url} alt={media.altText ?? product.title} fill sizes="64px" className="object-cover" /> : isAppProduct ? <AppWindow size={20} className="text-[var(--foreground)]/25" /> : <BookOpen size={20} className="text-[var(--foreground)]/25" />}
             </button>
           ))}
         </div>
@@ -144,7 +146,9 @@ export function ProductDetail({ product, isWishlisted = false, isLoggedIn = fals
           {isAppProduct && <span className="rounded-full bg-[var(--brand-secondary)] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.1em] text-white">Free App</span>}
         </div>
         <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[.1em] text-[var(--brand-primary)]">
-          {product.productType === "service"
+          {product.productType === "app"
+            ? <><Download size={13} /> Direct download — no payment required</>
+            : product.productType === "service"
             ? <><ShieldCheck size={13} /> Account portal access after verified payment</>
             : digital || !PHYSICAL_GOODS_ENABLED
             ? <><Download size={13} /> Instant digital delivery</>

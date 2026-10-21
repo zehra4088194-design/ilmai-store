@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
+  AppWindow,
   ArrowRight,
   BookOpen,
   Boxes,
@@ -29,7 +30,7 @@ import { formatMoney } from "@/lib/pricing";
 import { PHYSICAL_GOODS_ENABLED } from "@/constants/product";
 import { DEFAULT_EXCHANGE_RATE_SETTINGS } from "@/lib/platform-settings/types";
 
-type PaginationInfo = { page: number; pageSize: number; total: number; categorySlug?: string; search?: string };
+type PaginationInfo = { page: number; pageSize: number; total: number; categorySlug?: string; search?: string; productType?: string };
 
 type Props = {
   products: Product[];
@@ -49,6 +50,7 @@ function pageHref(pagination: PaginationInfo, page: number): string {
   const params = new URLSearchParams();
   if (pagination.search) params.set("search", pagination.search);
   if (pagination.categorySlug) params.set("category", pagination.categorySlug);
+  if (pagination.productType) params.set("type", pagination.productType);
   if (page > 1) params.set("page", String(page));
   const qs = params.toString();
   return qs ? `/store?${qs}` : "/store";
@@ -132,7 +134,7 @@ function ProductCard({ product, index, saved, isLoggedIn }: { product: Product; 
           <Image src={image.url} alt={image.altText ?? product.title} fill sizes="(min-width: 1280px) 22vw, (min-width: 640px) 30vw, 45vw" className="object-cover transition duration-500 group-hover:scale-[1.05]" />
         ) : (
           <div className={`absolute inset-0 grid place-items-center bg-gradient-to-br ${placeholderGradient(chip)}`}>
-            <BookOpen size={48} strokeWidth={1} className="text-white/35" />
+            {app ? <AppWindow size={48} strokeWidth={1} className="text-white/35" /> : <BookOpen size={48} strokeWidth={1} className="text-white/35" />}
           </div>
         )}
         <WishlistButton
@@ -193,6 +195,7 @@ function FilterSidebar({
   maxPrice,
   price,
   onPrice,
+  appsMode = false,
 }: {
   categories: Category[];
   activeCategory: string | null;
@@ -201,6 +204,7 @@ function FilterSidebar({
   maxPrice: number;
   price: number;
   onPrice: (n: number) => void;
+  appsMode?: boolean;
 }) {
   return (
     <aside className="hidden w-full shrink-0 lg:block lg:w-64">
@@ -212,6 +216,9 @@ function FilterSidebar({
         >
           All Products
         </div>
+        <Link href="/store?type=app" className={`filter-check-row ${appsMode ? "active" : ""}`}>
+          Softwares
+        </Link>
         {categories.map((c) => (
           <div key={c.id} className={`filter-check-row ${activeCategory === c.id ? "active" : ""}`} onClick={() => onSelect(c.id)}>
             {c.name}
@@ -219,21 +226,23 @@ function FilterSidebar({
         ))}
       </div>
 
-      <div className="filter-card mt-4">
-        <p className="filter-heading">Filter by Price</p>
-        <input
-          type="range"
-          min={minPrice}
-          max={maxPrice}
-          value={price}
-          onChange={(e) => onPrice(Number(e.target.value))}
-          className="w-full accent-[var(--brand-primary)]"
-        />
-        <div className="mt-2 flex items-center justify-between text-xs font-bold text-[var(--muted)]">
-          <span>PKR {minPrice}</span>
-          <span>PKR {price}</span>
+      {!appsMode && (
+        <div className="filter-card mt-4">
+          <p className="filter-heading">Filter by Price</p>
+          <input
+            type="range"
+            min={minPrice}
+            max={maxPrice}
+            value={price}
+            onChange={(e) => onPrice(Number(e.target.value))}
+            className="w-full accent-[var(--brand-primary)]"
+          />
+          <div className="mt-2 flex items-center justify-between text-xs font-bold text-[var(--muted)]">
+            <span>PKR {minPrice}</span>
+            <span>PKR {price}</span>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="filter-card mt-4">
         <p className="filter-heading">Why shop with us</p>
@@ -264,6 +273,7 @@ export function Storefront({
   pagination,
 }: Props) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const appsMode = pagination?.productType === "app";
   const hero = banners?.[0];
   const wishlistSet = useMemo(() => new Set(wishlistProductIds), [wishlistProductIds]);
 
@@ -294,8 +304,8 @@ export function Storefront({
     <section className={`store-container ${catalogMode ? "pt-10" : "mt-10"}`}>
       <div className="flex flex-col gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <span className="eyebrow">{catalogMode ? "All Products" : "On the shelf right now"}</span>
-          <h2 className="section-title mt-2 !text-2xl sm:!text-3xl">{catalogMode ? "Everything worth studying with." : "Start somewhere good."}</h2>
+          <span className="eyebrow">{appsMode ? "Apps & Software" : catalogMode ? "All Products" : "On the shelf right now"}</span>
+          <h2 className="section-title mt-2 !text-2xl sm:!text-3xl">{appsMode ? "Download free software, directly." : catalogMode ? "Everything worth studying with." : "Start somewhere good."}</h2>
         </div>
         {initialSearch && (
           <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-2 text-xs font-bold text-[var(--muted)]">
@@ -314,13 +324,15 @@ export function Storefront({
             maxPrice={maxPrice}
             price={price}
             onPrice={setPrice}
+            appsMode={appsMode}
           />
         )}
 
         <div className="min-w-0 flex-1">
-          {catalogMode && categories.length > 0 && (
+          {catalogMode && (categories.length > 0 || appsMode) && (
             <div className="mb-5 flex gap-2 overflow-x-auto pb-1 lg:hidden">
               <button type="button" onClick={() => setActiveCategory(null)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black ${!activeCategory ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white" : "border-[var(--border)] bg-[var(--surface-strong)] text-[var(--foreground)]"}`}>All</button>
+              <Link href="/store?type=app" className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black ${appsMode ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white" : "border-[var(--border)] bg-[var(--surface-strong)] text-[var(--foreground)]"}`}>Softwares</Link>
               {categories.slice(0, 10).map((category) => (
                 <button key={category.id} type="button" onClick={() => setActiveCategory(category.id)} className={`shrink-0 rounded-full border px-4 py-2 text-xs font-black ${activeCategory === category.id ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white" : "border-[var(--border)] bg-[var(--surface-strong)] text-[var(--foreground)]"}`}>{category.name}</button>
               ))}

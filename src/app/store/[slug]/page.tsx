@@ -112,7 +112,7 @@ export default async function ProductPage({ params }: { params: Params }) {
         </div>
         {related.length > 0 && <RelatedProducts products={related} />}
         <div className="mt-8 rounded-[32px] border border-[var(--border)] bg-[var(--surface-strong)] p-6 sm:p-8">
-          <ProductReviews productId={product.id} productSlug={product.slug} reviews={reviews} isLoggedIn={Boolean(user)} hasPurchased={hasPurchased} />
+          <ProductReviews productId={product.id} productSlug={product.slug} reviews={reviews} isLoggedIn={Boolean(user)} hasPurchased={hasPurchased} freeProduct={product.productType === "app"} />
         </div>
       </div>
       <StoreFooter />

@@ -192,6 +192,10 @@ export const ProductService = {
       // store_products ad feed (it reads this same list via /api/products).
       .not("slug", "like", "notes-%");
     if (!PHYSICAL_GOODS_ENABLED) request = request.not("product_type", "in", `(${PHYSICAL_PRODUCT_TYPES.join(",")})`);
+    // Apps live in their own "Softwares" section (/store?type=app) and are
+    // deliberately hidden from the general storefront listing/search so they
+    // don't mix with study products on the main shelf.
+    if (!query.productType) request = request.neq("product_type", "app");
     if (query.search) {
       // search_product_ids (see migration fuzzy_product_search) does a
       // substring match OR a pg_trgm similarity match, so a typo like

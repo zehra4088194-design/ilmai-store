@@ -23,6 +23,7 @@ const NAV_LINKS: Array<[string, string]> = [
   ["Shop", "/store"],
   ["IlmAI Notes", "/store/ilm-ai-notes"],
   ["Request University Notes", "/store/university-note-request"],
+  ["Softwares", "/store?type=app"],
   ["Digital Products", "/store?category=digital"],
   ...(PHYSICAL_GOODS_ENABLED ? [["Books", "/store?category=books"] as [string, string]] : []),
   ["Courses", "/store?category=courses"],
@@ -150,6 +151,9 @@ export function StoreHeader({ initialSearch = "", categories = [] }: Props) {
             </button>
             {catOpen && (
               <div className="absolute left-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] py-2 shadow-2xl">
+                <Link href="/store?type=app" onClick={() => setCatOpen(false)} className="block px-4 py-2.5 text-sm font-semibold text-[var(--foreground)] transition hover:bg-[var(--gray)]">
+                  Softwares
+                </Link>
                 {(categories.length ? categories : []).map((c) => (
                   <Link key={c.id} href={`/store?category=${encodeURIComponent(c.slug)}`} onClick={() => setCatOpen(false)} className="block px-4 py-2.5 text-sm font-semibold text-[var(--foreground)] transition hover:bg-[var(--gray)]">
                     {c.name}

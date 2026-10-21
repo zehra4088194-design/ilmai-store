@@ -22,7 +22,7 @@ function Stars({ rating, onChange }: { rating: number; onChange?: (n: number) =>
   </div>;
 }
 
-export function ProductReviews({ productId, productSlug, reviews, isLoggedIn, hasPurchased }: { productId: string; productSlug: string; reviews: Review[]; isLoggedIn: boolean; hasPurchased: boolean }) {
+export function ProductReviews({ productId, productSlug, reviews, isLoggedIn, hasPurchased, freeProduct = false }: { productId: string; productSlug: string; reviews: Review[]; isLoggedIn: boolean; hasPurchased: boolean; freeProduct?: boolean }) {
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -75,7 +75,7 @@ export function ProductReviews({ productId, productSlug, reviews, isLoggedIn, ha
       <div className="mt-8 max-w-xl rounded-2xl border border-[var(--border)] bg-[var(--gray)] p-6 text-sm text-[var(--foreground)]">
         <Link href={`/login?redirect=${encodeURIComponent(`/store/${productSlug}`)}`} className="font-bold text-[var(--brand-primary)] underline">Sign in</Link> to leave a review for this product.
       </div>
-    ) : !hasPurchased ? (
+    ) : !hasPurchased && !freeProduct ? (
       <div className="mt-8 max-w-xl rounded-2xl border border-[var(--border)] bg-[var(--gray)] p-6 text-sm text-[var(--foreground)]">
         You&apos;ll be able to leave a review once you&apos;ve purchased this product. <Link href={`/store/${productSlug}`} className="font-bold text-[var(--brand-primary)] underline">Buy it now</Link>
       </div>
