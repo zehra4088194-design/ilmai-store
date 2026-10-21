@@ -309,7 +309,7 @@ export function ProductForm(props: Props) {
           </label>
           {isAppProduct && (
             <label className="text-sm font-bold sm:col-span-2">
-              Download link (Google Drive or direct URL) <Hint>Yeh woh link hai jo customer ko "Download" button click karne par milega. Google Drive ka direct download link ya koi bhi seedha download URL yahan paste karein. Customer ko sirf button dikhega, link nahi.</Hint>
+              Download link (Google Drive or direct URL) <Hint>Yeh woh link hai jo customer ko &quot;Download&quot; button click karne par milega. Google Drive ka direct download link ya koi bhi seedha download URL yahan paste karein. Customer ko sirf button dikhega, link nahi.</Hint>
               <input
                 required
                 type="url"
