@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
 import { verifyStoreHandoffToken } from "@/lib/auth/handoff";
+import { safeRedirect } from "@/lib/auth/safe-redirect";
 import { logger } from "@/lib/logger";
 import { ShopkeeperService } from "@/services/ShopkeeperService";
 
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
 
   const payload = token ? verifyStoreHandoffToken(token) : null;
   if (!payload) {
-    return NextResponse.redirect(new URL(destination, request.url));
+    return safeRedirect(destination);
   }
 
   try {
@@ -106,9 +107,9 @@ export async function GET(request: NextRequest) {
         ? "/shopkeeper"
         : destination;
 
-    return NextResponse.redirect(new URL(finalDestination, request.url));
+    return safeRedirect(finalDestination);
   } catch (error) {
     logger.error("GET /auth/handoff failed", { error: error instanceof Error ? error.message : String(error) });
-    return NextResponse.redirect(new URL(destination, request.url));
+    return safeRedirect(destination);
   }
 }

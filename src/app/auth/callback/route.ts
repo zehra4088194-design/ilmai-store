@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { safeRedirect } from "@/lib/auth/safe-redirect";
 import { logger } from "@/lib/logger";
 
 /**
@@ -23,9 +24,9 @@ export async function GET(request: NextRequest) {
       if (error) throw error;
     } catch (error) {
       logger.error("GET /auth/callback failed", { error: error instanceof Error ? error.message : String(error) });
-      return NextResponse.redirect(new URL("/login?error=link-expired", request.url));
+      return safeRedirect("/login?error=link-expired");
     }
   }
 
-  return NextResponse.redirect(new URL(destination, request.url));
+  return safeRedirect(destination);
 }
