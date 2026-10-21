@@ -83,7 +83,9 @@ export function ProductForm(props: Props) {
   const [deliveryFeeRupees, setDeliveryFeeRupees] = useState(
     initial?.deliveryFee?.amountMinor ? (initial.deliveryFee.amountMinor / 100).toString() : "",
   );
+  const [downloadLink, setDownloadLink] = useState(initial?.downloadLink ?? "");
   const isPhysical = PHYSICAL_PRODUCT_TYPES.includes(productType);
+  const isAppProduct = productType === "app";
   const [variants, setVariants] = useState<VariantForm[]>(
     initial ? toVariantForm(initial) : [emptyVariant(true, "PKR")],
   );
@@ -123,6 +125,7 @@ export function ProductForm(props: Props) {
         compareAtPriceMinor: compareAtRupees ? Math.round(Number(compareAtRupees) * 100) : null,
         deliveryFeeMinor: isPhysical && !freeDelivery && deliveryFeeRupees ? Math.round(Number(deliveryFeeRupees) * 100) : 0,
         isFeatured,
+        downloadLink: isAppProduct && downloadLink ? downloadLink : undefined,
         adAudience: adAudience || undefined,
         adCategory: adCategory.trim() || undefined,
         adGradeLevel: adGradeLevel.trim() || undefined,
@@ -291,8 +294,8 @@ export function ProductForm(props: Props) {
             </label>
           )}
           <label className="text-sm font-bold">
-            Price <Hint>Asli bikri wali price (rupees me likhein, chahe currency PKR ho ya USD) — yehi price product card, product page aur checkout par customer ko dikhti hai.</Hint>
-            <input required type="number" min="0" step="0.01" value={priceRupees} onChange={(e) => setPriceRupees(e.target.value)} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#0F766E]" />
+            Price {isAppProduct && "(set to 0 for free apps)"} <Hint>Asli bikri wali price (rupees me likhein, chahe currency PKR ho ya USD) — yehi price product card, product page aur checkout par customer ko dikhti hai.</Hint>
+            <input required={!isAppProduct} type="number" min="0" step="0.01" value={priceRupees} onChange={(e) => setPriceRupees(e.target.value)} className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#0F766E]" />
           </label>
           <label className="text-sm font-bold">
             Currency <Hint>Is price ki currency. PKR ho to &quot;PKR 500&quot; aur USD ho to &quot;$4&quot; is tarah har jagah (store, cart, checkout) dikhta hai.</Hint>
@@ -304,6 +307,19 @@ export function ProductForm(props: Props) {
             Compare-at price (optional) <Hint>Yahan ek zyada purani/badi price daalein to woh product card aur product page par asli price ke saath kati hui (strike-through) dikhegi — jaise discount ho raha ho. Khali chhoro to kuch cross-out nahi dikhega.</Hint>
             <input type="number" min="0" step="0.01" value={compareAtRupees} onChange={(e) => setCompareAtRupees(e.target.value)} placeholder="Khali chhod dein agar discount nahi dikhana" className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#0F766E]" />
           </label>
+          {isAppProduct && (
+            <label className="text-sm font-bold sm:col-span-2">
+              Download link (Google Drive or direct URL) <Hint>Yeh woh link hai jo customer ko "Download" button click karne par milega. Google Drive ka direct download link ya koi bhi seedha download URL yahan paste karein. Customer ko sirf button dikhega, link nahi.</Hint>
+              <input
+                required
+                type="url"
+                value={downloadLink}
+                onChange={(e) => setDownloadLink(e.target.value)}
+                placeholder="https://drive.google.com/uc?export=download&id=YOUR_FILE_ID"
+                className="mt-2 w-full rounded-xl border px-4 py-3 font-normal outline-none focus:border-[#0F766E]"
+              />
+            </label>
+          )}
           {isPhysical && (
             <div className="text-sm font-bold sm:col-span-2">
               Delivery <Hint>Yeh product physical/book hone ki wajah se delivery fee mangta hai. Free rakhein ya ek fixed amount lagayein — yehi fee product page, cart aur checkout par customer se charge hogi.</Hint>
@@ -337,75 +353,77 @@ export function ProductForm(props: Props) {
         </div>
       </div>
 
-      <div className="mt-6 rounded-3xl border bg-white p-6 sm:p-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Variants</p>
-            <h2 className="display-font mt-1 text-2xl text-[#0B1D3A]">Purchasable options</h2>
-            <p className="mt-1 max-w-md text-xs leading-5 text-[#64748B]">Yeh wo option(s) hain jo customer khareedte waqt product page par choose karta hai (jaise Size/Color, ya sirf ek hi default option). Kam se kam ek variant zaroori hai.</p>
-          </div>
-          <button type="button" onClick={addVariant} className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold">
-            <Plus size={15} /> Add variant
-          </button>
-        </div>
-
-        <div className="mt-6 grid gap-4">
-          {variants.map((variant, index) => (
-            <div key={index} className="rounded-2xl bg-[#F1F5F9] p-4 sm:p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-[#0B1D3A]">Variant {index + 1}</p>
-                {variants.length > 1 && (
-                  <button type="button" onClick={() => removeVariant(index)} className="inline-flex items-center gap-1 text-xs font-bold text-red-700">
-                    <Trash2 size={14} /> Remove
-                  </button>
-                )}
-              </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <label className="text-xs font-bold">
-                  SKU (internal code) <Hint>Sirf aapke record ke liye apna code — customer ko kahin nahi dikhta.</Hint>
-                  <input required value={variant.sku} onChange={(e) => updateVariant(index, { sku: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#0F766E]" />
-                </label>
-                <label className="text-xs font-bold">
-                  Option name <Hint>Jaise &quot;Small&quot; ya &quot;Hardcover&quot; — product page par is naam ka button dikhega jise customer click kar ke choose karega.</Hint>
-                  <input required value={variant.name} onChange={(e) => updateVariant(index, { name: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#0F766E]" />
-                </label>
-                <label className="text-xs font-bold">
-                  Price (in rupees) <Hint>Is option ki apni price — customer yeh option select kare to cart aur checkout par yehi price lagegi.</Hint>
-                  <input required type="number" min="0" step="0.01" value={variant.priceRupees} onChange={(e) => updateVariant(index, { priceRupees: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#0F766E]" />
-                </label>
-                <label className="text-xs font-bold">
-                  Currency <Hint>Is option ki price ki currency.</Hint>
-                  <select value={variant.currency} onChange={(e) => updateVariant(index, { currency: e.target.value as (typeof SUPPORTED_CURRENCIES)[number] })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#0F766E]">
-                    {SUPPORTED_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </label>
-              </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <label className="flex items-start gap-2 text-xs font-bold">
-                  <input type="radio" name="default-variant" checked={variant.isDefault} onChange={() => markDefault(index)} className="mt-0.5 h-4 w-4" />
-                  <span>Default variant <Hint>Customer jab product page kholega to yehi option pehle se selected/chuna hua dikhega.</Hint></span>
-                </label>
-                <label className="flex items-start gap-2 text-xs font-bold">
-                  <input type="checkbox" checked={variant.requiresShipping} onChange={(e) => updateVariant(index, { requiresShipping: e.target.checked })} className="mt-0.5 h-4 w-4" />
-                  <span>Requires shipping (courier se bhejna hai) <Hint>On karein sirf physical cheez (courier se jaane wali) ke liye — is se neeche delivery fee, stock aur low-stock ke options khulenge, aur checkout par customer se shipping address maanga jayega.</Hint></span>
-                </label>
-                {variant.requiresShipping && (
-                  <>
-                    <label className="flex items-start gap-2 text-xs font-bold">
-                      <span className="mt-0.5">Stock on hand<Hint>Abhi kitne units available hain. Payment confirm (paid) hote hi is me se ek kam ho jayega, aur store par isi se &quot;X in stock&quot; ya &quot;Out of stock&quot; dikhega.</Hint></span>
-                      <input required type="number" min="0" step="1" value={variant.stockQuantity} onChange={(e) => updateVariant(index, { stockQuantity: e.target.value })} placeholder="0" className="mt-0.5 w-24 shrink-0 rounded-lg border bg-white px-3 py-2 text-sm font-normal outline-none focus:border-[#0F766E]" />
-                    </label>
-                    <label className="flex items-start gap-2 text-xs font-bold">
-                      <span className="mt-0.5">Low-stock alert at<Hint>Stock isse kam/barabar reh jaye to product page par ek amber warning (&quot;Only X left in stock&quot;) dikhna shuru ho jayega.</Hint></span>
-                      <input required type="number" min="0" step="1" value={variant.lowStockThreshold} onChange={(e) => updateVariant(index, { lowStockThreshold: e.target.value })} placeholder="5" className="mt-0.5 w-24 shrink-0 rounded-lg border bg-white px-3 py-2 text-sm font-normal outline-none focus:border-[#0F766E]" />
-                    </label>
-                  </>
-                )}
-              </div>
+      {!isAppProduct && (
+        <div className="mt-6 rounded-3xl border bg-white p-6 sm:p-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Variants</p>
+              <h2 className="display-font mt-1 text-2xl text-[#0B1D3A]">Purchasable options</h2>
+              <p className="mt-1 max-w-md text-xs leading-5 text-[#64748B]">Yeh wo option(s) hain jo customer khareedte waqt product page par choose karta hai (jaise Size/Color, ya sirf ek hi default option). Kam se kam ek variant zaroori hai.</p>
             </div>
-          ))}
+            <button type="button" onClick={addVariant} className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold">
+              <Plus size={15} /> Add variant
+            </button>
+          </div>
+
+          <div className="mt-6 grid gap-4">
+            {variants.map((variant, index) => (
+              <div key={index} className="rounded-2xl bg-[#F1F5F9] p-4 sm:p-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold text-[#0B1D3A]">Variant {index + 1}</p>
+                  {variants.length > 1 && (
+                    <button type="button" onClick={() => removeVariant(index)} className="inline-flex items-center gap-1 text-xs font-bold text-red-700">
+                      <Trash2 size={14} /> Remove
+                    </button>
+                  )}
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label className="text-xs font-bold">
+                    SKU (internal code) <Hint>Sirf aapke record ke liye apna code — customer ko kahin nahi dikhta.</Hint>
+                    <input required value={variant.sku} onChange={(e) => updateVariant(index, { sku: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#0F766E]" />
+                  </label>
+                  <label className="text-xs font-bold">
+                    Option name <Hint>Jaise &quot;Small&quot; ya &quot;Hardcover&quot; — product page par is naam ka button dikhega jise customer click kar ke choose karega.</Hint>
+                    <input required value={variant.name} onChange={(e) => updateVariant(index, { name: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#0F766E]" />
+                  </label>
+                  <label className="text-xs font-bold">
+                    Price (in rupees) <Hint>Is option ki apni price — customer yeh option select kare to cart aur checkout par yehi price lagegi.</Hint>
+                    <input required type="number" min="0" step="0.01" value={variant.priceRupees} onChange={(e) => updateVariant(index, { priceRupees: e.target.value })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#0F766E]" />
+                  </label>
+                  <label className="text-xs font-bold">
+                    Currency <Hint>Is option ki price ki currency.</Hint>
+                    <select value={variant.currency} onChange={(e) => updateVariant(index, { currency: e.target.value as (typeof SUPPORTED_CURRENCIES)[number] })} className="mt-2 w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-[#0F766E]">
+                      {SUPPORTED_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </label>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label className="flex items-start gap-2 text-xs font-bold">
+                    <input type="radio" name="default-variant" checked={variant.isDefault} onChange={() => markDefault(index)} className="mt-0.5 h-4 w-4" />
+                    <span>Default variant <Hint>Customer jab product page kholega to yehi option pehle se selected/chuna hua dikhega.</Hint></span>
+                  </label>
+                  <label className="flex items-start gap-2 text-xs font-bold">
+                    <input type="checkbox" checked={variant.requiresShipping} onChange={(e) => updateVariant(index, { requiresShipping: e.target.checked })} className="mt-0.5 h-4 w-4" />
+                    <span>Requires shipping (courier se bhejna hai) <Hint>On karein sirf physical cheez (courier se jaane wali) ke liye — is se neeche delivery fee, stock aur low-stock ke options khulenge, aur checkout par customer se shipping address maanga jayega.</Hint></span>
+                  </label>
+                  {variant.requiresShipping && (
+                    <>
+                      <label className="flex items-start gap-2 text-xs font-bold">
+                        <span className="mt-0.5">Stock on hand<Hint>Abhi kitne units available hain. Payment confirm (paid) hote hi is me se ek kam ho jayega, aur store par isi se &quot;X in stock&quot; ya &quot;Out of stock&quot; dikhega.</Hint></span>
+                        <input required type="number" min="0" step="1" value={variant.stockQuantity} onChange={(e) => updateVariant(index, { stockQuantity: e.target.value })} placeholder="0" className="mt-0.5 w-24 shrink-0 rounded-lg border bg-white px-3 py-2 text-sm font-normal outline-none focus:border-[#0F766E]" />
+                      </label>
+                      <label className="flex items-start gap-2 text-xs font-bold">
+                        <span className="mt-0.5">Low-stock alert at<Hint>Stock isse kam/barabar reh jaye to product page par ek amber warning (&quot;Only X left in stock&quot;) dikhna shuru ho jayega.</Hint></span>
+                        <input required type="number" min="0" step="1" value={variant.lowStockThreshold} onChange={(e) => updateVariant(index, { lowStockThreshold: e.target.value })} placeholder="5" className="mt-0.5 w-24 shrink-0 rounded-lg border bg-white px-3 py-2 text-sm font-normal outline-none focus:border-[#0F766E]" />
+                      </label>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <button type="submit" disabled={submitting} className="rounded-full bg-[#0B1D3A] px-6 py-3 text-sm font-bold text-white disabled:opacity-50">
