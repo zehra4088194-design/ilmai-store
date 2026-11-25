@@ -29,7 +29,7 @@ export const ShopkeeperService = {
 
   async requireActiveForUser(userId: string) {
     const account = await this.getForUser(userId);
-    if (!canGenerateShopkeeperQr(account, userId)) {
+    if (!account || !canGenerateShopkeeperQr(account, userId)) {
       throw new AuthorizationError("Merchant QR access is not active for this account.");
     }
     return account;
