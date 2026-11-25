@@ -5,10 +5,18 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminShopkeepersPage() {
   const shopkeepers = await ShopkeeperService.listForAdmin();
-  return <main className="mx-auto max-w-6xl p-6 lg:p-10">
-    <p className="text-xs font-bold uppercase tracking-[.2em] text-[#0F766E]">Service access</p>
-    <h1 className="display-font mt-2 text-5xl">Shopkeepers</h1>
-    <p className="mt-3 max-w-2xl text-sm leading-6 text-[#64748B]">Add a shopkeeper using their existing Store account email and JazzCash number. Enter the exact JazzCash-issued merchant identifier separately; never derive it from the number. Accounts without a verified identifier remain pending.</p>
-    <ShopkeeperManager shopkeepers={shopkeepers} />
-  </main>;
+
+  return (
+    <main className="mx-auto max-w-6xl p-5 sm:p-8 lg:p-10">
+      <div className="mb-8">
+        <p className="text-xs font-black uppercase tracking-[.2em] text-[#0F766E]">Merchant administration</p>
+        <h1 className="display-font mt-2 text-4xl font-black sm:text-5xl">Merchants</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-[#64748B]">
+          Only administrators can create merchant access. Add an email to send an invitation,
+          then verify the exact JazzCash-issued receiving identifier before activating QR generation.
+        </p>
+      </div>
+      <ShopkeeperManager shopkeepers={shopkeepers} />
+    </main>
+  );
 }

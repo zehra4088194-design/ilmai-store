@@ -5,22 +5,13 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "IlmAI Store | Official Study Notes, Courses & Digital Products",
-  description: "The official store of the IlmAI education platform for study notes, courses, test series, and educational products.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_STORE_URL ?? "https://ilmai.store"),
-  alternates: { canonical: "/" },
-  openGraph: {
-    title: "IlmAI Store | Official Study Notes, Courses & Digital Products",
-    description: "The official store of the IlmAI education platform for study notes, courses, test series, and educational products.",
-    type: "website",
-    url: process.env.NEXT_PUBLIC_STORE_URL ?? "https://ilmai.store",
-  },
-  robots: { index: true, follow: true },
+  title: "IlmAI Pay | Merchant QR Portal",
+  description: "Secure merchant access to dynamic JazzCash payment QR codes.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://ilmai.store"),
+  robots: { index: false, follow: false },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={inter.variable}>
       <body>{children}</body>
