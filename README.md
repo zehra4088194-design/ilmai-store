@@ -2,9 +2,9 @@
 
 Merchant-only dynamic JazzCash QR portal at https://ilmai.store.
 
-The application has just two roles:
-- **Admin:** invites merchant accounts, records the shopkeeper's JazzCash number and exact provider-issued receiving identifier, verifies it, and activates or suspends access.
-- **Merchant:** signs in to /shopkeeper, enters an amount, and receives a server-generated dynamic QR for the merchant's verified receiving identifier.
+The app has two roles:
+- **Admin:** adds merchants by shop name only, receives a generated Merchant Login ID and temporary password, verifies their JazzCash receiving details, and activates or suspends access.
+- **Merchant:** signs in using those credentials, adds their own JazzCash number and provider-issued receiving identifier, waits for admin verification, then creates dynamic payment QRs with the shop name printed beneath the QR.
 
 There is no public registration, storefront, catalog, cart, checkout, customer orders, seller marketplace, or subscription billing in this app.
 
@@ -22,22 +22,19 @@ Required environment variables:
 - NEXT_PUBLIC_SUPABASE_ANON_KEY
 - SUPABASE_SERVICE_ROLE_ID_KEY
 
-## Admin provisioning
+## Merchant provisioning
 
-1. Sign in with an account present in the Supabase `admin_users` table.
-2. Open /admin/shopkeepers and add the merchant's email and JazzCash mobile number.
-3. If the email is not already a Supabase Auth user, the server sends an invitation email through Supabase Auth.
-4. Enter the exact merchant receiving identifier issued by JazzCash and mark it verified only after checking it with the provider.
-5. Only an active merchant with a verified receiving identifier can generate QRs.
+1. An admin signs in using an account in the Supabase `admin_users` table.
+2. At `/admin/shopkeepers`, the admin enters only the shop name.
+3. The server creates a dedicated Supabase Auth account and a one-time Merchant Login ID/password. The admin copies these credentials and shares them privately with the shopkeeper.
+4. The merchant signs in at `/login` and submits their own JazzCash mobile number and the exact provider-issued receiving identifier from `/shopkeeper`.
+5. The merchant remains pending until an admin checks the receiving ID and marks the account active.
+6. Only active, verified merchants can generate QRs.
 
-Configure Supabase Auth email templates and add `https://ilmai.store/auth/callback` to the project's allowed redirect URLs. Disable public email sign-ups in Supabase Auth settings; merchants must be invited by an administrator.
+Public sign-up is removed from the UI. Keep Supabase Auth public sign-ups disabled in the project settings.
 
-## Payment QR
+## QR and payment security
 
-The existing server-side QR builder is retained at `src/lib/payments/paymentQr.ts`. The QR endpoint derives the signed-in user from the Supabase session, looks up that user's merchant record, validates active/verified status, validates whole-PKR amount, rate-limits requests and generates the QR without trusting a client-supplied merchant ID.
+The QR endpoint derives the merchant from the authenticated session and uses only that merchant's verified receiving identifier. It validates whole-rupee amounts, rate-limits requests and sends `Cache-Control: no-store`.
 
-A generated QR is **not proof of a completed payment**. Do not display payment success unless a future provider-backed transaction-status or webhook integration independently confirms it.
-
-## Database
-
-Historical migrations are intentionally retained so an already-deployed Supabase project keeps a valid migration history and existing data is not destroyed. The shopkeeper table and access controls are defined in `028_shopkeeper_jazzcash_qr.sql`; apply the repository's required migration history in order on a fresh project.
+A generated or scanned QR is not proof of payment. Do not show a transaction as paid unless a provider-backed status API or verified webhook confirms it.

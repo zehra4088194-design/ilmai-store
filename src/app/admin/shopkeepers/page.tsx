@@ -12,7 +12,7 @@ export default async function AdminShopkeepersPage() {
         <p className="text-xs font-black uppercase tracking-[.2em] text-[#0F766E]">Merchant administration</p>
         <h1 className="display-font mt-2 text-4xl font-black sm:text-5xl">Merchants</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[#64748B]">
-          Add the shop name and merchant sign-in email, then verify the JazzCash receiving details before activating QR generation.
+          Add a shop by name only. IlmAI generates its login credentials; the shopkeeper submits their own JazzCash receiving details, then you verify and activate the account.
         </p>
       </div>
       <ShopkeeperManager shopkeepers={shopkeepers} />
