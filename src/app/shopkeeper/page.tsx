@@ -14,7 +14,7 @@ export default async function ShopkeeperPage() {
   const account = await ShopkeeperService.getForUser(user.id);
 
   return <ShopkeeperPortal
-    account={account ? { jazzcashNumber: account.jazzcash_number, status: account.status } : null}
+    account={account ? { displayName: account.display_name || "Merchant", jazzcashNumber: account.jazzcash_number, status: account.status } : null}
     email={user.email ?? "Signed-in account"}
   />;
 }

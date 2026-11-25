@@ -13,8 +13,8 @@ export function ShopkeeperManager({ shopkeepers }: { shopkeepers: ShopkeeperAcco
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  async function remove(id: string, email: string) {
-    if (!confirm(`Remove merchant access for ${email}? Their sign-in account will remain, but they will no longer be able to generate a QR.`)) return;
+  async function remove(id: string, displayName: string) {
+    if (!confirm(`Remove merchant access for ${displayName}? Their sign-in account will remain, but they will no longer be able to generate a QR.`)) return;
     setBusy(id);
     setError(null);
     setNotice(null);
@@ -59,6 +59,7 @@ export function ShopkeeperManager({ shopkeepers }: { shopkeepers: ShopkeeperAcco
         event.preventDefault();
         const data = new FormData(event.currentTarget);
         void submit("/api/admin/shopkeepers", "POST", {
+          displayName: data.get("displayName"),
           email: data.get("email"),
           jazzcashNumber: data.get("jazzcashNumber"),
           receivingIdentifier: data.get("receivingIdentifier"),
@@ -67,9 +68,12 @@ export function ShopkeeperManager({ shopkeepers }: { shopkeepers: ShopkeeperAcco
       }} className="rounded-3xl border bg-white p-5 shadow-sm sm:p-7">
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#E6F4F1] text-[#0F766E]"><UserPlus size={19} /></span>
-          <div><h2 className="text-lg font-black">Add merchant</h2><p className="text-xs text-[#64748B]">Create access or invite an existing account by email.</p></div>
+          <div><h2 className="text-lg font-black">Add merchant</h2><p className="text-xs text-[#64748B]">Add the shop name and link its existing or invited sign-in account.</p></div>
         </div>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <label className="grid gap-1.5 text-xs font-bold sm:col-span-2">Shop / merchant name
+            <input required minLength={2} maxLength={120} name="displayName" placeholder="e.g. Al-Madina Store" className="rounded-xl border px-3 py-3 text-sm font-normal" />
+          </label>
           <label className="grid gap-1.5 text-xs font-bold">Merchant email
             <input required type="email" name="email" placeholder="merchant@example.com" className="rounded-xl border px-3 py-3 text-sm font-normal" />
           </label>
@@ -83,7 +87,7 @@ export function ShopkeeperManager({ shopkeepers }: { shopkeepers: ShopkeeperAcco
             <input type="checkbox" name="receivingIdentifierVerified" />
             I have verified this exact receiving ID with JazzCash for this merchant
           </label>
-          <p className="text-xs leading-5 text-[#64748B] sm:col-span-2">Without a verified receiving ID, the merchant remains pending and cannot generate a payment QR.</p>
+          <p className="text-xs leading-5 text-[#64748B] sm:col-span-2">The shop name is printed beneath its QR. An unverified receiving ID keeps the merchant pending and QR generation disabled.</p>
           <button disabled={Boolean(busy)} className="gold-btn min-h-11 px-5 text-sm sm:col-span-2">
             {busy === true ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />} Add merchant
           </button>
@@ -98,6 +102,7 @@ export function ShopkeeperManager({ shopkeepers }: { shopkeepers: ShopkeeperAcco
           event.preventDefault();
           const data = new FormData(event.currentTarget);
           void submit(`/api/admin/shopkeepers/${merchant.id}`, "PATCH", {
+            displayName: data.get("displayName"),
             jazzcashNumber: data.get("jazzcashNumber"),
             receivingIdentifier: data.get("receivingIdentifier"),
             receivingIdentifierVerified: data.get("receivingIdentifierVerified") === "on",
@@ -105,10 +110,13 @@ export function ShopkeeperManager({ shopkeepers }: { shopkeepers: ShopkeeperAcco
           }, merchant.id);
         }} className="rounded-3xl border bg-white p-5 shadow-sm sm:p-7">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div><h3 className="font-black">{merchant.email}</h3><p className="mt-1 text-xs text-[#64748B]">Added {new Date(merchant.created_at).toLocaleDateString("en-PK")}</p></div>
+            <div><h3 className="font-black">{merchant.display_name}</h3><p className="mt-1 text-xs text-[#64748B]">{merchant.email} · Added {new Date(merchant.created_at).toLocaleDateString("en-PK")}</p></div>
             <a href="/shopkeeper" className="text-xs font-bold text-[#0F766E] underline">Merchant portal</a>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-xs font-bold sm:col-span-2">Shop / merchant name
+              <input required minLength={2} maxLength={120} name="displayName" defaultValue={merchant.display_name} className="w-full rounded-xl border px-3 py-3 text-sm font-normal" />
+            </label>
             <label className="grid gap-1.5 text-xs font-bold">JazzCash number
               <input required name="jazzcashNumber" defaultValue={merchant.jazzcash_number} className="w-full rounded-xl border px-3 py-3 text-sm font-normal" />
             </label>
@@ -126,7 +134,7 @@ export function ShopkeeperManager({ shopkeepers }: { shopkeepers: ShopkeeperAcco
             <button type="submit" disabled={Boolean(busy)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#0B1D3A] px-4 text-xs font-bold text-white">
               {busy === merchant.id ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
             </button>
-            <button type="button" disabled={Boolean(busy)} onClick={() => void remove(merchant.id, merchant.email)} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-red-200 px-4 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50">
+            <button type="button" disabled={Boolean(busy)} onClick={() => void remove(merchant.id, merchant.display_name)} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-red-200 px-4 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50">
               <Trash2 size={14} /> Remove access
             </button>
           </div>

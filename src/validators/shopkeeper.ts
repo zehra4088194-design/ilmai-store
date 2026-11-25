@@ -3,8 +3,10 @@ import { SHOPKEEPER_STATUSES } from "@/constants/shopkeeper";
 
 const merchantIdentifier = z.string().regex(/^[\x21-\x7e]{1,99}$/, "Enter the exact JazzCash merchant identifier provided for this account.");
 const mobileNumber = z.string().trim().min(7).max(24).regex(/^\+?[0-9 ()-]+$/).refine((value) => (value.match(/\d/g) ?? []).length >= 7);
+const displayName = z.string().trim().min(2, "Enter the shop or merchant name.").max(120, "Shop name must be 120 characters or fewer.");
 
 export const shopkeeperAdminCreateSchema = z.object({
+  displayName,
   email: z.string().trim().email().max(320),
   jazzcashNumber: mobileNumber,
   receivingIdentifier: z.union([merchantIdentifier, z.literal("")]).optional().default(""),
@@ -12,6 +14,7 @@ export const shopkeeperAdminCreateSchema = z.object({
 });
 
 export const shopkeeperAdminUpdateSchema = z.object({
+  displayName,
   jazzcashNumber: mobileNumber,
   receivingIdentifier: z.union([merchantIdentifier, z.literal("")]),
   receivingIdentifierVerified: z.boolean(),

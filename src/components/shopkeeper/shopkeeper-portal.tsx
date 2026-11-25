@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Check, Clipboard, Download, Loader2, LogOut, Printer, QrCode, ShieldCheck, Store } from "lucide-react";
 import type { ShopkeeperStatus } from "@/constants/shopkeeper";
 
-type Account = { jazzcashNumber: string; status: ShopkeeperStatus };
+type Account = { displayName: string; jazzcashNumber: string; status: ShopkeeperStatus };
 
 export function ShopkeeperPortal({ account, email }: { account: Account | null; email: string }) {
   const [amount, setAmount] = useState("100");
@@ -105,7 +105,7 @@ export function ShopkeeperPortal({ account, email }: { account: Account | null; 
               <div className="mt-6 grid min-h-[320px] place-items-center rounded-3xl bg-[#F1F5F9] p-5">
                 {loading ? <div className="text-center text-sm font-semibold text-[#64748B]"><Loader2 size={30} className="mx-auto animate-spin text-[#0F766E]" /><span className="mt-3 block">Preparing payment QR…</span></div>
                   : error ? <p role="alert" className="max-w-sm text-center text-sm font-semibold text-red-700">{error}</p>
-                  : qrDataUrl ? <div className="text-center"><p className="mb-2 text-sm font-bold text-[#64748B]">Scan to pay <span className="text-[#0B1D3A]">Rs. {Number(amount).toLocaleString("en-PK")}</span></p><Image src={qrDataUrl} alt={`JazzCash payment QR for Rs. ${amount}`} width={800} height={800} unoptimized className="mx-auto aspect-square w-64 rounded-xl bg-white p-3 sm:w-80 print:w-[360px]" /><p className="mt-3 text-xs font-bold text-[#64748B]">JazzCash · Expires 11:59 PM Pakistan time</p><p className="mt-1 text-[10px] font-semibold text-[#64748B]">Powered by IlmAI Pay</p></div>
+                  : qrDataUrl ? <div className="text-center"><p className="mb-2 text-sm font-bold text-[#64748B]">Scan to pay <span className="text-[#0B1D3A]">Rs. {Number(amount).toLocaleString("en-PK")}</span></p><Image src={qrDataUrl} alt={`JazzCash payment QR for Rs. ${amount}`} width={800} height={800} unoptimized className="mx-auto aspect-square w-64 rounded-xl bg-white p-3 sm:w-80 print:w-[360px]" /><p className="mt-3 text-base font-black text-[#0B1D3A]">{account.displayName}</p><p className="mt-1 text-xs font-bold text-[#64748B]">JazzCash · Expires 11:59 PM Pakistan time</p><p className="mt-1 text-[10px] font-semibold text-[#64748B]">Powered by IlmAI Pay</p></div>
                   : <div className="text-center text-sm font-semibold text-[#64748B]"><QrCode size={38} className="mx-auto text-[#0F766E]" /><p className="mt-3">Your payment QR will appear here.</p></div>}
               </div>
               <div className="mt-5 flex flex-wrap gap-3 print:hidden">
