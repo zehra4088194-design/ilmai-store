@@ -132,6 +132,15 @@ export const ShopkeeperService = {
       if (insertError.code === "42501") {
         throw new StorageError("Supabase denied INSERT access to public.shopkeepers. Apply migration 032_merchant_provisioning_permissions.sql to the Supabase project used by ilmai.store.");
       }
+      if (insertError.code === "23502") {
+        // PostgreSQL includes the missing NOT NULL column and relation in its
+        // message. Surface only those schema identifiers; never expose row detail.
+        const missingColumn = insertError.message.match(/null value in column "([^"]+)" of relation "([^"]+)"/i);
+        if (missingColumn) {
+          throw new StorageError(`The live database requires "${missingColumn[1]}" in table "${missingColumn[2]}", but merchant setup does not provide it. The production schema is out of sync with migration 028_shopkeeper_jazzcash_qr.sql. Share this column name so the correct migration can be prepared.`);
+        }
+        throw new StorageError("The live database has an extra required field on the merchant table. Check the ilmai.store app logs for the missing column name.");
+      }
       if (insertError.code === "23514") {
         throw new ConflictError("The production shopkeepers table rejected the pending merchant record. Its JazzCash/status check constraint does not match the app's pending-account schema.");
       }
