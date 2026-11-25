@@ -1,6 +1,7 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
-import { AuthorizationError, ConflictError, NotFoundError } from "@/lib/errors";
+import { AuthorizationError, ConflictError, NotFoundError, StorageError } from "@/lib/errors";
+import { logger } from "@/lib/logger";
 import { canGenerateShopkeeperQr } from "@/lib/shopkeeper/access";
 import { createSupabaseAdminClient } from "@/lib/supabase/server-admin";
 import type { ShopkeeperStatus } from "@/constants/shopkeeper";
@@ -113,9 +114,34 @@ export const ShopkeeperService = {
     });
 
     if (insertError) {
-      await db.auth.admin.deleteUser(userData.user.id);
-      if (insertError.code === "23505") throw new ConflictError("This merchant account already exists.");
-      throw new Error(insertError.message);
+      const { error: cleanupError } = await db.auth.admin.deleteUser(userData.user.id);
+      logger.error("Merchant provisioning: shopkeepers insert failed", {
+        code: insertError.code ?? null,
+        message: insertError.message,
+      });
+      if (cleanupError) {
+        logger.error("Merchant provisioning: orphan Auth user cleanup failed", {
+          code: cleanupError.code ?? null,
+          message: cleanupError.message,
+        });
+      }
+
+      if (insertError.code === "23505") {
+        throw new ConflictError("This merchant account already exists.");
+      }
+      if (insertError.code === "42501") {
+        throw new StorageError("Supabase denied INSERT access to public.shopkeepers. Apply migration 032_merchant_provisioning_permissions.sql to the Supabase project used by ilmai.store.");
+      }
+      if (insertError.code === "23514") {
+        throw new ConflictError("The production shopkeepers table rejected the pending merchant record. Its JazzCash/status check constraint does not match the app's pending-account schema.");
+      }
+      if (insertError.code === "42P01") {
+        throw new StorageError("The shopkeepers table is missing from the Supabase project used by ilmai.store. Apply migration 028_shopkeeper_jazzcash_qr.sql first.");
+      }
+      if (insertError.code === "42703") {
+        throw new StorageError("The production shopkeepers table is missing a column required by this app. Its database migrations are out of date.");
+      }
+      throw new StorageError(`Merchant record could not be saved (database error ${insertError.code ?? "unknown"}). Check the ilmai.store app logs for the underlying database message.`);
     }
 
     return { loginId, temporaryPassword };
