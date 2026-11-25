@@ -3,38 +3,35 @@
 ## Runtime
 
 - Next.js App Router, Node.js standalone Docker image.
-- Supabase Auth for admin and merchant sign-in.
-- Supabase Postgres for `admin_users`, `shopkeepers`, and existing rate-limit infrastructure.
-- Server-side QR creation through `src/lib/payments/paymentQr.ts`.
+- Supabase Auth for admin and generated merchant sign-in accounts.
+- Supabase Postgres for `admin_users`, `shopkeepers`, and rate-limit infrastructure.
+- Server-side QR generation through `src/lib/payments/paymentQr.ts`.
 
 ## Roles and routes
 
-- `/login`: sign-in only; no public signup.
-- `/shopkeeper`: authenticated merchant portal.
-- `/admin/shopkeepers`: administrator-only merchant provisioning and status management.
-- `POST /api/shopkeeper/qr`: derives merchant from the authenticated session; accepts amount only.
-- `POST /api/admin/shopkeepers`: admin-only add/invite action.
-- `PATCH|DELETE /api/admin/shopkeepers/:id`: admin-only verification, activation, suspension and access removal.
-- `POST /auth/logout`: clears the current Supabase session.
-- `/api/health`: container health check.
+- `/login`: sign-in for admins and merchants; there is no public registration.
+- `/shopkeeper`: authenticated merchant portal, account setup, QR generation and password change.
+- `/admin/shopkeepers`: administrator-only merchant creation, receiving-detail verification and access management.
+- `POST /api/shopkeeper/account`: saves the signed-in merchant's own JazzCash number and receiving identifier, resets verification and returns the account to pending status.
+- `POST /api/shopkeeper/qr`: derives merchant from the authenticated session and only creates a QR for active, verified receiving details.
+- `POST /api/admin/shopkeepers`: admin-only shop-name creation; generates a merchant Auth login and returns a one-time temporary password.
+- `PATCH|DELETE /api/admin/shopkeepers/:id`: admin-only profile, verification, activation, suspension and access management.
 
-## Merchant provisioning
+## Provisioning and security
 
-The admin service looks up an existing Auth account by email. If it does not exist, it uses Supabase's server-side `inviteUserByEmail` API and redirects the invite through `/auth/callback` to `/shopkeeper`. It then creates a `shopkeepers` row. The exact JazzCash receiving identifier is stored separately from the display mobile number and must be verified by an administrator before the status can become active.
+The admin creates a merchant with a shop name only. A server-generated email-shaped Merchant Login ID and random temporary password are returned to the admin once. The merchant receives no public sign-up path. The shop name is stored in Auth `app_metadata`, which is only writable by trusted server code and is used only as a display label.
 
-The service-role Supabase client is used only inside server-only services and after `requireAdmin` or a verified Auth session. It is never imported into browser code.
+The merchant supplies their own JazzCash mobile number and exact provider-issued receiving identifier after signing in. These values are submitted through a server route scoped to the authenticated user's `user_id`. The receiving identifier remains unverified and QR generation remains disabled until an administrator independently checks it and activates the account.
 
-## QR request flow
+The service-role client is imported only in server-only services and is used after a verified user/admin check. The client cannot choose another merchant's user ID or receiving identifier for QR generation.
+
+## QR flow
 
 1. Merchant enters a whole-PKR amount.
-2. Browser calls `POST /api/shopkeeper/qr` with the amount only.
-3. API verifies the session, applies rate limiting and loads the current user's merchant record.
+2. Browser sends only that amount to `POST /api/shopkeeper/qr`.
+3. API checks the Supabase session, rate limit and this user's merchant row.
 4. API rejects pending, suspended or unverified accounts.
-5. QR builder encodes the provider-issued receiving identifier and amount, generates Pakistan-time expiry and recalculates CRC.
-6. Browser displays the returned QR.
+5. QR builder encodes the merchant's verified receiving identifier and amount, sets the Pakistan-time expiry and recalculates CRC.
+6. The merchant's shop name is displayed immediately beneath the QR.
 
-QR creation does not confirm that a customer has paid. A future transaction ledger must be backed by an official provider status API or signed webhook.
-
-## Database history
-
-Old ecommerce migrations are retained as historical database migrations. The application routes, services and UI for those features are removed, but this refactor does not drop old database tables or delete production records.
+QR creation is not payment confirmation. A future transaction ledger must use an official provider status API or verified webhook.
