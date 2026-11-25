@@ -1,53 +1,11 @@
-# IlmAI Store security rules
+# Security
 
-## Secrets
-
-`SUPABASE_SERVICE_ROLE_ID_KEY`, Safepay private/webhook keys, B2 secret keys, and
-`BREVO_API_KEY` are server-only. They must never be prefixed `NEXT_PUBLIC_`,
-imported by client components, returned in an API response, or logged.
-
-## Row-level security
-
-RLS is enabled on every application table. Public catalog reads are limited to
-published products; user data is owner-scoped; payment, inventory, payment
-event, manual claim, order event, token, and coupon-redemption tables are
-service/admin-only. Guest order access uses a 30-day SHA-256 token digest and
-an HttpOnly cookie.
-
-## Payment integrity
-
-The browser can only show payment UX. A verified Safepay webhook or an
-authenticated admin verification of a JazzCash claim calls the shared
-`OrderCompletionService`; only that server-side flow marks payments paid.
-
-Safepay signatures are checked against the raw request body and rejected when
-the timestamp is outside the configured tolerance. Webhook event IDs and
-provider transaction IDs are unique, so retries are idempotent. Amount and
-currency are compared with the server-side order snapshot for Safepay.
-
-## Digital delivery
-
-Digital files live under the private B2 prefix. Every download re-checks the
-authenticated user or guest order token, order ID, entitlement ID, expiry, and
-download limit before minting a signed URL. Signed URLs are limited to ten
-minutes.
-
-## Input and uploads
-
-Routes validate JSON with Zod before services receive it. Product media and
-payment proofs validate MIME type and size in `src/constants/upload.ts` before
-being sent to B2. Payment proofs remain private and are only opened through an
-admin-authorized signed redirect.
-
-## Rate limiting
-
-Cart writes, checkout creation, JazzCash checkout, and review submission use
-the Postgres-backed limiter in `src/lib/rate-limit.ts`. Run migration 009
-before enabling these routes in production.
-
-## Logging and operations
-
-Use `src/lib/logger.ts`. Never log secrets, tokens, raw provider payloads, or
-full customer addresses/phone numbers. Scheduled jobs require an exact
-`Authorization: Bearer <CRON_SECRET>` header. Every admin mutation calls
-`requireAdmin()` before using a service-role client.
+- Every admin page and admin API calls `requireAdmin()`, which checks the signed-in user against `admin_users`.
+- Merchant QR generation derives the user from the server-verified Supabase session. The client cannot submit an owner ID or receiving identifier.
+- Only server-side code uses the Supabase service-role key. It must never appear in a client component or `NEXT_PUBLIC_*` variable.
+- The database's shopkeepers RLS policy restricts client reads to the owner or an admin; there is no client write policy.
+- Merchant access must be active and the JazzCash-issued receiving identifier must be verified before QR generation.
+- QR generation validates a positive whole-rupee amount, applies database rate limiting and sends `Cache-Control: no-store`.
+- Public signup UI and routes are removed. Disable public signups in Supabase Auth settings as well; administrators use the Auth invitation API to provision merchant identities.
+- A QR being generated or scanned is not payment confirmation. Do not mark transactions paid without an official provider status check or verified webhook.
+- Never log passwords, access tokens, merchant receiving identifiers or raw payment payloads.

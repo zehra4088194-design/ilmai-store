@@ -1,112 +1,14 @@
-# ENVIRONMENT.md — IlmAI Store
+# Environment
 
-Every variable in `.env.example`, what it's for, and its exposure level.
-`public` = safe to ship to the browser (`NEXT_PUBLIC_*`). `server` = must
-never reach the browser (see `SECURITY.md` §1).
+Only these environment variables are required for the merchant-only app.
 
-## Application
-
-| Var | Exposure | Purpose |
+| Variable | Exposure | Purpose |
 |---|---|---|
-| `NEXT_PUBLIC_APP_URL` | public | Canonical URL of this app (`https://ilmai.store`) |
-| `NEXT_PUBLIC_STORE_URL` | public | Same as above, explicit alias used by cross-links from ilmai.study |
-| `NEXT_PUBLIC_ILMAI_STUDY_URL` | public | URL of the main platform, for cross-linking/promotions |
-| `NODE_ENV` | server | Standard Node environment flag |
-| `ILMAI_STUDY_AD_CONVERSION_URL` | server | HTTPS endpoint on ilmai.study that receives paid attributed-order events |
-| `ILMAI_STUDY_AD_CONVERSION_SECRET` | server | Optional bearer token for the conversion endpoint; never expose client-side |
-| `NOTES_PRODUCT_SYNC_SECRET` | server | Bearer secret for `POST /api/internal/notes-product` — ilmai.study's "Order printed notes" button calls this to create/update the matching store product. Same value must be set on ilmai.study. |
-| `EXCHANGE_RATE_API_KEY` | server | ExchangeRate-API v6 key used by the scheduled USD/PKR refresh |
-| `CRON_SECRET` | server | Bearer secret required by every `/api/cron/*` route, including the exchange-rate one — must be set for `services/cron` (see below) to actually be able to call them |
+| NEXT_PUBLIC_APP_URL | public | Canonical app URL, https://ilmai.store |
+| NEXT_PUBLIC_SUPABASE_URL | public | Supabase project URL |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | public | Supabase anon/publishable key |
+| SUPABASE_SERVICE_ROLE_ID_KEY | server only | Privileged server-side account and merchant operations; never expose to the browser |
 
-`docker-compose.yaml` is the production deployment definition for the Oracle Cloud + Coolify
-setup. The companion `cron` service in that compose file calls `/api/cron/usd-pkr-rate`,
-`/api/cron/abandoned-cart`, and `/api/cron/release-inventory` on the schedule defined in
-`services/cron/crontab`. This project does not use Vercel as its production host.
+Set the same values in local development and Coolify. Never commit real credentials.
 
-`CRON_SECRET` must be set in Coolify so the scheduled requests authenticate successfully.`
-
-## Supabase
-
-| Var | Exposure | Purpose |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | public | Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public | Anon key, RLS-restricted, safe client-side |
-| `SUPABASE_SERVICE_ROLE_ID_KEY` | server | Bypasses RLS — admin/service use only, never client |
-
-## Brevo
-
-| Var | Exposure | Purpose |
-|---|---|---|
-| `BREVO_API_KEY` | server | Sending transactional email |
-| `BREVO_FROM_EMAIL` | server | Default from-address, e.g. `store@ilmai.store` |
-| `BREVO_FROM_NAME` | server | Default from-name, e.g. `IlmAI Store` |
-
-## Backblaze B2 (S3-compatible)
-
-| Var | Exposure | Purpose |
-|---|---|---|
-| `B2_ENDPOINT` | server | S3-compatible endpoint URL |
-| `B2_REGION` | server | Region string required by the S3 SDK |
-| `B2_BUCKET_NAME` | server | Bucket holding product media + digital files |
-| `B2_ACCESS_KEY_ID` | server | Application key ID |
-| `B2_SECRET_ACCESS_KEY` | server | Application key secret |
-| `B2_PUBLIC_MEDIA_PREFIX` | server | Prefix for public product images (served via signed/public read as appropriate) |
-| `B2_PRIVATE_DOWNLOADS_PREFIX` | server | Prefix for private digital files, signed-URL only |
-
-## Safepay
-
-| Var | Exposure | Purpose |
-|---|---|---|
-| `NEXT_PUBLIC_SAFEPAY_ENVIRONMENT` | public | `sandbox` or `production` — also picks the API/checkout base URLs |
-| `SAFEPAY_API_KEY` | server | Merchant API key ("beacon") used to create orders and build the checkout redirect URL |
-| `SAFEPAY_SECRET_KEY` | server | Merchant secret key, if your Safepay integration requires it for signed requests |
-| `SAFEPAY_WEBHOOK_SECRET` | server | Used to verify incoming webhook signatures |
-
-All order creation, status checks, and webhook handling happen server-side
-with `SAFEPAY_API_KEY` / `SAFEPAY_WEBHOOK_SECRET`, which are never exposed
-to the browser — the shopper is redirected to Safepay's hosted checkout page
-instead of a client-side widget.
-
-Endpoint paths and the webhook signature header used in
-`SafepayProvider.ts` / `/api/webhooks/safepay` are best-effort from
-Safepay's public Order API docs and have not been exercised against a real
-Safepay account yet — confirm them against the "Integration" page in your
-Safepay dashboard once sandbox keys are issued, and run a full sandbox
-checkout + webhook round-trip before sending live traffic.
-
-## Admin / Misc
-
-| Var | Exposure | Purpose |
-|---|---|---|
-| `ADMIN_NOTIFICATION_EMAIL` | server | Where new-order/admin alerts get sent |
-| `NEXT_PUBLIC_DEFAULT_CURRENCY` | public | Default storefront currency, e.g. `PKR` |
-
-## Bot/fraud protection (Google reCAPTCHA v3)
-
-| Var | Exposure | Purpose |
-|---|---|---|
-| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | public | reCAPTCHA v3 site key — get one at https://www.google.com/recaptcha/admin (register `ilmai.store`, type "reCAPTCHA v3"). Gates checkout (`/api/checkout`, `/api/checkout/jazzcash`) server-side. |
-| `RECAPTCHA_SECRET_KEY` | server | The matching secret key from the same reCAPTCHA admin console entry. |
-
-Both are optional at runtime — if `RECAPTCHA_SECRET_KEY` isn't set, `verifyRecaptcha()` (`src/lib/recaptcha.ts`) passes every request through rather than locking out real customers before it's configured. Set both together, never just one.
-
-To also protect **signup** (`/signup`), separately enable it in the Supabase
-dashboard: **Authentication → Attack Protection → CAPTCHA protection**,
-choose reCAPTCHA, and paste the same secret key there — the app already
-sends `options.captchaToken` on `supabase.auth.signUp()`
-(`src/app/signup/signup-form.tsx`), Supabase's own Auth server verifies it.
-This step can't be done from this repo/CLI — it's a Supabase project setting.
-
-## ilmai.study account handoff
-
-| Var | Exposure | Purpose |
-|---|---|---|
-| `STORE_HANDOFF_SECRET` | server | HMAC secret verifying the short-lived token `/auth/handoff` receives from ilmai.study's `/api/store-handoff` — must be the exact same value on both deployments. See `src/lib/auth/handoff.ts`. |
-
-## Rules
-
-- Never commit `.env` or `.env.local` — only `.env.example` with placeholders.
-- Never write a real-looking fake secret in `.env.example` — use empty values
-  or obvious placeholders like `sk_live_...`.
-- Any new env var must be added to `.env.example` **and** this file in the
-  same change.
+Supabase Auth must allow the callback URL `https://ilmai.store/auth/callback`. Disable public user registration in Supabase Auth settings; new merchant accounts are created only through the administrator's invitation flow.

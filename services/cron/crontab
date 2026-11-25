@@ -1,9 +1,0 @@
-# Schedules are UTC.
-#
-# The store runs as a plain Docker deployment behind Traefik, so this container
-# is the authoritative scheduler for production. The USD/PKR refresh matches
-# ilmai.study: 20:00 UTC = 1:00 AM Pakistan time (UTC+5), once a day.
-0 20 * * * curl -fsS --retry 3 -H "Authorization: Bearer $CRON_SECRET" "$APP_INTERNAL_URL/api/cron/usd-pkr-rate"
-0 * * * * curl -fsS --retry 2 -H "Authorization: Bearer $CRON_SECRET" "$APP_INTERNAL_URL/api/cron/abandoned-cart"
-*/15 * * * * curl -fsS --retry 2 -H "Authorization: Bearer $CRON_SECRET" "$APP_INTERNAL_URL/api/cron/release-inventory"
-*/30 * * * * curl -fsS --retry 2 -H "Authorization: Bearer $CRON_SECRET" "$APP_INTERNAL_URL/api/cron/study-notes-sync"

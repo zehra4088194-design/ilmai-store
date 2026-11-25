@@ -1,10 +1,5 @@
-# IlmAI Store
+# IlmAI Pay
 
-IlmAI Store (https://ilmai.store) is the official store of the IlmAI education platform (https://ilmai.study).
-
-Public commerce pages:
-- https://ilmai.store/store
-- https://ilmai.store/sitemap.xml
-- https://ilmai.store/ai/catalog
-
-For individual products, use the canonical /store/{slug} page linked from the public catalog and sitemap. Generated one-off notes (notes-*) are intentionally excluded from the public AI catalog and product sitemap; students normally reach their own generated-note purchase from https://ilmai.study. Account, checkout, order, admin, and API routes are not public catalog sources.
+IlmAI Pay is a private merchant portal at https://ilmai.store.
+There is no public storefront or public merchant registration.
+Merchants must be invited and activated by an administrator.

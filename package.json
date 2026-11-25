@@ -1,21 +1,14 @@
 {
-  "name": "ilmai-store",
+  "name": "ilmai-pay",
   "version": "0.1.0",
   "private": true,
-  "description": "First-party ecommerce store for the IlmAI education platform.",
-  "keywords": [
-    "new"
-  ],
+  "description": "Admin-managed merchant dynamic JazzCash QR portal.",
+  "keywords": ["merchant", "jazzcash", "qr", "payments"],
   "homepage": "https://ilmai.store",
-  "bugs": {
-    "url": "https://github.com/zehra4088194-design/ilmai-store/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zehra4088194-design/ilmai-store.git"
-  },
+  "bugs": { "url": "https://github.com/zehra4088194-design/ilmai-store/issues" },
+  "repository": { "type": "git", "url": "git+https://github.com/zehra4088194-design/ilmai-store.git" },
   "license": "ISC",
-  "author": "Husnain noor",
+  "author": "IlmAI",
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
@@ -54,7 +47,5 @@
     "tsx": "4.19.2",
     "typescript": "^5.5.0"
   },
-  "engines": {
-    "node": ">=22.0.0"
-  }
+  "engines": { "node": ">=22.0.0" }
 }

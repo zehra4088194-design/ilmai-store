@@ -1,13 +1,10 @@
-name: Store CI
+name: IlmAI Pay CI
 
 on:
   push:
-    branches:
-      - main
-      - feat/student-notes-basket-requests-fees
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   validate:

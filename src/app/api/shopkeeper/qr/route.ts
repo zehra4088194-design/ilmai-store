@@ -17,21 +17,16 @@ export async function POST(request: NextRequest) {
     if (!rate.allowed) return NextResponse.json({ error: "Too many QR requests. Wait a moment and try again." }, { status: 429 });
 
     let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      throw new ValidationError("A valid JSON request is required.");
-    }
+    try { body = await request.json(); }
+    catch { throw new ValidationError("A valid JSON request is required."); }
+
     const { amount: rawAmount } = parseOrThrow(shopkeeperQrSchema, body);
     let amount: number;
-    try {
-      amount = validateAmount(rawAmount);
-    } catch {
-      throw new ValidationError("Enter a positive, whole-rupee amount within the supported range.");
-    }
+    try { amount = validateAmount(rawAmount); }
+    catch { throw new ValidationError("Enter a positive, whole-rupee amount within the supported range."); }
 
     const account = await ShopkeeperService.requireActiveForUser(userId);
-    if (!account || !account.receiving_identifier) throw new ValidationError("This shopkeeper account has no verified JazzCash receiving identifier.");
+    if (!account.receiving_identifier) throw new ValidationError("This merchant has no verified JazzCash receiving identifier.");
     const { qrDataUrl } = await generatePaymentQR(amount, undefined, account.receiving_identifier);
     return NextResponse.json({ qrDataUrl }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
