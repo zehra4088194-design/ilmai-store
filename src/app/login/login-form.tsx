@@ -24,7 +24,7 @@ export function LoginForm() {
     try {
       const supabase = createSupabaseBrowserClient();
       const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-      if (signInError) throw new Error("Email or password is incorrect.");
+      if (signInError) throw new Error("Merchant Login ID or password is incorrect.");
       router.replace(redirectTo);
       router.refresh();
     } catch (err) {
@@ -35,11 +35,11 @@ export function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="mt-8 grid gap-4">
-      {inviteOnlyNotice && <p className="rounded-xl bg-[#E6F4F1] px-4 py-3 text-sm font-semibold text-[#0F766E]">Merchant accounts are added by the administrator. Ask them to send you an invitation.</p>}
+      {inviteOnlyNotice && <p className="rounded-xl bg-[#E6F4F1] px-4 py-3 text-sm font-semibold text-[#0F766E]">Merchant accounts are created by the administrator. Ask them for your Merchant Login ID and temporary password.</p>}
       {error && <p role="alert" className="rounded-xl bg-[#fbeaea] px-4 py-3 text-sm font-semibold text-[#a13f3f]">{error}</p>}
       <label className="grid gap-2 text-sm font-semibold">
-        Email
-        <input type="email" required autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="rounded-xl border bg-white px-4 py-3 text-sm font-normal outline-none focus:border-[#0F766E]" />
+        Email or Merchant Login ID
+        <input type="text" required autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ILM-…@merchant.ilmai.store" className="rounded-xl border bg-white px-4 py-3 text-sm font-normal outline-none focus:border-[#0F766E]" />
       </label>
       <label className="grid gap-2 text-sm font-semibold">
         Password

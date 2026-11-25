@@ -13,11 +13,11 @@ export async function POST(request: NextRequest) {
     catch { throw new ValidationError("A valid JSON request is required."); }
 
     const input = parseOrThrow(shopkeeperAdminCreateSchema, body);
-    const result = await ShopkeeperService.adminAddByEmail(input);
-    return NextResponse.json({ ok: true, invited: result.invited }, { status: 201 });
+    const credentials = await ShopkeeperService.adminCreateByName(input);
+    return NextResponse.json({ ok: true, credentials }, { status: 201 });
   } catch (error) {
     if (isAppError(error)) return NextResponse.json({ error: error.publicMessage }, { status: error.statusCode });
     logger.error("POST /api/admin/shopkeepers failed", { error: String(error) });
-    return NextResponse.json({ error: "Merchant account could not be added." }, { status: 500 });
+    return NextResponse.json({ error: "Merchant account could not be created." }, { status: 500 });
   }
 }
